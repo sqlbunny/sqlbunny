@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 	"testing"
@@ -334,15 +335,15 @@ func TestSetDelete(t *testing.T) {
 	}
 }
 
-func TestSetExecutor(t *testing.T) {
+func TestSetContext(t *testing.T) {
 	t.Parallel()
 
 	q := &Query{}
-	d := &sql.DB{}
-	SetExecutor(q, d)
+	d := context.Background()
+	SetContext(q, d)
 
-	if q.executor != d {
-		t.Errorf("Expected executor to get set to d, but was: %#v", q.executor)
+	if q.ctx != d {
+		t.Errorf("Expected executor to get set to d, but was: %#v", q.ctx)
 	}
 }
 
@@ -373,19 +374,8 @@ func TestAppendSelect(t *testing.T) {
 func TestSQL(t *testing.T) {
 	t.Parallel()
 
-	q := Raw(&sql.DB{}, "thing", 5)
-	if q.rawSQL.sql != "thing" {
-		t.Errorf("Expected %q, got %s", "thing", q.rawSQL.sql)
-	}
-	if q.rawSQL.args[0].(int) != 5 {
-		t.Errorf("Expected 5, got %v", q.rawSQL.args[0])
-	}
-}
-
-func TestSQLG(t *testing.T) {
-	t.Parallel()
-
-	q := RawG("thing", 5)
+	ctx := execToContext(&sql.DB{})
+	q := Raw(ctx, "thing", 5)
 	if q.rawSQL.sql != "thing" {
 		t.Errorf("Expected %q, got %s", "thing", q.rawSQL.sql)
 	}

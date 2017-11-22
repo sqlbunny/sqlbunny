@@ -1,15 +1,20 @@
 package queries
 
 import (
+	"context"
 	"database/sql/driver"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/volatiletech/sqlboiler/boil"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
+func execToContext(exec boil.Executor) context.Context {
+	return boil.WithDB(context.Background(), exec)
+}
 func bin64(i uint64) string {
 	str := strconv.FormatUint(i, 2)
 	pad := 64 - len(str)
@@ -55,7 +60,7 @@ func TestBindStruct(t *testing.T) {
 	ret.AddRow(driver.Value(int64(35)), driver.Value("pat"))
 	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
 
-	SetExecutor(query, db)
+	SetContext(query, execToContext(db))
 	err = query.Bind(&testResults)
 	if err != nil {
 		t.Error(err)
@@ -96,7 +101,7 @@ func TestBindSlice(t *testing.T) {
 	ret.AddRow(driver.Value(int64(12)), driver.Value("cat"))
 	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
 
-	SetExecutor(query, db)
+	SetContext(query, execToContext(db))
 	err = query.Bind(&testResults)
 	if err != nil {
 		t.Error(err)
@@ -147,7 +152,7 @@ func TestBindPtrSlice(t *testing.T) {
 	ret.AddRow(driver.Value(int64(12)), driver.Value("cat"))
 	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
 
-	SetExecutor(query, db)
+	SetContext(query, execToContext(db))
 	err = query.Bind(&testResults)
 	if err != nil {
 		t.Error(err)
@@ -455,7 +460,7 @@ func TestBindSingular(t *testing.T) {
 	ret.AddRow(driver.Value(int64(35)), driver.Value("pat"))
 	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
 
-	SetExecutor(query, db)
+	SetContext(query, execToContext(db))
 	err = query.Bind(&testResults)
 	if err != nil {
 		t.Error(err)
@@ -501,7 +506,7 @@ func TestBind_InnerJoin(t *testing.T) {
 	ret.AddRow(driver.Value(int64(11)))
 	mock.ExpectQuery(`SELECT "fun"\.\* FROM "fun" INNER JOIN happy as h on fun.id = h.fun_id;`).WillReturnRows(ret)
 
-	SetExecutor(query, db)
+	SetContext(query, execToContext(db))
 	err = query.Bind(&testResults)
 	if err != nil {
 		t.Error(err)
@@ -558,7 +563,7 @@ func TestBind_InnerJoinSelect(t *testing.T) {
 	ret.AddRow(driver.Value(int64(12)), driver.Value(int64(13)))
 	mock.ExpectQuery(`SELECT "fun"."id" as "fun.id", "h"."id" as "h.id" FROM "fun" INNER JOIN happy as h on fun.happy_id = h.id;`).WillReturnRows(ret)
 
-	SetExecutor(query, db)
+	SetContext(query, execToContext(db))
 	err = query.Bind(&testResults)
 	if err != nil {
 		t.Error(err)

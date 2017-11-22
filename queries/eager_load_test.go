@@ -1,10 +1,9 @@
 package queries
 
 import (
+	"context"
 	"fmt"
 	"testing"
-
-	"github.com/volatiletech/sqlboiler/boil"
 )
 
 var testEagerCounters struct {
@@ -200,7 +199,7 @@ func TestEagerLoadFromOne(t *testing.T) {
 	obj := &testEager{}
 
 	toLoad := []string{"ChildOne.NestedMany", "ChildOne.NestedOne", "ChildMany.NestedMany", "ChildMany.NestedOne"}
-	err := eagerLoad(nil, toLoad, obj, kindStruct)
+	err := eagerLoad(context.Background(), toLoad, obj, kindStruct)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -242,7 +241,7 @@ func TestEagerLoadFromMany(t *testing.T) {
 	}
 
 	toLoad := []string{"ChildOne.NestedMany", "ChildOne.NestedOne", "ChildMany.NestedMany", "ChildMany.NestedOne"}
-	err := eagerLoad(nil, toLoad, &slice, kindPtrSliceStruct)
+	err := eagerLoad(context.Background(), toLoad, &slice, kindPtrSliceStruct)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -286,7 +285,7 @@ func TestEagerLoadZeroParents(t *testing.T) {
 	obj := &testEager{}
 
 	toLoad := []string{"ZeroMany.NestedMany", "ZeroOne.NestedOne", "ZeroMany.NestedMany", "ZeroOne.NestedOne"}
-	err := eagerLoad(nil, toLoad, obj, kindStruct)
+	err := eagerLoad(context.Background(), toLoad, obj, kindStruct)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -308,7 +307,7 @@ func TestEagerLoadZeroParentsMany(t *testing.T) {
 	}
 
 	toLoad := []string{"ZeroMany.NestedMany", "ZeroOne.NestedOne", "ZeroMany.NestedMany", "ZeroOne.NestedOne"}
-	err := eagerLoad(nil, toLoad, &obj, kindPtrSliceStruct)
+	err := eagerLoad(context.Background(), toLoad, &obj, kindPtrSliceStruct)
 	if err != nil {
 		t.Fatal(err)
 	}
