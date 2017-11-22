@@ -312,6 +312,10 @@ func (p *PostgresDriver) ForeignKeyInfo(schema, tableName string) ([]bdb.Foreign
 	return fkeys, nil
 }
 
+func hasNameSuffix(name, suffix string) bool {
+	return name == suffix || strings.HasSuffix(name, "_"+suffix)
+}
+
 // TranslateColumnType converts postgres database types to Go types, for example
 // "varchar" to "string" and "bigint" to "int64". It returns this parsed data
 // as a Column object.
@@ -319,9 +323,17 @@ func (p *PostgresDriver) TranslateColumnType(c bdb.Column) bdb.Column {
 	if c.Nullable {
 		switch c.DBType {
 		case "bigint", "bigserial":
-			c.Type = "null.Int64"
+			if hasNameSuffix(c.Name, "amount") {
+				c.Type = "*ktypes.Amount"
+			} else {
+				c.Type = "null.Int64"
+			}
 		case "integer", "serial":
-			c.Type = "null.Int"
+			if hasNameSuffix(c.Name, "currency") {
+				c.Type = "*ktypes.Currency"
+			} else {
+				c.Type = "null.Int"
+			}
 		case "smallint", "smallserial":
 			c.Type = "null.Int16"
 		case "decimal", "numeric", "double precision":
@@ -333,7 +345,11 @@ func (p *PostgresDriver) TranslateColumnType(c bdb.Column) bdb.Column {
 		case `"char"`:
 			c.Type = "null.Byte"
 		case "bytea":
-			c.Type = "null.Bytes"
+			if hasNameSuffix(c.Name, "id") {
+				c.Type = "ktypes.ID"
+			} else {
+				c.Type = "null.Bytes"
+			}
 		case "json", "jsonb":
 			c.Type = "null.JSON"
 		case "boolean":
@@ -361,9 +377,17 @@ func (p *PostgresDriver) TranslateColumnType(c bdb.Column) bdb.Column {
 	} else {
 		switch c.DBType {
 		case "bigint", "bigserial":
-			c.Type = "int64"
+			if hasNameSuffix(c.Name, "amount") {
+				c.Type = "ktypes.Amount"
+			} else {
+				c.Type = "int64"
+			}
 		case "integer", "serial":
-			c.Type = "int"
+			if hasNameSuffix(c.Name, "currency") {
+				c.Type = "ktypes.Currency"
+			} else {
+				c.Type = "int"
+			}
 		case "smallint", "smallserial":
 			c.Type = "int16"
 		case "decimal", "numeric", "double precision":
@@ -377,7 +401,11 @@ func (p *PostgresDriver) TranslateColumnType(c bdb.Column) bdb.Column {
 		case "json", "jsonb":
 			c.Type = "types.JSON"
 		case "bytea":
-			c.Type = "[]byte"
+			if hasNameSuffix(c.Name, "id") {
+				c.Type = "ktypes.ID"
+			} else {
+				c.Type = "[]byte"
+			}
 		case "boolean":
 			c.Type = "bool"
 		case "date", "time", "timestamp without time zone", "timestamp with time zone":

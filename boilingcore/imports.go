@@ -170,6 +170,7 @@ func newImporter() importer {
 			`"time"`,
 		},
 		thirdParty: importList{
+			`ktypes "github.com/KernelPay/kernel/types"`,
 			`"github.com/pkg/errors"`,
 			`"github.com/volatiletech/sqlboiler/boil"`,
 			`"github.com/volatiletech/sqlboiler/queries"`,
