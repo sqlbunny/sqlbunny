@@ -76,13 +76,6 @@ func (o *{{$tableNameSingular}}) Update(ctx context.Context, whitelist ... strin
 	{{- end}}
 }
 
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q {{$varNameSingular}}Query) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values.
 func (q {{$varNameSingular}}Query) UpdateAll(cols M) error {
 	queries.SetUpdate(q.Query, cols)

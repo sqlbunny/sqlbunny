@@ -36,13 +36,6 @@ func (o *{{$tableNameSingular}}) Delete(ctx context.Context) error {
 	return nil
 }
 
-// DeleteAllP deletes all rows, and panics on error.
-func (q {{$varNameSingular}}Query) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-	panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all matching rows.
 func (q {{$varNameSingular}}Query) DeleteAll() error {
 	if q.Query == nil {

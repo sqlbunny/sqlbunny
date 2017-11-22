@@ -127,28 +127,6 @@ func (q *Query) Query() (*sql.Rows, error) {
 	return boil.DBFromContext(q.ctx).QueryContext(q.ctx, qs, args...)
 }
 
-// ExecP executes a query that does not need a row returned
-// It will panic on error
-func (q *Query) ExecP() sql.Result {
-	res, err := q.Exec()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return res
-}
-
-// QueryP executes the query for the All finisher and returns multiple rows
-// It will panic on error
-func (q *Query) QueryP() *sql.Rows {
-	rows, err := q.Query()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return rows
-}
-
 // SetContext on the query.
 func SetContext(q *Query, ctx context.Context) {
 	q.ctx = ctx

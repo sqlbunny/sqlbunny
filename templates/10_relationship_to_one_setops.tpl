@@ -7,16 +7,6 @@
 		{{- $varNameSingular := .Table | singular | camelCase}}
 		{{- $schemaTable := .Table | $dot.SchemaTable}}
 
-// Set{{$txt.Function.Name}}P of the {{.Table | singular}} to the related item.
-// Sets o.R.{{$txt.Function.Name}} to related.
-// Adds o to related.R.{{$txt.Function.ForeignName}}.
-// Panics on error.
-func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}P(ctx context.Context, insert bool, related *{{$txt.ForeignTable.NameGo}}) {
-	if err := o.Set{{$txt.Function.Name}}(ctx, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Set{{$txt.Function.Name}} of the {{.Table | singular}} to the related item.
 // Sets o.R.{{$txt.Function.Name}} to related.
 // Adds o to related.R.{{$txt.Function.ForeignName}}.
@@ -79,16 +69,6 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Conte
 }
 
 		{{- if .Nullable}}
-// Remove{{$txt.Function.Name}}P relationship.
-// Sets o.R.{{$txt.Function.Name}} to nil.
-// Removes o from all passed in related items' relationships struct (Optional).
-// Panics on error.
-func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}P(ctx context.Context, related *{{$txt.ForeignTable.NameGo}}) {
-	if err := o.Remove{{$txt.Function.Name}}(ctx, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Remove{{$txt.Function.Name}} relationship.
 // Sets o.R.{{$txt.Function.Name}} to nil.
 // Removes o from all passed in related items' relationships struct (Optional).

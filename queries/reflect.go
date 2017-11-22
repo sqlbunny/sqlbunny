@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/strmangle"
 )
 
@@ -35,15 +34,6 @@ const (
 	loaderStructName       = "L"
 	sentinel               = uint64(255)
 )
-
-// BindP executes the query and inserts the
-// result into the passed in object pointer.
-// It panics on error. See boil.Bind() documentation.
-func (q *Query) BindP(obj interface{}) {
-	if err := q.Bind(obj); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
 
 // Bind executes the query and inserts the
 // result into the passed in object pointer
