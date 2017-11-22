@@ -13,7 +13,7 @@ import (
 )
 
 func execToContext(exec boil.Executor) context.Context {
-	return boil.WithDB(context.Background(), exec)
+	return boil.WithExecutor(context.Background(), exec)
 }
 func bin64(i uint64) string {
 	str := strconv.FormatUint(i, 2)

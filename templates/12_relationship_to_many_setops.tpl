@@ -39,7 +39,7 @@ func (o *{{$txt.LocalTable.NameGo}}) Add{{$txt.Function.Name}}(ctx context.Conte
 				fmt.Fprintln(boil.DebugWriter, values)
 			}
 
-			if _, err = boil.DBFromContext(ctx).ExecContext(ctx, updateQuery, values...); err != nil {
+			if _, err = boil.ExecContext(ctx, updateQuery, values...); err != nil {
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
@@ -60,7 +60,7 @@ func (o *{{$txt.LocalTable.NameGo}}) Add{{$txt.Function.Name}}(ctx context.Conte
 			fmt.Fprintln(boil.DebugWriter, values)
 		}
 
-		_, err = boil.DBFromContext(ctx).ExecContext(ctx, query, values...)
+		_, err = boil.ExecContext(ctx, query, values...)
 		if err != nil {
 			return errors.Wrap(err, "failed to insert into join table")
 		}
@@ -120,7 +120,7 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Conte
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err := boil.DBFromContext(ctx).ExecContext(ctx, query, values...)
+	_, err := boil.ExecContext(ctx, query, values...)
 	if err != nil {
 		return errors.Wrap(err, "failed to remove relationships before set")
 	}
@@ -168,7 +168,7 @@ func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Co
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = boil.DBFromContext(ctx).ExecContext(ctx, query, values...)
+	_, err = boil.ExecContext(ctx, query, values...)
 	if err != nil {
 		return errors.Wrap(err, "failed to remove relationships before set")
 	}

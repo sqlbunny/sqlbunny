@@ -84,9 +84,9 @@ func (o *{{$tableNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 	{{if .UseLastInsertID -}}
 	{{- $canLastInsertID := .Table.CanLastInsertID -}}
 	{{if $canLastInsertID -}}
-	result, err := boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
+	result, err := boil.ExecContext(ctx, cache.query, vals...)
 	{{else -}}
-	_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
+	_, err = boil.ExecContext(ctx, cache.query, vals...)
 	{{- end}}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to insert into {{.Table.Name}}")
@@ -127,15 +127,15 @@ func (o *{{$tableNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 		fmt.Fprintln(boil.DebugWriter, identifierCols...)
 	}
 
-	err = boil.DBFromContext(ctx).QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
+	err = boil.QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to populate default values for {{.Table.Name}}")
 	}
 	{{else}}
 	if len(cache.retMapping) != 0 {
-		err = boil.DBFromContext(ctx).QueryRowContext(ctx, cache.query, vals...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
+		err = boil.QueryRowContext(ctx, cache.query, vals...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
 	} else {
-		_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
+		_, err = boil.ExecContext(ctx, cache.query, vals...)
 	}
 
 	if err != nil {

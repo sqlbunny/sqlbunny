@@ -104,7 +104,7 @@ func (q *Query) Exec() (sql.Result, error) {
 		fmt.Fprintln(boil.DebugWriter, qs)
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
-	return boil.DBFromContext(q.ctx).ExecContext(q.ctx, qs, args...)
+	return boil.ExecContext(q.ctx, qs, args...)
 }
 
 // QueryRow executes the query for the One finisher and returns a row
@@ -114,7 +114,7 @@ func (q *Query) QueryRow() *sql.Row {
 		fmt.Fprintln(boil.DebugWriter, qs)
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
-	return boil.DBFromContext(q.ctx).QueryRowContext(q.ctx, qs, args...)
+	return boil.QueryRowContext(q.ctx, qs, args...)
 }
 
 // Query executes the query for the All finisher and returns multiple rows
@@ -124,7 +124,7 @@ func (q *Query) Query() (*sql.Rows, error) {
 		fmt.Fprintln(boil.DebugWriter, qs)
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
-	return boil.DBFromContext(q.ctx).QueryContext(q.ctx, qs, args...)
+	return boil.QueryContext(q.ctx, qs, args...)
 }
 
 // SetContext on the query.

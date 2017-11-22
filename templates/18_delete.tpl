@@ -22,7 +22,7 @@ func (o *{{$tableNameSingular}}) Delete(ctx context.Context) error {
 	fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := boil.DBFromContext(ctx).ExecContext(ctx, sql, args...)
+	_, err := boil.ExecContext(ctx, sql, args...)
 	if err != nil {
 	return errors.Wrap(err, "{{.PkgName}}: unable to delete from {{.Table.Name}}")
 	}
@@ -86,7 +86,7 @@ func (o {{$tableNameSingular}}Slice) DeleteAll(ctx context.Context) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := boil.DBFromContext(ctx).ExecContext(ctx, sql, args...)
+	_, err := boil.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to delete all from {{$varNameSingular}} slice")
 	}

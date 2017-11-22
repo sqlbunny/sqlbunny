@@ -52,7 +52,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.Name}}(ctx context.Context, sin
 		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
 	}
 
-	results, err := boil.DBFromContext(ctx).QueryContext(ctx, query, args...)
+	results, err := boil.QueryContext(ctx, query, args...)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load {{.ForeignTable}}")
 	}

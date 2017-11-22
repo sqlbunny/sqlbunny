@@ -58,7 +58,7 @@ func (o *{{$tableNameSingular}}) Update(ctx context.Context, whitelist ... strin
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, values...)
+	_, err = boil.ExecContext(ctx, cache.query, values...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to update {{.Table.Name}} row")
 	}
@@ -124,7 +124,7 @@ func (o {{$tableNameSingular}}Slice) UpdateAll(ctx context.Context, cols M) erro
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := boil.DBFromContext(ctx).ExecContext(ctx, sql, args...)
+	_, err := boil.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to update all in {{$varNameSingular}} slice")
 	}

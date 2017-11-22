@@ -134,9 +134,9 @@ func (o *{{$tableNameSingular}}) Upsert(ctx context.Context, {{if eq .DriverName
 	{{if .UseLastInsertID -}}
 	{{- $canLastInsertID := .Table.CanLastInsertID -}}
 	{{if $canLastInsertID -}}
-	result, err := boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
+	result, err := boil.ExecContext(ctx, cache.query, vals...)
 	{{else -}}
-	_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
+	_, err = boil.ExecContext(ctx, cache.query, vals...)
 	{{- end}}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to upsert for {{.Table.Name}}")
@@ -177,18 +177,18 @@ func (o *{{$tableNameSingular}}) Upsert(ctx context.Context, {{if eq .DriverName
 		fmt.Fprintln(boil.DebugWriter, identifierCols...)
 	}
 
-	err = boil.DBFromContext(ctx).QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(returns...)
+	err = boil.QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(returns...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to populate default values for {{.Table.Name}}")
 	}
 	{{- else}}
 	if len(cache.retMapping) != 0 {
-		err = boil.DBFromContext(ctx).QueryRowContext(ctx, cache.query, vals...).Scan(returns...)
+		err = boil.QueryRowContext(ctx, cache.query, vals...).Scan(returns...)
 		if err == sql.ErrNoRows {
 			err = nil // Postgres doesn't return anything when there's no update
 		}
 	} else {
-		_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
+		_, err = boil.ExecContext(ctx, cache.query, vals...)
 	}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to upsert {{.Table.Name}}")

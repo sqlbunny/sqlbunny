@@ -17,7 +17,7 @@ func {{$tableNameSingular}}Exists(ctx context.Context, {{$pkArgs}}) (bool, error
 		fmt.Fprintln(boil.DebugWriter, {{$pkNames | join ", "}})
 	}
 
-	row := boil.DBFromContext(ctx).QueryRowContext(ctx, sql, {{$pkNames | join ", "}})
+	row := boil.QueryRowContext(ctx, sql, {{$pkNames | join ", "}})
 
 	err := row.Scan(&exists)
 	if err != nil {

@@ -30,7 +30,7 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Conte
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	if _, err = boil.DBFromContext(ctx).ExecContext(ctx, updateQuery, values...); err != nil {
+	if _, err = boil.ExecContext(ctx, updateQuery, values...); err != nil {
 		return errors.Wrap(err, "failed to update local table")
 	}
 
