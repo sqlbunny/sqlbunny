@@ -171,7 +171,6 @@ func newImporter() importer {
 			`"time"`,
 		},
 		thirdParty: importList{
-			`ktypes "github.com/KernelPay/kernel/types"`,
 			`"github.com/pkg/errors"`,
 			`"github.com/volatiletech/sqlboiler/boil"`,
 			`"github.com/volatiletech/sqlboiler/queries"`,
@@ -386,6 +385,15 @@ func newImporter() importer {
 		},
 		"types.Hstore": {
 			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types"`},
+		},
+		"ktypes.ID": {
+			thirdParty: importList{`ktypes "github.com/KernelPay/kernel/types"`},
+		},
+		"ktypes.Amount": {
+			thirdParty: importList{`ktypes "github.com/KernelPay/kernel/types"`},
+		},
+		"ktypes.Currency": {
+			thirdParty: importList{`ktypes "github.com/KernelPay/kernel/types"`},
 		},
 	}
 
