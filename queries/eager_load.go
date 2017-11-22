@@ -1,17 +1,16 @@
 package queries
 
 import (
-	"database/sql"
+	"context"
 	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/strmangle"
 )
 
 type loadRelationshipState struct {
-	exec   boil.Executor
+	ctx    context.Context
 	loaded map[string]struct{}
 	toLoad []string
 }
@@ -47,9 +46,9 @@ func (l loadRelationshipState) buildKey(depth int) string {
 // obj should be one of:
 // *[]*struct or *struct
 // bkind should reflect what kind of thing it is above
-func eagerLoad(exec boil.Executor, toLoad []string, obj interface{}, bkind bindKind) error {
+func eagerLoad(ctx context.Context, toLoad []string, obj interface{}, bkind bindKind) error {
 	state := loadRelationshipState{
-		exec:   exec,
+		ctx:    ctx,
 		loaded: map[string]struct{}{},
 	}
 	for _, toLoad := range toLoad {
@@ -155,12 +154,6 @@ func (l loadRelationshipState) callLoadFunction(depth int, loadingFrom reflect.V
 		return errors.Errorf("could not find %s%s method for eager loading", loadMethodPrefix, current)
 	}
 
-	// Hack to allow nil executors
-	execArg := reflect.ValueOf(l.exec)
-	if !execArg.IsValid() {
-		execArg = reflect.ValueOf((*sql.DB)(nil))
-	}
-
 	// Get a loader instance from anything we have, *struct, or *[]*struct
 	val := reflect.Indirect(loadingFrom)
 	if bkind == kindPtrSliceStruct {
@@ -176,7 +169,7 @@ func (l loadRelationshipState) callLoadFunction(depth int, loadingFrom reflect.V
 
 	methodArgs := []reflect.Value{
 		val.FieldByName(loaderStructName),
-		execArg,
+		reflect.ValueOf(l.ctx),
 		reflect.ValueOf(bkind == kindStruct),
 		loadingFrom,
 	}

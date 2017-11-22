@@ -111,7 +111,7 @@ func (q *Query) Bind(obj interface{}) error {
 	}
 
 	if len(q.load) != 0 {
-		return eagerLoad(q.executor, q.load, obj, bkind)
+		return eagerLoad(q.ctx, q.load, obj, bkind)
 	}
 
 	return nil

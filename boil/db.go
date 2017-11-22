@@ -1,33 +1,29 @@
 package boil
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
 // Executor can perform SQL queries.
 type Executor interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
-// Transactor can commit and rollback, on top of being able to execute queries.
-type Transactor interface {
-	Commit() error
-	Rollback() error
+type key int
 
-	Executor
+const dbKey key = 0
+
+func WithDB(ctx context.Context, db Executor) context.Context {
+	return context.WithValue(ctx, dbKey, db)
 }
 
-// Beginner begins transactions.
-type Beginner interface {
-	Begin() (*sql.Tx, error)
-}
-
-// Begin a transaction
-func Begin() (Transactor, error) {
-	creator, ok := currentDB.(Beginner)
+func DBFromContext(ctx context.Context) Executor {
+	db, ok := ctx.Value(dbKey).(Executor)
 	if !ok {
-		panic("database does not support transactions")
+		panic("No database in the context")
 	}
-
-	return creator.Begin()
+	return db
 }

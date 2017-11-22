@@ -25,7 +25,7 @@ func (q {{$varNameSingular}}Query) One() (*{{$tableNameSingular}}, error) {
 	}
 
 	{{if not .NoHooks -}}
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(queries.GetContext(q.Query)); err != nil {
 		return o, err
 	}
 	{{- end}}
@@ -55,7 +55,7 @@ func (q {{$varNameSingular}}Query) All() ({{$tableNameSingular}}Slice, error) {
 	{{if not .NoHooks -}}
 	if len({{$varNameSingular}}AfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(queries.GetContext(q.Query)); err != nil {
 				return o, err
 			}
 		}

@@ -4,7 +4,7 @@
 {{- $pkArgs := joinSlices " " $pkNames $colDefs.Types | join ", " -}}
 {{- $schemaTable := .Table.Name | .SchemaTable}}
 // {{$tableNameSingular}}Exists checks if the {{$tableNameSingular}} row exists.
-func {{$tableNameSingular}}Exists(exec boil.Executor, {{$pkArgs}}) (bool, error) {
+func {{$tableNameSingular}}Exists(ctx context.Context, {{$pkArgs}}) (bool, error) {
 	var exists bool
 	{{if eq .DriverName "mssql" -}}
 	sql := "select case when exists(select top(1) 1 from {{$schemaTable}} where {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Table.PKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Table.PKey.Columns}}{{end}}) then 1 else 0 end"
@@ -17,7 +17,7 @@ func {{$tableNameSingular}}Exists(exec boil.Executor, {{$pkArgs}}) (bool, error)
 		fmt.Fprintln(boil.DebugWriter, {{$pkNames | join ", "}})
 	}
 
-	row := exec.QueryRow(sql, {{$pkNames | join ", "}})
+	row := boil.DBFromContext(ctx).QueryRowContext(ctx, sql, {{$pkNames | join ", "}})
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -25,29 +25,4 @@ func {{$tableNameSingular}}Exists(exec boil.Executor, {{$pkArgs}}) (bool, error)
 	}
 
 	return exists, nil
-}
-
-// {{$tableNameSingular}}ExistsG checks if the {{$tableNameSingular}} row exists.
-func {{$tableNameSingular}}ExistsG({{$pkArgs}}) (bool, error) {
-	return {{$tableNameSingular}}Exists(boil.GetDB(), {{$pkNames | join ", "}})
-}
-
-// {{$tableNameSingular}}ExistsGP checks if the {{$tableNameSingular}} row exists. Panics on error.
-func {{$tableNameSingular}}ExistsGP({{$pkArgs}}) bool {
-	e, err := {{$tableNameSingular}}Exists(boil.GetDB(), {{$pkNames | join ", "}})
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// {{$tableNameSingular}}ExistsP checks if the {{$tableNameSingular}} row exists. Panics on error.
-func {{$tableNameSingular}}ExistsP(exec boil.Executor, {{$pkArgs}}) bool {
-	e, err := {{$tableNameSingular}}Exists(exec, {{$pkNames | join ", "}})
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

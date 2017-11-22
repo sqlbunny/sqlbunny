@@ -1,33 +1,12 @@
 {{- $tableNameSingular := .Table.Name | singular | titleCase -}}
 {{- $varNameSingular := .Table.Name | singular | camelCase -}}
 {{- $schemaTable := .Table.Name | .SchemaTable}}
-// InsertG a single record. See Insert for whitelist behavior description.
-func (o *{{$tableNameSingular}}) InsertG(whitelist ... string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *{{$tableNameSingular}}) InsertGP(whitelist ... string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *{{$tableNameSingular}}) InsertP(exec boil.Executor, whitelist ... string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Insert a single record using an executor.
 // Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
 // No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
 // - All columns without a default value are included (i.e. name, age)
 // - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *{{$tableNameSingular}}) Insert(exec boil.Executor, whitelist ... string) error {
+func (o *{{$tableNameSingular}}) Insert(ctx context.Context, whitelist ... string) error {
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{.Table.Name}} provided for insertion")
 	}
@@ -36,7 +15,7 @@ func (o *{{$tableNameSingular}}) Insert(exec boil.Executor, whitelist ... string
 	{{- template "timestamp_insert_helper" . }}
 
 	{{if not .NoHooks -}}
-	if err := o.doBeforeInsertHooks(exec); err != nil {
+	if err := o.doBeforeInsertHooks(ctx); err != nil {
 		return err
 	}
 	{{- end}}
@@ -105,14 +84,14 @@ func (o *{{$tableNameSingular}}) Insert(exec boil.Executor, whitelist ... string
 	{{if .UseLastInsertID -}}
 	{{- $canLastInsertID := .Table.CanLastInsertID -}}
 	{{if $canLastInsertID -}}
-	result, err := exec.Exec(cache.query, vals...)
+	result, err := boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
 	{{else -}}
-	_, err = exec.Exec(cache.query, vals...)
+	_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
 	{{- end}}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to insert into {{.Table.Name}}")
 	}
-	
+
 	{{if $canLastInsertID -}}
 	var lastID int64
 	{{- end}}
@@ -148,15 +127,15 @@ func (o *{{$tableNameSingular}}) Insert(exec boil.Executor, whitelist ... string
 		fmt.Fprintln(boil.DebugWriter, identifierCols...)
 	}
 
-	err = exec.QueryRow(cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
+	err = boil.DBFromContext(ctx).QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to populate default values for {{.Table.Name}}")
 	}
 	{{else}}
 	if len(cache.retMapping) != 0 {
-		err = exec.QueryRow(cache.query, vals...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
+		err = boil.DBFromContext(ctx).QueryRowContext(ctx, cache.query, vals...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
 	} else {
-		_, err = exec.Exec(cache.query, vals...)
+		_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
 	}
 
 	if err != nil {
@@ -174,7 +153,7 @@ CacheNoHooks:
 	}
 
 	{{if not .NoHooks -}}
-	return o.doAfterInsertHooks(exec)
+	return o.doAfterInsertHooks(ctx)
 	{{- else -}}
 	return nil
 	{{- end}}

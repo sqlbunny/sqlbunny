@@ -5,15 +5,10 @@ var dialect = queries.Dialect{
 	UseTopClause: {{.Dialect.UseTopClause}},
 }
 
-// NewQueryG initializes a new Query using the passed in QueryMods
-func NewQueryG(mods ...qm.QueryMod) *queries.Query {
-	return NewQuery(boil.GetDB(), mods...)
-}
-
 // NewQuery initializes a new Query using the passed in QueryMods
-func NewQuery(exec boil.Executor, mods ...qm.QueryMod) *queries.Query {
+func NewQuery(ctx context.Context, mods ...qm.QueryMod) *queries.Query {
 	q := &queries.Query{}
-	queries.SetExecutor(q, exec)
+	queries.SetContext(q, ctx)
 	queries.SetDialect(q, &dialect)
 	qm.Apply(q, mods...)
 

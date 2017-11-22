@@ -1,30 +1,6 @@
 {{- $tableNameSingular := .Table.Name | singular | titleCase -}}
 {{- $varNameSingular := .Table.Name | singular | camelCase -}}
 {{- $schemaTable := .Table.Name | .SchemaTable}}
-// UpdateG a single {{$tableNameSingular}} record. See Update for
-// whitelist behavior description.
-func (o *{{$tableNameSingular}}) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single {{$tableNameSingular}} record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *{{$tableNameSingular}}) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the {{$tableNameSingular}}, and panics on error.
-// See Update for whitelist behavior description.
-func (o *{{$tableNameSingular}}) UpdateP(exec boil.Executor, whitelist ... string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Update uses an executor to update the {{$tableNameSingular}}.
 // Whitelist behavior: If a whitelist is provided, only the columns given are updated.
 // No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
@@ -32,12 +8,12 @@ func (o *{{$tableNameSingular}}) UpdateP(exec boil.Executor, whitelist ... strin
 // - All primary keys are subtracted from this set
 // Update does not automatically update the record in case of default values. Use .Reload()
 // to refresh the records.
-func (o *{{$tableNameSingular}}) Update(exec boil.Executor, whitelist ... string) error {
+func (o *{{$tableNameSingular}}) Update(ctx context.Context, whitelist ... string) error {
 	{{- template "timestamp_update_helper" . -}}
 
 	var err error
 	{{if not .NoHooks -}}
-	if err = o.doBeforeUpdateHooks(exec); err != nil {
+	if err = o.doBeforeUpdateHooks(ctx); err != nil {
 		return err
 	}
 	{{end -}}
@@ -82,7 +58,7 @@ func (o *{{$tableNameSingular}}) Update(exec boil.Executor, whitelist ... string
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, values...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to update {{.Table.Name}} row")
 	}
@@ -94,7 +70,7 @@ func (o *{{$tableNameSingular}}) Update(exec boil.Executor, whitelist ... string
 	}
 
 	{{if not .NoHooks -}}
-	return o.doAfterUpdateHooks(exec)
+	return o.doAfterUpdateHooks(ctx)
 	{{- else -}}
 	return nil
 	{{- end}}
@@ -119,27 +95,8 @@ func (q {{$varNameSingular}}Query) UpdateAll(cols M) error {
 	return nil
 }
 
-// UpdateAllG updates all rows with the specified column values.
-func (o {{$tableNameSingular}}Slice) UpdateAllG(cols M) error {
-	return o.UpdateAll(boil.GetDB(), cols)
-}
-
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o {{$tableNameSingular}}Slice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o {{$tableNameSingular}}Slice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o {{$tableNameSingular}}Slice) UpdateAll(exec boil.Executor, cols M) error {
+func (o {{$tableNameSingular}}Slice) UpdateAll(ctx context.Context, cols M) error {
 	ln := int64(len(o))
 	if ln == 0 {
 		return nil
@@ -164,7 +121,7 @@ func (o {{$tableNameSingular}}Slice) UpdateAll(exec boil.Executor, cols M) error
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), {{$varNameSingular}}PrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
-	
+
 	sql := fmt.Sprintf("UPDATE {{$schemaTable}} SET %s WHERE %s",
 		strmangle.SetParamNames("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, colNames),
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), {{if .Dialect.IndexPlaceholders}}len(colNames)+1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns, len(o)))
@@ -174,7 +131,7 @@ func (o {{$tableNameSingular}}Slice) UpdateAll(exec boil.Executor, cols M) error
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	_, err := boil.DBFromContext(ctx).ExecContext(ctx, sql, args...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to update all in {{$varNameSingular}} slice")
 	}

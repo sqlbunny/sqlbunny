@@ -162,6 +162,7 @@ func newImporter() importer {
 	imp.Standard = imports{
 		standard: importList{
 			`"bytes"`,
+			`"context"`,
 			`"database/sql"`,
 			`"fmt"`,
 			`"reflect"`,
@@ -181,8 +182,10 @@ func newImporter() importer {
 
 	imp.Singleton = mapImports{
 		"boil_queries": {
+			standard: importList{
+				`"context"`,
+			},
 			thirdParty: importList{
-				`"github.com/volatiletech/sqlboiler/boil"`,
 				`"github.com/volatiletech/sqlboiler/queries"`,
 				`"github.com/volatiletech/sqlboiler/queries/qm"`,
 			},

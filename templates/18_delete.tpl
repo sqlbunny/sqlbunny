@@ -1,43 +1,15 @@
 {{- $tableNameSingular := .Table.Name | singular | titleCase -}}
 {{- $varNameSingular := .Table.Name | singular | camelCase -}}
 {{- $schemaTable := .Table.Name | .SchemaTable}}
-// DeleteP deletes a single {{$tableNameSingular}} record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *{{$tableNameSingular}}) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-	panic(boil.WrapErr(err))
-	}
-}
-
-// DeleteG deletes a single {{$tableNameSingular}} record.
-// DeleteG will match against the primary key column to find the record to delete.
-func (o *{{$tableNameSingular}}) DeleteG() error {
-	if o == nil {
-	return errors.New("{{.PkgName}}: no {{$tableNameSingular}} provided for deletion")
-	}
-
-	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single {{$tableNameSingular}} record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *{{$tableNameSingular}}) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-	panic(boil.WrapErr(err))
-	}
-}
-
 // Delete deletes a single {{$tableNameSingular}} record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *{{$tableNameSingular}}) Delete(exec boil.Executor) error {
+func (o *{{$tableNameSingular}}) Delete(ctx context.Context) error {
 	if o == nil {
 	return errors.New("{{.PkgName}}: no {{$tableNameSingular}} provided for delete")
 	}
 
 	{{if not .NoHooks -}}
-	if err := o.doBeforeDeleteHooks(exec); err != nil {
+	if err := o.doBeforeDeleteHooks(ctx); err != nil {
 	return err
 	}
 	{{- end}}
@@ -50,13 +22,13 @@ func (o *{{$tableNameSingular}}) Delete(exec boil.Executor) error {
 	fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	_, err := boil.DBFromContext(ctx).ExecContext(ctx, sql, args...)
 	if err != nil {
 	return errors.Wrap(err, "{{.PkgName}}: unable to delete from {{.Table.Name}}")
 	}
 
 	{{if not .NoHooks -}}
-	if err := o.doAfterDeleteHooks(exec); err != nil {
+	if err := o.doAfterDeleteHooks(ctx); err != nil {
 	return err
 	}
 	{{- end}}
@@ -87,30 +59,8 @@ func (q {{$varNameSingular}}Query) DeleteAll() error {
 	return nil
 }
 
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o {{$tableNameSingular}}Slice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-	panic(boil.WrapErr(err))
-	}
-}
-
-// DeleteAllG deletes all rows in the slice.
-func (o {{$tableNameSingular}}Slice) DeleteAllG() error {
-	if o == nil {
-	return errors.New("{{.PkgName}}: no {{$tableNameSingular}} slice provided for delete all")
-	}
-	return o.DeleteAll(boil.GetDB())
-}
-
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o {{$tableNameSingular}}Slice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-	panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o {{$tableNameSingular}}Slice) DeleteAll(exec boil.Executor) error {
+func (o {{$tableNameSingular}}Slice) DeleteAll(ctx context.Context) error {
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{$tableNameSingular}} slice provided for delete all")
 	}
@@ -122,7 +72,7 @@ func (o {{$tableNameSingular}}Slice) DeleteAll(exec boil.Executor) error {
 	{{if not .NoHooks -}}
 	if len({{$varNameSingular}}BeforeDeleteHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(exec); err != nil {
+			if err := obj.doBeforeDeleteHooks(ctx); err != nil {
 				return err
 			}
 		}
@@ -143,7 +93,7 @@ func (o {{$tableNameSingular}}Slice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	_, err := boil.DBFromContext(ctx).ExecContext(ctx, sql, args...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to delete all from {{$varNameSingular}} slice")
 	}
@@ -151,7 +101,7 @@ func (o {{$tableNameSingular}}Slice) DeleteAll(exec boil.Executor) error {
 	{{if not .NoHooks -}}
 	if len({{$varNameSingular}}AfterDeleteHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(exec); err != nil {
+			if err := obj.doAfterDeleteHooks(ctx); err != nil {
 				return err
 			}
 		}

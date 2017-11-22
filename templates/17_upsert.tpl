@@ -1,28 +1,8 @@
 {{- $tableNameSingular := .Table.Name | singular | titleCase -}}
 {{- $varNameSingular := .Table.Name | singular | camelCase -}}
 {{- $schemaTable := .Table.Name | .SchemaTable}}
-// UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *{{$tableNameSingular}}) UpsertG({{if eq .DriverName "postgres"}}updateOnConflict bool, conflictColumns []string, {{end}}updateColumns []string,	whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), {{if eq .DriverName "postgres"}}updateOnConflict, conflictColumns, {{end}}updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *{{$tableNameSingular}}) UpsertGP({{if eq .DriverName "postgres"}}updateOnConflict bool, conflictColumns []string, {{end}}updateColumns []string,	whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), {{if eq .DriverName "postgres"}}updateOnConflict, conflictColumns, {{end}}updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *{{$tableNameSingular}}) UpsertP(exec boil.Executor, {{if eq .DriverName "postgres"}}updateOnConflict bool, conflictColumns []string, {{end}}updateColumns []string,	whitelist ...string) {
-	if err := o.Upsert(exec, {{if eq .DriverName "postgres"}}updateOnConflict, conflictColumns, {{end}}updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *{{$tableNameSingular}}) Upsert(exec boil.Executor, {{if eq .DriverName "postgres"}}updateOnConflict bool, conflictColumns []string, {{end}}updateColumns []string, whitelist ...string) error {
+func (o *{{$tableNameSingular}}) Upsert(ctx context.Context, {{if eq .DriverName "postgres"}}updateOnConflict bool, conflictColumns []string, {{end}}updateColumns []string, whitelist ...string) error {
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{.Table.Name}} provided for upsert")
 	}
@@ -30,7 +10,7 @@ func (o *{{$tableNameSingular}}) Upsert(exec boil.Executor, {{if eq .DriverName 
 	{{- template "timestamp_upsert_helper" . }}
 
 	{{if not .NoHooks -}}
-	if err := o.doBeforeUpsertHooks(exec); err != nil {
+	if err := o.doBeforeUpsertHooks(ctx); err != nil {
 		return err
 	}
 	{{- end}}
@@ -154,9 +134,9 @@ func (o *{{$tableNameSingular}}) Upsert(exec boil.Executor, {{if eq .DriverName 
 	{{if .UseLastInsertID -}}
 	{{- $canLastInsertID := .Table.CanLastInsertID -}}
 	{{if $canLastInsertID -}}
-	result, err := exec.Exec(cache.query, vals...)
+	result, err := boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
 	{{else -}}
-	_, err = exec.Exec(cache.query, vals...)
+	_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
 	{{- end}}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to upsert for {{.Table.Name}}")
@@ -197,18 +177,18 @@ func (o *{{$tableNameSingular}}) Upsert(exec boil.Executor, {{if eq .DriverName 
 		fmt.Fprintln(boil.DebugWriter, identifierCols...)
 	}
 
-	err = exec.QueryRow(cache.retQuery, identifierCols...).Scan(returns...)
+	err = boil.DBFromContext(ctx).QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(returns...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to populate default values for {{.Table.Name}}")
 	}
 	{{- else}}
 	if len(cache.retMapping) != 0 {
-		err = exec.QueryRow(cache.query, vals...).Scan(returns...)
+		err = boil.DBFromContext(ctx).QueryRowContext(ctx, cache.query, vals...).Scan(returns...)
 		if err == sql.ErrNoRows {
 			err = nil // Postgres doesn't return anything when there's no update
 		}
 	} else {
-		_, err = exec.Exec(cache.query, vals...)
+		_, err = boil.DBFromContext(ctx).ExecContext(ctx, cache.query, vals...)
 	}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to upsert {{.Table.Name}}")
@@ -225,7 +205,7 @@ CacheNoHooks:
 	}
 
 	{{if not .NoHooks -}}
-	return o.doAfterUpsertHooks(exec)
+	return o.doAfterUpsertHooks(ctx)
 	{{- else -}}
 	return nil
 	{{- end}}

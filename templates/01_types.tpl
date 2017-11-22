@@ -18,7 +18,7 @@ type (
 	{{$tableNameSingular}}Slice []*{{$tableNameSingular}}
 	{{if not .NoHooks -}}
 	// {{$tableNameSingular}}Hook is the signature for custom {{$tableNameSingular}} hook methods
-	{{$tableNameSingular}}Hook func(boil.Executor, *{{$tableNameSingular}}) error
+	{{$tableNameSingular}}Hook func(context.Context, *{{$tableNameSingular}}) error
 	{{- end}}
 
 	{{$varNameSingular}}Query struct {

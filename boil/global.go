@@ -7,8 +7,6 @@ import (
 )
 
 var (
-	// currentDB is a global database handle for the package
-	currentDB Executor
 	// timestampLocation is the timezone used for the
 	// automated setting of created_at/updated_at columns
 	timestampLocation = time.UTC
@@ -22,16 +20,6 @@ var DebugMode = false
 
 // DebugWriter is where the debug output will be sent if DebugMode is true
 var DebugWriter io.Writer = os.Stdout
-
-// SetDB initializes the database handle for all template db interactions
-func SetDB(db Executor) {
-	currentDB = db
-}
-
-// GetDB retrieves the global state database handle
-func GetDB() Executor {
-	return currentDB
-}
 
 // SetLocation sets the global timestamp Location.
 // This is the timezone used by the generated package for the

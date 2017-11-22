@@ -957,7 +957,7 @@ it with the `AddModelHook` method. Here is an example of a before insert hook:
 
 ```go
 // Define my hook function
-func myHook(exec boil.Executor, p *Pilot) error {
+func myHook(ctx context.Context, p *Pilot) error {
   // Do stuff
   return nil
 }

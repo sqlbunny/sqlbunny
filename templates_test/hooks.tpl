@@ -3,47 +3,47 @@
 {{- $tableNamePlural := .Table.Name | plural | titleCase -}}
 {{- $varNamePlural := .Table.Name | plural | camelCase -}}
 {{- $varNameSingular := .Table.Name | singular | camelCase -}}
-func {{$varNameSingular}}BeforeInsertHook(e boil.Executor, o *{{$tableNameSingular}}) error {
+func {{$varNameSingular}}BeforeInsertHook(ctx context.Context, o *{{$tableNameSingular}}) error {
 	*o = {{$tableNameSingular}}{}
 	return nil
 }
 
-func {{$varNameSingular}}AfterInsertHook(e boil.Executor, o *{{$tableNameSingular}}) error {
+func {{$varNameSingular}}AfterInsertHook(ctx context.Context, o *{{$tableNameSingular}}) error {
 	*o = {{$tableNameSingular}}{}
 	return nil
 }
 
-func {{$varNameSingular}}AfterSelectHook(e boil.Executor, o *{{$tableNameSingular}}) error {
+func {{$varNameSingular}}AfterSelectHook(ctx context.Context, o *{{$tableNameSingular}}) error {
 	*o = {{$tableNameSingular}}{}
 	return nil
 }
 
-func {{$varNameSingular}}BeforeUpdateHook(e boil.Executor, o *{{$tableNameSingular}}) error {
+func {{$varNameSingular}}BeforeUpdateHook(ctx context.Context, o *{{$tableNameSingular}}) error {
 	*o = {{$tableNameSingular}}{}
 	return nil
 }
 
-func {{$varNameSingular}}AfterUpdateHook(e boil.Executor, o *{{$tableNameSingular}}) error {
+func {{$varNameSingular}}AfterUpdateHook(ctx context.Context, o *{{$tableNameSingular}}) error {
 	*o = {{$tableNameSingular}}{}
 	return nil
 }
 
-func {{$varNameSingular}}BeforeDeleteHook(e boil.Executor, o *{{$tableNameSingular}}) error {
+func {{$varNameSingular}}BeforeDeleteHook(ctx context.Context, o *{{$tableNameSingular}}) error {
 	*o = {{$tableNameSingular}}{}
 	return nil
 }
 
-func {{$varNameSingular}}AfterDeleteHook(e boil.Executor, o *{{$tableNameSingular}}) error {
+func {{$varNameSingular}}AfterDeleteHook(ctx context.Context, o *{{$tableNameSingular}}) error {
 	*o = {{$tableNameSingular}}{}
 	return nil
 }
 
-func {{$varNameSingular}}BeforeUpsertHook(e boil.Executor, o *{{$tableNameSingular}}) error {
+func {{$varNameSingular}}BeforeUpsertHook(ctx context.Context, o *{{$tableNameSingular}}) error {
 	*o = {{$tableNameSingular}}{}
 	return nil
 }
 
-func {{$varNameSingular}}AfterUpsertHook(e boil.Executor, o *{{$tableNameSingular}}) error {
+func {{$varNameSingular}}AfterUpsertHook(ctx context.Context, o *{{$tableNameSingular}}) error {
 	*o = {{$tableNameSingular}}{}
 	return nil
 }

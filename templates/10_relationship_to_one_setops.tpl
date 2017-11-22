@@ -6,30 +6,13 @@
 		{{- $foreignNameSingular := .ForeignTable | singular | camelCase -}}
 		{{- $varNameSingular := .Table | singular | camelCase}}
 		{{- $schemaTable := .Table | $dot.SchemaTable}}
-// Set{{$txt.Function.Name}}G of the {{.Table | singular}} to the related item.
-// Sets o.R.{{$txt.Function.Name}} to related.
-// Adds o to related.R.{{$txt.Function.ForeignName}}.
-// Uses the global database handle.
-func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}G(insert bool, related *{{$txt.ForeignTable.NameGo}}) error {
-	return o.Set{{$txt.Function.Name}}(boil.GetDB(), insert, related)
-}
 
 // Set{{$txt.Function.Name}}P of the {{.Table | singular}} to the related item.
 // Sets o.R.{{$txt.Function.Name}} to related.
 // Adds o to related.R.{{$txt.Function.ForeignName}}.
 // Panics on error.
-func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}P(exec boil.Executor, insert bool, related *{{$txt.ForeignTable.NameGo}}) {
-	if err := o.Set{{$txt.Function.Name}}(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// Set{{$txt.Function.Name}}GP of the {{.Table | singular}} to the related item.
-// Sets o.R.{{$txt.Function.Name}} to related.
-// Adds o to related.R.{{$txt.Function.ForeignName}}.
-// Uses the global database handle and panics on error.
-func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}GP(insert bool, related *{{$txt.ForeignTable.NameGo}}) {
-	if err := o.Set{{$txt.Function.Name}}(boil.GetDB(), insert, related); err != nil {
+func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}P(ctx context.Context, insert bool, related *{{$txt.ForeignTable.NameGo}}) {
+	if err := o.Set{{$txt.Function.Name}}(ctx, insert, related); err != nil {
 		panic(boil.WrapErr(err))
 	}
 }
@@ -37,10 +20,10 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}GP(insert bool, re
 // Set{{$txt.Function.Name}} of the {{.Table | singular}} to the related item.
 // Sets o.R.{{$txt.Function.Name}} to related.
 // Adds o to related.R.{{$txt.Function.ForeignName}}.
-func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(exec boil.Executor, insert bool, related *{{$txt.ForeignTable.NameGo}}) error {
+func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Context, insert bool, related *{{$txt.ForeignTable.NameGo}}) error {
 	var err error
 	if insert {
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(ctx); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
@@ -57,7 +40,7 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(exec boil.Executo
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	if _, err = exec.Exec(updateQuery, values...); err != nil {
+	if _, err = boil.DBFromContext(ctx).ExecContext(ctx, updateQuery, values...); err != nil {
 		return errors.Wrap(err, "failed to update local table")
 	}
 
@@ -96,30 +79,12 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(exec boil.Executo
 }
 
 		{{- if .Nullable}}
-// Remove{{$txt.Function.Name}}G relationship.
-// Sets o.R.{{$txt.Function.Name}} to nil.
-// Removes o from all passed in related items' relationships struct (Optional).
-// Uses the global database handle.
-func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}G(related *{{$txt.ForeignTable.NameGo}}) error {
-	return o.Remove{{$txt.Function.Name}}(boil.GetDB(), related)
-}
-
 // Remove{{$txt.Function.Name}}P relationship.
 // Sets o.R.{{$txt.Function.Name}} to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
 // Panics on error.
-func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}P(exec boil.Executor, related *{{$txt.ForeignTable.NameGo}}) {
-	if err := o.Remove{{$txt.Function.Name}}(exec, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// Remove{{$txt.Function.Name}}GP relationship.
-// Sets o.R.{{$txt.Function.Name}} to nil.
-// Removes o from all passed in related items' relationships struct (Optional).
-// Uses the global database handle and panics on error.
-func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}GP(related *{{$txt.ForeignTable.NameGo}}) {
-	if err := o.Remove{{$txt.Function.Name}}(boil.GetDB(), related); err != nil {
+func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}P(ctx context.Context, related *{{$txt.ForeignTable.NameGo}}) {
+	if err := o.Remove{{$txt.Function.Name}}(ctx, related); err != nil {
 		panic(boil.WrapErr(err))
 	}
 }
@@ -127,11 +92,11 @@ func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}GP(related *{{$
 // Remove{{$txt.Function.Name}} relationship.
 // Sets o.R.{{$txt.Function.Name}} to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
-func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(exec boil.Executor, related *{{$txt.ForeignTable.NameGo}}) error {
+func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Context, related *{{$txt.ForeignTable.NameGo}}) error {
 	var err error
 
 	o.{{$txt.LocalTable.ColumnNameGo}}.Valid = false
-	if err = o.Update(exec, "{{.Column}}"); err != nil {
+	if err = o.Update(ctx, "{{.Column}}"); err != nil {
 		o.{{$txt.LocalTable.ColumnNameGo}}.Valid = true
 		return errors.Wrap(err, "failed to update local table")
 	}
