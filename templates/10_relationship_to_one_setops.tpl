@@ -25,11 +25,6 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Conte
 	)
 	values := []interface{}{related.{{$txt.ForeignTable.ColumnNameGo}}, o.{{$dot.Table.PKey.Columns | stringMap $dot.StringFuncs.titleCase | join ", o."}}{{"}"}}
 
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, updateQuery)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
 	if _, err = boil.ExecContext(ctx, updateQuery, values...); err != nil {
 		return errors.Wrap(err, "failed to update local table")
 	}

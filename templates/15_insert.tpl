@@ -76,11 +76,6 @@ func (o *{{$tableNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 	value := reflect.Indirect(reflect.ValueOf(o))
 	vals := queries.ValuesFromMapping(value, cache.valueMapping)
 
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, cache.query)
-		fmt.Fprintln(boil.DebugWriter, vals)
-	}
-
 	{{if .UseLastInsertID -}}
 	{{- $canLastInsertID := .Table.CanLastInsertID -}}
 	{{if $canLastInsertID -}}
@@ -120,11 +115,6 @@ func (o *{{$tableNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 		{{range .Table.PKey.Columns -}}
 		o.{{. | titleCase}},
 		{{end -}}
-	}
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, cache.retQuery)
-		fmt.Fprintln(boil.DebugWriter, identifierCols...)
 	}
 
 	err = boil.QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)

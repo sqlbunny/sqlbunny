@@ -12,11 +12,6 @@ func {{$tableNameSingular}}Exists(ctx context.Context, {{$pkArgs}}) (bool, error
 	sql := "select exists(select 1 from {{$schemaTable}} where {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Table.PKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Table.PKey.Columns}}{{end}} limit 1)"
 	{{- end}}
 
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, {{$pkNames | join ", "}})
-	}
-
 	row := boil.QueryRowContext(ctx, sql, {{$pkNames | join ", "}})
 
 	err := row.Scan(&exists)

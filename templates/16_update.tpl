@@ -53,11 +53,6 @@ func (o *{{$tableNameSingular}}) Update(ctx context.Context, whitelist ... strin
 
 	values := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), cache.valueMapping)
 
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, cache.query)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
 	_, err = boil.ExecContext(ctx, cache.query, values...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to update {{.Table.Name}} row")
@@ -118,11 +113,6 @@ func (o {{$tableNameSingular}}Slice) UpdateAll(ctx context.Context, cols M) erro
 	sql := fmt.Sprintf("UPDATE {{$schemaTable}} SET %s WHERE %s",
 		strmangle.SetParamNames("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, colNames),
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), {{if .Dialect.IndexPlaceholders}}len(colNames)+1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns, len(o)))
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, args...)
-	}
 
 	_, err := boil.ExecContext(ctx, sql, args...)
 	if err != nil {

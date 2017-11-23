@@ -126,11 +126,6 @@ func (o *{{$tableNameSingular}}) Upsert(ctx context.Context, {{if eq .DriverName
 		returns = queries.PtrsFromMapping(value, cache.retMapping)
 	}
 
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, cache.query)
-		fmt.Fprintln(boil.DebugWriter, vals)
-	}
-
 	{{if .UseLastInsertID -}}
 	{{- $canLastInsertID := .Table.CanLastInsertID -}}
 	{{if $canLastInsertID -}}
@@ -170,11 +165,6 @@ func (o *{{$tableNameSingular}}) Upsert(ctx context.Context, {{if eq .DriverName
 		{{range .Table.PKey.Columns -}}
 		o.{{. | titleCase}},
 		{{end -}}
-	}
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, cache.retQuery)
-		fmt.Fprintln(boil.DebugWriter, identifierCols...)
 	}
 
 	err = boil.QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(returns...)

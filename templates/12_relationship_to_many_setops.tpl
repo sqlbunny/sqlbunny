@@ -34,11 +34,6 @@ func (o *{{$txt.LocalTable.NameGo}}) Add{{$txt.Function.Name}}(ctx context.Conte
 			)
 			values := []interface{}{o.{{$txt.LocalTable.ColumnNameGo}}, rel.{{$foreignPKeyCols | stringMap $dot.StringFuncs.titleCase | join ", rel."}}{{"}"}}
 
-			if boil.DebugMode {
-				fmt.Fprintln(boil.DebugWriter, updateQuery)
-				fmt.Fprintln(boil.DebugWriter, values)
-			}
-
 			if _, err = boil.ExecContext(ctx, updateQuery, values...); err != nil {
 				return errors.Wrap(err, "failed to update foreign table")
 			}
@@ -54,11 +49,6 @@ func (o *{{$txt.LocalTable.NameGo}}) Add{{$txt.Function.Name}}(ctx context.Conte
 	for _, rel := range related {
 		query := "insert into {{.JoinTable | $dot.SchemaTable}} ({{.JoinLocalColumn | $dot.Quotes}}, {{.JoinForeignColumn | $dot.Quotes}}) values {{if $dot.Dialect.IndexPlaceholders}}($1, $2){{else}}(?, ?){{end}}"
 		values := []interface{}{{"{"}}o.{{$txt.LocalTable.ColumnNameGo}}, rel.{{$txt.ForeignTable.ColumnNameGo}}}
-
-		if boil.DebugMode {
-			fmt.Fprintln(boil.DebugWriter, query)
-			fmt.Fprintln(boil.DebugWriter, values)
-		}
 
 		_, err = boil.ExecContext(ctx, query, values...)
 		if err != nil {
@@ -115,11 +105,6 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Conte
 	query := "update {{.ForeignTable | $dot.SchemaTable}} set {{.ForeignColumn | $dot.Quotes}} = null where {{.ForeignColumn | $dot.Quotes}} = {{if $dot.Dialect.IndexPlaceholders}}$1{{else}}?{{end}}"
 	values := []interface{}{{"{"}}o.{{$txt.LocalTable.ColumnNameGo}}}
 	{{end -}}
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, query)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
 	_, err := boil.ExecContext(ctx, query, values...)
 	if err != nil {
 		return errors.Wrap(err, "failed to remove relationships before set")
@@ -161,11 +146,6 @@ func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Co
 	values := []interface{}{{"{"}}o.{{$txt.LocalTable.ColumnNameGo}}}
 	for _, rel := range related {
 		values = append(values, rel.{{$txt.ForeignTable.ColumnNameGo}})
-	}
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, query)
-		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
 	_, err = boil.ExecContext(ctx, query, values...)

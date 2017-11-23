@@ -1,8 +1,6 @@
 package boil
 
 import (
-	"io"
-	"os"
 	"time"
 )
 
@@ -17,9 +15,6 @@ var (
 //
 // NOTE: This should be disabled in production to avoid leaking sensitive data
 var DebugMode = false
-
-// DebugWriter is where the debug output will be sent if DebugMode is true
-var DebugWriter io.Writer = os.Stdout
 
 // SetLocation sets the global timestamp Location.
 // This is the timezone used by the generated package for the

@@ -39,10 +39,6 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.Name}}(ctx context.Context, sin
 		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
 	)
 
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
-	}
-
 	results, err := boil.QueryContext(ctx, query, args...)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load {{$txt.ForeignTable.NameGo}}")

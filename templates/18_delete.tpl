@@ -17,11 +17,6 @@ func (o *{{$tableNameSingular}}) Delete(ctx context.Context) error {
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), {{$varNameSingular}}PrimaryKeyMapping)
 	sql := "DELETE FROM {{$schemaTable}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Table.PKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Table.PKey.Columns}}{{end}}"
 
-	if boil.DebugMode {
-	fmt.Fprintln(boil.DebugWriter, sql)
-	fmt.Fprintln(boil.DebugWriter, args...)
-	}
-
 	_, err := boil.ExecContext(ctx, sql, args...)
 	if err != nil {
 	return errors.Wrap(err, "{{.PkgName}}: unable to delete from {{.Table.Name}}")
@@ -80,11 +75,6 @@ func (o {{$tableNameSingular}}Slice) DeleteAll(ctx context.Context) error {
 
 	sql := "DELETE FROM {{$schemaTable}} WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns, len(o))
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, args)
-	}
 
 	_, err := boil.ExecContext(ctx, sql, args...)
 	if err != nil {

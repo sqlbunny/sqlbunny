@@ -3,7 +3,6 @@ package queries
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/volatiletech/sqlboiler/boil"
 )
@@ -100,30 +99,18 @@ func Raw(ctx context.Context, query string, args ...interface{}) *Query {
 // Exec executes a query that does not need a row returned
 func (q *Query) Exec() (sql.Result, error) {
 	qs, args := buildQuery(q)
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, qs)
-		fmt.Fprintln(boil.DebugWriter, args)
-	}
 	return boil.ExecContext(q.ctx, qs, args...)
 }
 
 // QueryRow executes the query for the One finisher and returns a row
 func (q *Query) QueryRow() *sql.Row {
 	qs, args := buildQuery(q)
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, qs)
-		fmt.Fprintln(boil.DebugWriter, args)
-	}
 	return boil.QueryRowContext(q.ctx, qs, args...)
 }
 
 // Query executes the query for the All finisher and returns multiple rows
 func (q *Query) Query() (*sql.Rows, error) {
 	qs, args := buildQuery(q)
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, qs)
-		fmt.Fprintln(boil.DebugWriter, args)
-	}
 	return boil.QueryContext(q.ctx, qs, args...)
 }
 
