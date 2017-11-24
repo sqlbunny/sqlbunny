@@ -3,6 +3,7 @@ package boil
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/lib/pq"
@@ -108,8 +109,12 @@ func shouldRetryTransaction(err error) bool {
 // rollbackOnPanic rolls the passed transaction back if the code in the calling
 // function panics. This is needed in order to not leak transactions in case
 // of panic.
-func rollbackOnPanic(tx *sql.Tx) {
+func rollbackOnPanic(ctx context.Context, tx *sql.Tx, begin time.Time) {
 	if err := recover(); err != nil {
+		if queryLogger != nil {
+			queryLogger.LogRollback(ctx, time.Since(begin), fmt.Errorf("panic %v", err))
+		}
+
 		_ = tx.Rollback()
 		panic(err)
 	}
@@ -124,12 +129,20 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 		panic("database does not support transactions")
 	}
 
+	if queryLogger != nil {
+		ctx = queryLogger.LogBegin(ctx, readOnly)
+	}
+	begin := time.Now()
+
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{
 		Isolation: sql.LevelSerializable,
 		ReadOnly:  readOnly,
 	})
 	if err != nil {
-		// TODO rollback??
+		if queryLogger != nil {
+			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "BeginTx:"))
+		}
+		_ = tx.Rollback()
 		return err
 	}
 
@@ -137,20 +150,30 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 
 	// Since the user-provided function might panic, ensure the transaction
 	// releases all resources.
-	defer rollbackOnPanic(tx)
+	defer rollbackOnPanic(ctx, tx, begin)
 
 	err = fn(ctx2)
 	if err != nil {
 		// Error ignored here, maybe we should do something with it?
 		// Not sure what though.
+		if queryLogger != nil {
+			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "tx function returned error:"))
+		}
 		_ = tx.Rollback()
 		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		// TODO rollback?
+		if queryLogger != nil {
+			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "Commit:"))
+		}
+		_ = tx.Rollback()
 		return err
 	}
+	if queryLogger != nil {
+		queryLogger.LogCommit(ctx, time.Since(begin))
+	}
+
 	return nil
 }
