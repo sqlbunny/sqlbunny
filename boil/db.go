@@ -3,6 +3,7 @@ package boil
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -33,15 +34,32 @@ func ExecutorFromContext(ctx context.Context) Executor {
 
 func ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	exec := ExecutorFromContext(ctx)
-	return exec.ExecContext(ctx, query, args...)
+	begin := time.Now()
+	res, err := exec.ExecContext(ctx, query, args...)
+	if queryLogger != nil {
+		queryLogger.LogQuery(ctx, query, time.Since(begin), args...)
+	}
+	return res, err
 }
+
 func QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	exec := ExecutorFromContext(ctx)
-	return exec.QueryContext(ctx, query, args...)
+	begin := time.Now()
+	res, err := exec.QueryContext(ctx, query, args...)
+	if queryLogger != nil {
+		queryLogger.LogQuery(ctx, query, time.Since(begin), args...)
+	}
+	return res, err
 }
+
 func QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	exec := ExecutorFromContext(ctx)
-	return exec.QueryRowContext(ctx, query, args...)
+	begin := time.Now()
+	res := exec.QueryRowContext(ctx, query, args...)
+	if queryLogger != nil {
+		queryLogger.LogQuery(ctx, query, time.Since(begin), args...)
+	}
+	return res
 }
 
 // Atomic invokes the passed function in the context of a managed SQL

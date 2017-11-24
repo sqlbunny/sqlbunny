@@ -10,12 +10,6 @@ var (
 	timestampLocation = time.UTC
 )
 
-// DebugMode is a flag controlling whether generated sql statements and
-// debug information is outputted to the DebugWriter handle
-//
-// NOTE: This should be disabled in production to avoid leaking sensitive data
-var DebugMode = false
-
 // SetLocation sets the global timestamp Location.
 // This is the timezone used by the generated package for the
 // automated setting of created_at and updated_at columns.
