@@ -136,7 +136,7 @@ func TestToOne(t *testing.T) {
   {{- else -}}
     {{- range $table.FKeys -}}
       {{- $txt := txtsFromFKey $dot.Tables $table . -}}
-  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}ToOne{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}})
+  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}ToOne{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}})
     {{end -}}{{- /* fkey range */ -}}
   {{- end -}}{{- /* if join table */ -}}
 {{- end -}}{{- /* tables range */ -}}
@@ -150,7 +150,7 @@ func TestOneToOne(t *testing.T) {
 	{{- else -}}
 	  {{- range $table.ToOneRelationships -}}
 		{{- $txt := txtsFromOneToOne $dot.Tables $table . -}}
-  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}OneToOne{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}})
+  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}OneToOne{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}})
 	  {{end -}}{{- /* range */ -}}
 	{{- end -}}{{- /* outer if join table */ -}}
   {{- end -}}{{- /* outer tables range */ -}}
@@ -164,7 +164,7 @@ func TestToMany(t *testing.T) {
     {{- else -}}
       {{- range $table.ToManyRelationships -}}
         {{- $txt := txtsFromToMany $dot.Tables $table . -}}
-  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}ToMany{{$txt.Function.Name}})
+  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}ToMany{{$txt.Function.NameGo}})
       {{end -}}{{- /* range */ -}}
     {{- end -}}{{- /* outer if join table */ -}}
   {{- end -}}{{- /* outer tables range */ -}}
@@ -178,7 +178,7 @@ func TestToOneSet(t *testing.T) {
   {{- else -}}
     {{- range $table.FKeys -}}
       {{- $txt := txtsFromFKey $dot.Tables $table . -}}
-  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}ToOneSetOp{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}})
+  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}ToOneSetOp{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}})
     {{end -}}{{- /* fkey range */ -}}
   {{- end -}}{{- /* if join table */ -}}
 {{- end -}}{{- /* tables range */ -}}
@@ -193,7 +193,7 @@ func TestToOneRemove(t *testing.T) {
     {{- range $table.FKeys -}}
       {{- $txt := txtsFromFKey $dot.Tables $table . -}}
       {{- if $txt.ForeignKey.Nullable -}}
-  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}ToOneRemoveOp{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}})
+  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}ToOneRemoveOp{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}})
       {{end -}}{{- /* if foreign key nullable */ -}}
     {{- end -}}{{- /* fkey range */ -}}
   {{- end -}}{{- /* if join table */ -}}
@@ -208,7 +208,7 @@ func TestOneToOneSet(t *testing.T) {
 	{{- else -}}
 	  {{- range $table.ToOneRelationships -}}
 		  {{- $txt := txtsFromOneToOne $dot.Tables $table . -}}
-	t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}OneToOneSetOp{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}})
+	t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}OneToOneSetOp{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}})
 	  {{end -}}{{- /* range to one relationships */ -}}
 	{{- end -}}{{- /* outer if join table */ -}}
   {{- end -}}{{- /* outer tables range */ -}}
@@ -223,7 +223,7 @@ func TestOneToOneRemove(t *testing.T) {
 	  {{- range $table.ToOneRelationships -}}
 		{{- if .ForeignColumnNullable -}}
 		  {{- $txt := txtsFromOneToOne $dot.Tables $table . -}}
-	t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}OneToOneRemoveOp{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}})
+	t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}OneToOneRemoveOp{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}})
 		{{end -}}{{- /* if foreign column nullable */ -}}
 	  {{- end -}}{{- /* range */ -}}
 	{{- end -}}{{- /* outer if join table */ -}}
@@ -238,7 +238,7 @@ func TestToManyAdd(t *testing.T) {
     {{- else -}}
       {{- range $table.ToManyRelationships -}}
         {{- $txt := txtsFromToMany $dot.Tables $table . -}}
-  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}ToManyAddOp{{$txt.Function.Name}})
+  t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}ToManyAddOp{{$txt.Function.NameGo}})
       {{end -}}{{- /* range */ -}}
     {{- end -}}{{- /* outer if join table */ -}}
   {{- end -}}{{- /* outer tables range */ -}}
@@ -254,7 +254,7 @@ func TestToManySet(t *testing.T) {
         {{- if not (or .ForeignColumnNullable .ToJoinTable)}}
         {{- else -}}
           {{- $txt := txtsFromToMany $dot.Tables $table . -}}
-    t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}ToManySetOp{{$txt.Function.Name}})
+    t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}ToManySetOp{{$txt.Function.NameGo}})
         {{end -}}{{- /* if foreign column nullable */ -}}
       {{- end -}}{{- /* range */ -}}
     {{- end -}}{{- /* outer if join table */ -}}
@@ -271,7 +271,7 @@ func TestToManyRemove(t *testing.T) {
         {{- if not (or .ForeignColumnNullable .ToJoinTable)}}
         {{- else -}}
           {{- $txt := txtsFromToMany $dot.Tables $table . -}}
-    t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.Function.Name}}", test{{$txt.LocalTable.NameGo}}ToManyRemoveOp{{$txt.Function.Name}})
+    t.Run("{{$txt.LocalTable.NameGo}}To{{$txt.Function.NameGo}}", test{{$txt.LocalTable.NameGo}}ToManyRemoveOp{{$txt.Function.NameGo}})
         {{end -}}{{- /* if foreign column nullable */ -}}
       {{- end -}}{{- /* range */ -}}
     {{- end -}}{{- /* outer if join table */ -}}

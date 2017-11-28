@@ -5,9 +5,9 @@
 		{{- $txt := txtsFromFKey $dot.Tables $dot.Table . -}}
 		{{- $varNameSingular := $dot.Table.Name | singular | camelCase -}}
 		{{- $arg := printf "maybe%s" $txt.LocalTable.NameGo -}}
-// Load{{$txt.Function.Name}} allows an eager lookup of values, cached into the
+// Load{{$txt.Function.NameGo}} allows an eager lookup of values, cached into the
 // loaded structs of the objects.
-func ({{$varNameSingular}}L) Load{{$txt.Function.Name}}(ctx context.Context, singular bool, {{$arg}} interface{}) error {
+func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, singular bool, {{$arg}} interface{}) error {
 	var slice []*{{$txt.LocalTable.NameGo}}
 	var object *{{$txt.LocalTable.NameGo}}
 
@@ -65,7 +65,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.Name}}(ctx context.Context, sin
 	}
 
 	if singular {
-		object.R.{{$txt.Function.Name}} = resultSlice[0]
+		object.R.{{$txt.Function.NameGo}} = resultSlice[0]
 		return nil
 	}
 
@@ -76,7 +76,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.Name}}(ctx context.Context, sin
 			{{else -}}
 			if local.{{$txt.Function.LocalAssignment}} == foreign.{{$txt.Function.ForeignAssignment}} {
 			{{end -}}
-				local.R.{{$txt.Function.Name}} = foreign
+				local.R.{{$txt.Function.NameGo}} = foreign
 				break
 			}
 		}

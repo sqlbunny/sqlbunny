@@ -6,7 +6,7 @@
 	{{- $txt := txtsFromToMany $dot.Tables $table .}}
 	{{- $varNameSingular := .Table | singular | camelCase -}}
 	{{- $foreignVarNameSingular := .ForeignTable | singular | camelCase -}}
-func test{{$txt.LocalTable.NameGo}}ToMany{{$txt.Function.Name}}(t *testing.T) {
+func test{{$txt.LocalTable.NameGo}}ToMany{{$txt.Function.NameGo}}(t *testing.T) {
 	var err error
 	tx := MustTx(boil.Begin())
 	defer tx.Rollback()
@@ -55,7 +55,7 @@ func test{{$txt.LocalTable.NameGo}}ToMany{{$txt.Function.Name}}(t *testing.T) {
 	{{end}}
 
 	{{$varname := .ForeignTable | singular | camelCase -}}
-	{{$varname}}, err := a.{{$txt.Function.Name}}(tx).All()
+	{{$varname}}, err := a.{{$txt.Function.NameGo}}(tx).All()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,18 +87,18 @@ func test{{$txt.LocalTable.NameGo}}ToMany{{$txt.Function.Name}}(t *testing.T) {
 	}
 
 	slice := {{$txt.LocalTable.NameGo}}Slice{&a}
-	if err = a.L.Load{{$txt.Function.Name}}(tx, false, (*[]*{{$txt.LocalTable.NameGo}})(&slice)); err != nil {
+	if err = a.L.Load{{$txt.Function.NameGo}}(tx, false, (*[]*{{$txt.LocalTable.NameGo}})(&slice)); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.{{$txt.Function.Name}}); got != 2 {
+	if got := len(a.R.{{$txt.Function.NameGo}}); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
-	a.R.{{$txt.Function.Name}} = nil
-	if err = a.L.Load{{$txt.Function.Name}}(tx, true, &a); err != nil {
+	a.R.{{$txt.Function.NameGo}} = nil
+	if err = a.L.Load{{$txt.Function.NameGo}}(tx, true, &a); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.{{$txt.Function.Name}}); got != 2 {
+	if got := len(a.R.{{$txt.Function.NameGo}}); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 

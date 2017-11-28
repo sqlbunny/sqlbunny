@@ -7,9 +7,9 @@
 		{{- $txt := txtsFromToMany $dot.Tables $table . -}}
 		{{- $schemaForeignTable := .ForeignTable | $dot.SchemaTable}}
 
-// {{$txt.Function.Name}} retrieves all the {{.ForeignTable | singular}}'s {{$txt.ForeignTable.NameHumanReadable}} with an executor
-{{- if not (eq $txt.Function.Name $txt.ForeignTable.NamePluralGo)}} via {{.ForeignColumn}} column{{- end}}.
-func (o *{{$txt.LocalTable.NameGo}}) {{$txt.Function.Name}}(ctx context.Context, mods ...qm.QueryMod) {{$varNameSingular}}Query {
+// {{$txt.Function.NameGo}} retrieves all the {{.ForeignTable | singular}}'s {{$txt.ForeignTable.NameHumanReadable}} with an executor
+{{- if not (eq $txt.Function.NameGo $txt.ForeignTable.NamePluralGo)}} via {{.ForeignColumn}} column{{- end}}.
+func (o *{{$txt.LocalTable.NameGo}}) {{$txt.Function.NameGo}}(ctx context.Context, mods ...qm.QueryMod) {{$varNameSingular}}Query {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)

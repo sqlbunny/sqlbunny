@@ -8,11 +8,11 @@
 		{{- $foreignVarNameSingular := .ForeignTable | singular | camelCase}}
 		{{- $foreignPKeyCols := (getTable $dot.Tables .ForeignTable).PKey.Columns -}}
 		{{- $foreignSchemaTable := .ForeignTable | $dot.SchemaTable}}
-// Add{{$txt.Function.Name}} adds the given related objects to the existing relationships
+// Add{{$txt.Function.NameGo}} adds the given related objects to the existing relationships
 // of the {{$table.Name | singular}}, optionally inserting them as new records.
-// Appends related to o.R.{{$txt.Function.Name}}.
-// Sets related.R.{{$txt.Function.ForeignName}} appropriately.
-func (o *{{$txt.LocalTable.NameGo}}) Add{{$txt.Function.Name}}(ctx context.Context, insert bool, related ...*{{$txt.ForeignTable.NameGo}}) error {
+// Appends related to o.R.{{$txt.Function.NameGo}}.
+// Sets related.R.{{$txt.Function.ForeignNameGo}} appropriately.
+func (o *{{$txt.LocalTable.NameGo}}) Add{{$txt.Function.NameGo}}(ctx context.Context, insert bool, related ...*{{$txt.ForeignTable.NameGo}}) error {
 	var err error
 	for _, rel := range related {
 		if insert {
@@ -59,30 +59,30 @@ func (o *{{$txt.LocalTable.NameGo}}) Add{{$txt.Function.Name}}(ctx context.Conte
 
 	if o.R == nil {
 		o.R = &{{$varNameSingular}}R{
-			{{$txt.Function.Name}}: related,
+			{{$txt.Function.NameGo}}: related,
 		}
 	} else {
-		o.R.{{$txt.Function.Name}} = append(o.R.{{$txt.Function.Name}}, related...)
+		o.R.{{$txt.Function.NameGo}} = append(o.R.{{$txt.Function.NameGo}}, related...)
 	}
 
 	{{if .ToJoinTable -}}
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &{{$foreignVarNameSingular}}R{
-				{{$txt.Function.ForeignName}}: {{$txt.LocalTable.NameGo}}Slice{{"{"}}o{{"}"}},
+				{{$txt.Function.ForeignNameGo}}: {{$txt.LocalTable.NameGo}}Slice{{"{"}}o{{"}"}},
 			}
 		} else {
-			rel.R.{{$txt.Function.ForeignName}} = append(rel.R.{{$txt.Function.ForeignName}}, o)
+			rel.R.{{$txt.Function.ForeignNameGo}} = append(rel.R.{{$txt.Function.ForeignNameGo}}, o)
 		}
 	}
 	{{else -}}
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &{{$foreignVarNameSingular}}R{
-				{{$txt.Function.ForeignName}}: o,
+				{{$txt.Function.ForeignNameGo}}: o,
 			}
 		} else {
-			rel.R.{{$txt.Function.ForeignName}} = o
+			rel.R.{{$txt.Function.ForeignNameGo}} = o
 		}
 	}
 	{{end -}}
@@ -91,13 +91,13 @@ func (o *{{$txt.LocalTable.NameGo}}) Add{{$txt.Function.Name}}(ctx context.Conte
 }
 
 			{{- if (or .ForeignColumnNullable .ToJoinTable)}}
-// Set{{$txt.Function.Name}} removes all previously related items of the
+// Set{{$txt.Function.NameGo}} removes all previously related items of the
 // {{$table.Name | singular}} replacing them completely with the passed
 // in related items, optionally inserting them as new records.
-// Sets o.R.{{$txt.Function.ForeignName}}'s {{$txt.Function.Name}} accordingly.
-// Replaces o.R.{{$txt.Function.Name}} with related.
-// Sets related.R.{{$txt.Function.ForeignName}}'s {{$txt.Function.Name}} accordingly.
-func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Context, insert bool, related ...*{{$txt.ForeignTable.NameGo}}) error {
+// Sets o.R.{{$txt.Function.ForeignNameGo}}'s {{$txt.Function.NameGo}} accordingly.
+// Replaces o.R.{{$txt.Function.NameGo}} with related.
+// Sets related.R.{{$txt.Function.ForeignNameGo}}'s {{$txt.Function.NameGo}} accordingly.
+func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.NameGo}}(ctx context.Context, insert bool, related ...*{{$txt.ForeignTable.NameGo}}) error {
 	{{if .ToJoinTable -}}
 	query := "delete from {{.JoinTable | $dot.SchemaTable}} where {{.JoinLocalColumn | $dot.Quotes}} = {{if $dot.Dialect.IndexPlaceholders}}$1{{else}}?{{end}}"
 	values := []interface{}{{"{"}}o.{{$txt.LocalTable.ColumnNameGo}}}
@@ -111,32 +111,32 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Conte
 	}
 
 	{{if .ToJoinTable -}}
-	remove{{$txt.Function.Name}}From{{$txt.Function.ForeignName}}Slice(o, related)
+	remove{{$txt.Function.NameGo}}From{{$txt.Function.ForeignNameGo}}Slice(o, related)
 	if o.R != nil {
-		o.R.{{$txt.Function.Name}} = nil
+		o.R.{{$txt.Function.NameGo}} = nil
 	}
 	{{else -}}
 	if o.R != nil {
-		for _, rel := range o.R.{{$txt.Function.Name}} {
+		for _, rel := range o.R.{{$txt.Function.NameGo}} {
 			rel.{{$txt.ForeignTable.ColumnNameGo}}.Valid = false
 			if rel.R == nil {
 				continue
 			}
 
-			rel.R.{{$txt.Function.ForeignName}} = nil
+			rel.R.{{$txt.Function.ForeignNameGo}} = nil
 		}
 
-		o.R.{{$txt.Function.Name}} = nil
+		o.R.{{$txt.Function.NameGo}} = nil
 	}
 	{{end -}}
 
-	return o.Add{{$txt.Function.Name}}(ctx, insert, related...)
+	return o.Add{{$txt.Function.NameGo}}(ctx, insert, related...)
 }
 
-// Remove{{$txt.Function.Name}} relationships from objects passed in.
-// Removes related items from R.{{$txt.Function.Name}} (uses pointer comparison, removal does not keep order)
-// Sets related.R.{{$txt.Function.ForeignName}}.
-func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Context, related ...*{{$txt.ForeignTable.NameGo}}) error {
+// Remove{{$txt.Function.NameGo}} relationships from objects passed in.
+// Removes related items from R.{{$txt.Function.NameGo}} (uses pointer comparison, removal does not keep order)
+// Sets related.R.{{$txt.Function.ForeignNameGo}}.
+func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.NameGo}}(ctx context.Context, related ...*{{$txt.ForeignTable.NameGo}}) error {
 	var err error
 	{{if .ToJoinTable -}}
 	query := fmt.Sprintf(
@@ -157,7 +157,7 @@ func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Co
 		rel.{{$txt.ForeignTable.ColumnNameGo}}.Valid = false
 		{{if not .ToJoinTable -}}
 		if rel.R != nil {
-			rel.R.{{$txt.Function.ForeignName}} = nil
+			rel.R.{{$txt.Function.ForeignNameGo}} = nil
 		}
 		{{end -}}
 		if err = rel.Update(ctx, "{{.ForeignColumn}}"); err != nil {
@@ -167,23 +167,23 @@ func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Co
 	{{end -}}
 
 	{{if .ToJoinTable -}}
-	remove{{$txt.Function.Name}}From{{$txt.Function.ForeignName}}Slice(o, related)
+	remove{{$txt.Function.NameGo}}From{{$txt.Function.ForeignNameGo}}Slice(o, related)
 	{{end -}}
 	if o.R == nil {
 		return nil
 	}
 
 	for _, rel := range related {
-		for i, ri := range o.R.{{$txt.Function.Name}} {
+		for i, ri := range o.R.{{$txt.Function.NameGo}} {
 			if rel != ri {
 				continue
 			}
 
-			ln := len(o.R.{{$txt.Function.Name}})
+			ln := len(o.R.{{$txt.Function.NameGo}})
 			if ln > 1 && i < ln-1 {
-				o.R.{{$txt.Function.Name}}[i] = o.R.{{$txt.Function.Name}}[ln-1]
+				o.R.{{$txt.Function.NameGo}}[i] = o.R.{{$txt.Function.NameGo}}[ln-1]
 			}
-			o.R.{{$txt.Function.Name}} = o.R.{{$txt.Function.Name}}[:ln-1]
+			o.R.{{$txt.Function.NameGo}} = o.R.{{$txt.Function.NameGo}}[:ln-1]
 			break
 		}
 	}
@@ -192,12 +192,12 @@ func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Co
 }
 
 				{{if .ToJoinTable -}}
-func remove{{$txt.Function.Name}}From{{$txt.Function.ForeignName}}Slice(o *{{$txt.LocalTable.NameGo}}, related []*{{$txt.ForeignTable.NameGo}}) {
+func remove{{$txt.Function.NameGo}}From{{$txt.Function.ForeignNameGo}}Slice(o *{{$txt.LocalTable.NameGo}}, related []*{{$txt.ForeignTable.NameGo}}) {
 	for _, rel := range related {
 		if rel.R == nil {
 			continue
 		}
-		for i, ri := range rel.R.{{$txt.Function.ForeignName}} {
+		for i, ri := range rel.R.{{$txt.Function.ForeignNameGo}} {
 			{{if $txt.Function.UsesBytes -}}
 			if 0 != bytes.Compare(o.{{$txt.Function.LocalAssignment}}, ri.{{$txt.Function.LocalAssignment}}) {
 			{{else -}}
@@ -206,11 +206,11 @@ func remove{{$txt.Function.Name}}From{{$txt.Function.ForeignName}}Slice(o *{{$tx
 				continue
 			}
 
-			ln := len(rel.R.{{$txt.Function.ForeignName}})
+			ln := len(rel.R.{{$txt.Function.ForeignNameGo}})
 			if ln > 1 && i < ln-1 {
-				rel.R.{{$txt.Function.ForeignName}}[i] = rel.R.{{$txt.Function.ForeignName}}[ln-1]
+				rel.R.{{$txt.Function.ForeignNameGo}}[i] = rel.R.{{$txt.Function.ForeignNameGo}}[ln-1]
 			}
-			rel.R.{{$txt.Function.ForeignName}} = rel.R.{{$txt.Function.ForeignName}}[:ln-1]
+			rel.R.{{$txt.Function.ForeignNameGo}} = rel.R.{{$txt.Function.ForeignNameGo}}[:ln-1]
 			break
 		}
 	}

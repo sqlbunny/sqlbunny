@@ -7,10 +7,10 @@
 		{{- $foreignVarNameSingular := .ForeignTable | singular | camelCase -}}
 		{{- $foreignPKeyCols := (getTable $dot.Tables .ForeignTable).PKey.Columns -}}
 		{{- $foreignSchemaTable := .ForeignTable | $dot.SchemaTable}}
-// Set{{$txt.Function.Name}} of the {{.Table | singular}} to the related item.
-// Sets o.R.{{$txt.Function.Name}} to related.
-// Adds o to related.R.{{$txt.Function.ForeignName}}.
-func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Context, insert bool, related *{{$txt.ForeignTable.NameGo}}) error {
+// Set{{$txt.Function.NameGo}} of the {{.Table | singular}} to the related item.
+// Sets o.R.{{$txt.Function.NameGo}} to related.
+// Adds o to related.R.{{$txt.Function.ForeignNameGo}}.
+func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.NameGo}}(ctx context.Context, insert bool, related *{{$txt.ForeignTable.NameGo}}) error {
 	var err error
 
 	if insert {
@@ -43,27 +43,27 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Conte
 
 	if o.R == nil {
 		o.R = &{{$varNameSingular}}R{
-			{{$txt.Function.Name}}: related,
+			{{$txt.Function.NameGo}}: related,
 		}
 	} else {
-		o.R.{{$txt.Function.Name}} = related
+		o.R.{{$txt.Function.NameGo}} = related
 	}
 
 	if related.R == nil {
 		related.R = &{{$foreignVarNameSingular}}R{
-			{{$txt.Function.ForeignName}}: o,
+			{{$txt.Function.ForeignNameGo}}: o,
 		}
 	} else {
-		related.R.{{$txt.Function.ForeignName}} = o
+		related.R.{{$txt.Function.ForeignNameGo}} = o
 	}
 	return nil
 }
 
 		{{- if .ForeignColumnNullable}}
-// Remove{{$txt.Function.Name}} relationship.
-// Sets o.R.{{$txt.Function.Name}} to nil.
+// Remove{{$txt.Function.NameGo}} relationship.
+// Sets o.R.{{$txt.Function.NameGo}} to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
-func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Context, related *{{$txt.ForeignTable.NameGo}}) error {
+func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.NameGo}}(ctx context.Context, related *{{$txt.ForeignTable.NameGo}}) error {
 	var err error
 
 	related.{{$txt.ForeignTable.ColumnNameGo}}.Valid = false
@@ -72,12 +72,12 @@ func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Co
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.R.{{$txt.Function.Name}} = nil
+	o.R.{{$txt.Function.NameGo}} = nil
 	if related == nil || related.R == nil {
 		return nil
 	}
 
-	related.R.{{$txt.Function.ForeignName}} = nil
+	related.R.{{$txt.Function.ForeignNameGo}} = nil
 	return nil
 }
 {{end -}}{{/* if foreignkey nullable */}}

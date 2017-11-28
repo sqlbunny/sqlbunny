@@ -26,8 +26,10 @@ type TxtToOne struct {
 	}
 
 	Function struct {
-		Name        string
-		ForeignName string
+		Name          string
+		ForeignName   string
+		NameGo        string
+		ForeignNameGo string
 
 		UsesBytes bool
 
@@ -50,6 +52,8 @@ func txtsFromFKey(tables []bdb.Table, table bdb.Table, fkey bdb.ForeignKey) TxtT
 	r.ForeignTable.ColumnNameGo = strmangle.TitleCase(strmangle.Singular(fkey.ForeignColumn))
 
 	r.Function.Name, r.Function.ForeignName = txtNameToOne(fkey)
+	r.Function.NameGo = strmangle.TitleCase(r.Function.Name)
+	r.Function.ForeignNameGo = strmangle.TitleCase(r.Function.ForeignName)
 
 	if fkey.Nullable {
 		col := table.GetColumn(fkey.Column)
@@ -102,6 +106,8 @@ func txtsFromOneToOne(tables []bdb.Table, table bdb.Table, oneToOne bdb.ToOneRel
 		ForeignTable:  oneToOne.Table,
 		ForeignColumn: oneToOne.Column,
 	})
+	rel.Function.NameGo = strmangle.TitleCase(rel.Function.Name)
+	rel.Function.ForeignNameGo = strmangle.TitleCase(rel.Function.ForeignName)
 	return rel
 }
 
@@ -121,8 +127,10 @@ type TxtToMany struct {
 	}
 
 	Function struct {
-		Name        string
-		ForeignName string
+		Name          string
+		ForeignName   string
+		NameGo        string
+		ForeignNameGo string
 
 		UsesBytes bool
 
@@ -146,6 +154,8 @@ func txtsFromToMany(tables []bdb.Table, table bdb.Table, rel bdb.ToManyRelations
 	r.ForeignTable.NameHumanReadable = strings.Replace(rel.ForeignTable, "_", " ", -1)
 
 	r.Function.Name, r.Function.ForeignName = txtNameToMany(rel)
+	r.Function.NameGo = strmangle.TitleCase(r.Function.Name)
+	r.Function.ForeignNameGo = strmangle.TitleCase(r.Function.ForeignName)
 
 	col := table.GetColumn(rel.Column)
 	if rel.Nullable {
@@ -198,17 +208,16 @@ func txtsFromToMany(tables []bdb.Table, table bdb.Table, rel bdb.ToManyRelations
 func txtNameToOne(fk bdb.ForeignKey) (localFn, foreignFn string) {
 	localFn = strmangle.Singular(trimSuffixes(fk.Column))
 	fkeyIsTableName := localFn != strmangle.Singular(fk.ForeignTable)
-	localFn = strmangle.TitleCase(localFn)
 
 	if fkeyIsTableName {
-		foreignFn = localFn
+		foreignFn = localFn + "_"
 	}
 
 	plurality := strmangle.Plural
 	if fk.Unique {
 		plurality = strmangle.Singular
 	}
-	foreignFn += strmangle.TitleCase(plurality(fk.Table))
+	foreignFn += plurality(fk.Table)
 
 	return localFn, foreignFn
 }
@@ -239,37 +248,25 @@ func txtNameToMany(toMany bdb.ToManyRelationship) (localFn, foreignFn string) {
 		foreignFkey := strmangle.Singular(trimSuffixes(toMany.JoinForeignColumn))
 
 		if localFkey != strmangle.Singular(toMany.Table) {
-			foreignFn = strmangle.TitleCase(localFkey)
+			foreignFn = localFkey + "_"
 		}
-		foreignFn += strmangle.TitleCase(strmangle.Plural(toMany.Table))
+		foreignFn += strmangle.Plural(toMany.Table)
 
 		if foreignFkey != strmangle.Singular(toMany.ForeignTable) {
-			localFn = strmangle.TitleCase(foreignFkey)
+			localFn = foreignFkey + "_"
 		}
-		localFn += strmangle.TitleCase(strmangle.Plural(toMany.ForeignTable))
+		localFn += strmangle.Plural(toMany.ForeignTable)
 
 		return localFn, foreignFn
 	}
 
 	fkeyName := strmangle.Singular(trimSuffixes(toMany.ForeignColumn))
 	if fkeyName != strmangle.Singular(toMany.Table) {
-		localFn = strmangle.TitleCase(fkeyName)
+		localFn = fkeyName + "_"
 	}
-	localFn += strmangle.TitleCase(strmangle.Plural(toMany.ForeignTable))
-	foreignFn = strmangle.TitleCase(strmangle.Singular(fkeyName))
+	localFn += strmangle.Plural(toMany.ForeignTable)
+	foreignFn = strmangle.Singular(fkeyName)
 	return localFn, foreignFn
-}
-
-// mkFunctionName checks to see if the foreign key name is the same as the local table name (minus _id suffix)
-// Simple case: yes - we can name the function the same as the plural table name
-// Not simple case: We have to name the function based off the foreign key and the foreign table name
-func mkFunctionName(fkeyTableSingular, foreignTablePluralGo, fkeyColumn string, toJoinTable bool) string {
-	colName := trimSuffixes(fkeyColumn)
-	if toJoinTable || fkeyTableSingular == colName {
-		return foreignTablePluralGo
-	}
-
-	return strmangle.TitleCase(colName) + foreignTablePluralGo
 }
 
 var identifierSuffixes = []string{"_id", "_uuid", "_guid", "_oid"}

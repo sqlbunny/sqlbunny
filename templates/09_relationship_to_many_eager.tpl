@@ -6,9 +6,9 @@
 		{{- $txt := txtsFromToMany $dot.Tables $dot.Table . -}}
 		{{- $arg := printf "maybe%s" $txt.LocalTable.NameGo -}}
 		{{- $schemaForeignTable := .ForeignTable | $dot.SchemaTable}}
-// Load{{$txt.Function.Name}} allows an eager lookup of values, cached into the
+// Load{{$txt.Function.NameGo}} allows an eager lookup of values, cached into the
 // loaded structs of the objects.
-func ({{$varNameSingular}}L) Load{{$txt.Function.Name}}(ctx context.Context, singular bool, {{$arg}} interface{}) error {
+func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, singular bool, {{$arg}} interface{}) error {
 	var slice []*{{$txt.LocalTable.NameGo}}
 	var object *{{$txt.LocalTable.NameGo}}
 
@@ -93,7 +93,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.Name}}(ctx context.Context, sin
 
 	{{- end}}
 	if singular {
-		object.R.{{$txt.Function.Name}} = resultSlice
+		object.R.{{$txt.Function.NameGo}} = resultSlice
 		return nil
 	}
 
@@ -106,7 +106,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.Name}}(ctx context.Context, sin
 			{{else -}}
 			if local.{{$txt.Function.LocalAssignment}} == localJoinCol {
 			{{end -}}
-				local.R.{{$txt.Function.Name}} = append(local.R.{{$txt.Function.Name}}, foreign)
+				local.R.{{$txt.Function.NameGo}} = append(local.R.{{$txt.Function.NameGo}}, foreign)
 				break
 			}
 		}
@@ -119,7 +119,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.Name}}(ctx context.Context, sin
 			{{else -}}
 			if local.{{$txt.Function.LocalAssignment}} == foreign.{{$txt.Function.ForeignAssignment}} {
 			{{end -}}
-				local.R.{{$txt.Function.Name}} = append(local.R.{{$txt.Function.Name}}, foreign)
+				local.R.{{$txt.Function.NameGo}} = append(local.R.{{$txt.Function.NameGo}}, foreign)
 				break
 			}
 		}

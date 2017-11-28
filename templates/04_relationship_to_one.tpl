@@ -5,8 +5,8 @@
 		{{- $txt := txtsFromFKey $dot.Tables $dot.Table . -}}
 		{{- $varNameSingular := .ForeignTable | singular | camelCase}}
 
-// {{$txt.Function.Name}} pointed to by the foreign key.
-func (o *{{$txt.LocalTable.NameGo}}) {{$txt.Function.Name}}(ctx context.Context, mods ...qm.QueryMod) ({{$varNameSingular}}Query) {
+// {{$txt.Function.NameGo}} pointed to by the foreign key.
+func (o *{{$txt.LocalTable.NameGo}}) {{$txt.Function.NameGo}}(ctx context.Context, mods ...qm.QueryMod) ({{$varNameSingular}}Query) {
 	queryMods := []qm.QueryMod{
 		qm.Where("{{$txt.ForeignTable.ColumnName}}=?", o.{{$txt.LocalTable.ColumnNameGo}}),
 	}

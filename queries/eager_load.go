@@ -53,6 +53,9 @@ func eagerLoad(ctx context.Context, toLoad []string, obj interface{}, bkind bind
 	}
 	for _, toLoad := range toLoad {
 		state.toLoad = strings.Split(toLoad, ".")
+		for i := range state.toLoad {
+			state.toLoad[i] = strmangle.TitleCase(state.toLoad[i])
+		}
 		if err := state.loadRelationships(0, obj, bkind); err != nil {
 			return err
 		}

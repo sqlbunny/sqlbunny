@@ -5,7 +5,7 @@
 		{{- $txt := txtsFromOneToOne $dot.Tables $dot.Table . -}}
 		{{- $varNameSingular := .Table | singular | camelCase -}}
 		{{- $foreignVarNameSingular := .ForeignTable | singular | camelCase}}
-func test{{$txt.LocalTable.NameGo}}OneToOne{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.Name}}(t *testing.T) {
+func test{{$txt.LocalTable.NameGo}}OneToOne{{$txt.ForeignTable.NameGo}}Using{{$txt.Function.NameGo}}(t *testing.T) {
 	tx := MustTx(boil.Begin())
 	defer tx.Rollback()
 
@@ -36,7 +36,7 @@ func test{{$txt.LocalTable.NameGo}}OneToOne{{$txt.ForeignTable.NameGo}}Using{{$t
 		t.Fatal(err)
 	}
 
-	check, err := local.{{$txt.Function.Name}}(tx).One()
+	check, err := local.{{$txt.Function.NameGo}}(tx).One()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,18 +50,18 @@ func test{{$txt.LocalTable.NameGo}}OneToOne{{$txt.ForeignTable.NameGo}}Using{{$t
 	}
 
 	slice := {{$txt.LocalTable.NameGo}}Slice{&local}
-	if err = local.L.Load{{$txt.Function.Name}}(tx, false, (*[]*{{$txt.LocalTable.NameGo}})(&slice)); err != nil {
+	if err = local.L.Load{{$txt.Function.NameGo}}(tx, false, (*[]*{{$txt.LocalTable.NameGo}})(&slice)); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.{{$txt.Function.Name}} == nil {
+	if local.R.{{$txt.Function.NameGo}} == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
-	local.R.{{$txt.Function.Name}} = nil
-	if err = local.L.Load{{$txt.Function.Name}}(tx, true, &local); err != nil {
+	local.R.{{$txt.Function.NameGo}} = nil
+	if err = local.L.Load{{$txt.Function.NameGo}}(tx, true, &local); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.{{$txt.Function.Name}} == nil {
+	if local.R.{{$txt.Function.NameGo}} == nil {
 		t.Error("struct should have been eager loaded")
 	}
 }

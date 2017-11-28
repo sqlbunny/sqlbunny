@@ -7,10 +7,10 @@
 		{{- $varNameSingular := .Table | singular | camelCase}}
 		{{- $schemaTable := .Table | $dot.SchemaTable}}
 
-// Set{{$txt.Function.Name}} of the {{.Table | singular}} to the related item.
-// Sets o.R.{{$txt.Function.Name}} to related.
-// Adds o to related.R.{{$txt.Function.ForeignName}}.
-func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Context, insert bool, related *{{$txt.ForeignTable.NameGo}}) error {
+// Set{{$txt.Function.NameGo}} of the {{.Table | singular}} to the related item.
+// Sets o.R.{{$txt.Function.NameGo}} to related.
+// Adds o to related.R.{{$txt.Function.ForeignNameGo}}.
+func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.NameGo}}(ctx context.Context, insert bool, related *{{$txt.ForeignTable.NameGo}}) error {
 	var err error
 	if insert {
 		if err = related.Insert(ctx); err != nil {
@@ -36,27 +36,27 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Conte
 
 	if o.R == nil {
 		o.R = &{{$varNameSingular}}R{
-			{{$txt.Function.Name}}: related,
+			{{$txt.Function.NameGo}}: related,
 		}
 	} else {
-		o.R.{{$txt.Function.Name}} = related
+		o.R.{{$txt.Function.NameGo}} = related
 	}
 
 	{{if .Unique -}}
 	if related.R == nil {
 		related.R = &{{$foreignNameSingular}}R{
-			{{$txt.Function.ForeignName}}: o,
+			{{$txt.Function.ForeignNameGo}}: o,
 		}
 	} else {
-		related.R.{{$txt.Function.ForeignName}} = o
+		related.R.{{$txt.Function.ForeignNameGo}} = o
 	}
 	{{else -}}
 	if related.R == nil {
 		related.R = &{{$foreignNameSingular}}R{
-			{{$txt.Function.ForeignName}}: {{$txt.LocalTable.NameGo}}Slice{{"{"}}o{{"}"}},
+			{{$txt.Function.ForeignNameGo}}: {{$txt.LocalTable.NameGo}}Slice{{"{"}}o{{"}"}},
 		}
 	} else {
-		related.R.{{$txt.Function.ForeignName}} = append(related.R.{{$txt.Function.ForeignName}}, o)
+		related.R.{{$txt.Function.ForeignNameGo}} = append(related.R.{{$txt.Function.ForeignNameGo}}, o)
 	}
 	{{- end}}
 
@@ -64,10 +64,10 @@ func (o *{{$txt.LocalTable.NameGo}}) Set{{$txt.Function.Name}}(ctx context.Conte
 }
 
 		{{- if .Nullable}}
-// Remove{{$txt.Function.Name}} relationship.
-// Sets o.R.{{$txt.Function.Name}} to nil.
+// Remove{{$txt.Function.NameGo}} relationship.
+// Sets o.R.{{$txt.Function.NameGo}} to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
-func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Context, related *{{$txt.ForeignTable.NameGo}}) error {
+func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.NameGo}}(ctx context.Context, related *{{$txt.ForeignTable.NameGo}}) error {
 	var err error
 
 	o.{{$txt.LocalTable.ColumnNameGo}}.Valid = false
@@ -76,15 +76,15 @@ func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Co
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.R.{{$txt.Function.Name}} = nil
+	o.R.{{$txt.Function.NameGo}} = nil
 	if related == nil || related.R == nil {
 		return nil
 	}
 
 	{{if .Unique -}}
-	related.R.{{$txt.Function.ForeignName}} = nil
+	related.R.{{$txt.Function.ForeignNameGo}} = nil
 	{{else -}}
-	for i, ri := range related.R.{{$txt.Function.ForeignName}} {
+	for i, ri := range related.R.{{$txt.Function.ForeignNameGo}} {
 		{{if $txt.Function.UsesBytes -}}
 		if 0 != bytes.Compare(o.{{$txt.Function.LocalAssignment}}, ri.{{$txt.Function.LocalAssignment}}) {
 		{{else -}}
@@ -93,11 +93,11 @@ func (o *{{$txt.LocalTable.NameGo}}) Remove{{$txt.Function.Name}}(ctx context.Co
 			continue
 		}
 
-		ln := len(related.R.{{$txt.Function.ForeignName}})
+		ln := len(related.R.{{$txt.Function.ForeignNameGo}})
 		if ln > 1 && i < ln-1 {
-			related.R.{{$txt.Function.ForeignName}}[i] = related.R.{{$txt.Function.ForeignName}}[ln-1]
+			related.R.{{$txt.Function.ForeignNameGo}}[i] = related.R.{{$txt.Function.ForeignNameGo}}[ln-1]
 		}
-		related.R.{{$txt.Function.ForeignName}} = related.R.{{$txt.Function.ForeignName}}[:ln-1]
+		related.R.{{$txt.Function.ForeignNameGo}} = related.R.{{$txt.Function.ForeignNameGo}}[:ln-1]
 		break
 	}
 	{{end -}}

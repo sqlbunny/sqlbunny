@@ -31,8 +31,10 @@ func TestTxtsFromOne(t *testing.T) {
 	expect.ForeignTable.ColumnName = "id"
 	expect.ForeignTable.ColumnNameGo = "ID"
 
-	expect.Function.Name = "Pilot"
-	expect.Function.ForeignName = "Jet"
+	expect.Function.Name = "pilot"
+	expect.Function.ForeignName = "jet"
+	expect.Function.NameGo = "Pilot"
+	expect.Function.ForeignNameGo = "Jet"
 
 	expect.Function.LocalAssignment = "PilotID.Int"
 	expect.Function.ForeignAssignment = "ID"
@@ -53,8 +55,10 @@ func TestTxtsFromOne(t *testing.T) {
 	expect.ForeignTable.ColumnName = "id"
 	expect.ForeignTable.ColumnNameGo = "ID"
 
-	expect.Function.Name = "Airport"
-	expect.Function.ForeignName = "Jets"
+	expect.Function.Name = "airport"
+	expect.Function.ForeignName = "jets"
+	expect.Function.NameGo = "Airport"
+	expect.Function.ForeignNameGo = "Jets"
 
 	expect.Function.LocalAssignment = "AirportID"
 	expect.Function.ForeignAssignment = "ID"
@@ -102,8 +106,10 @@ func TestTxtsFromOneToOne(t *testing.T) {
 	expect.ForeignTable.ColumnName = "pilot_id"
 	expect.ForeignTable.ColumnNameGo = "PilotID"
 
-	expect.Function.Name = "Jet"
-	expect.Function.ForeignName = "Pilot"
+	expect.Function.Name = "jet"
+	expect.Function.ForeignName = "pilot"
+	expect.Function.NameGo = "Jet"
+	expect.Function.ForeignNameGo = "Pilot"
 
 	expect.Function.LocalAssignment = "ID"
 	expect.Function.ForeignAssignment = "PilotID.Int"
@@ -133,8 +139,10 @@ func TestTxtsFromMany(t *testing.T) {
 	expect.ForeignTable.ColumnNameGo = "PilotID"
 	expect.ForeignTable.Slice = "LicenseSlice"
 
-	expect.Function.Name = "Licenses"
-	expect.Function.ForeignName = "Pilot"
+	expect.Function.Name = "licenses"
+	expect.Function.ForeignName = "pilot"
+	expect.Function.NameGo = "Licenses"
+	expect.Function.ForeignNameGo = "Pilot"
 	expect.Function.LocalAssignment = "ID"
 	expect.Function.ForeignAssignment = "PilotID"
 
@@ -153,8 +161,10 @@ func TestTxtsFromMany(t *testing.T) {
 	expect.ForeignTable.ColumnNameGo = "ID"
 	expect.ForeignTable.Slice = "LanguageSlice"
 
-	expect.Function.Name = "Languages"
-	expect.Function.ForeignName = "Pilots"
+	expect.Function.Name = "languages"
+	expect.Function.ForeignName = "pilots"
+	expect.Function.NameGo = "Languages"
+	expect.Function.ForeignNameGo = "Pilots"
 	expect.Function.LocalAssignment = "ID"
 	expect.Function.ForeignAssignment = "ID"
 
@@ -177,21 +187,21 @@ func TestTxtNameToOne(t *testing.T) {
 		LocalFn   string
 		ForeignFn string
 	}{
-		{"jets", "airport_id", false, "airports", "id", true, "Airport", "Jets"},
-		{"jets", "airport_id", true, "airports", "id", true, "Airport", "Jet"},
+		{"jets", "airport_id", false, "airports", "id", true, "airport", "jets"},
+		{"jets", "airport_id", true, "airports", "id", true, "airport", "jet"},
 
-		{"jets", "holiday_id", false, "airports", "id", true, "Holiday", "HolidayJets"},
-		{"jets", "holiday_id", true, "airports", "id", true, "Holiday", "HolidayJet"},
+		{"jets", "holiday_id", false, "airports", "id", true, "holiday", "holiday_jets"},
+		{"jets", "holiday_id", true, "airports", "id", true, "holiday", "holiday_jet"},
 
-		{"jets", "holiday_airport_id", false, "airports", "id", true, "HolidayAirport", "HolidayAirportJets"},
-		{"jets", "holiday_airport_id", true, "airports", "id", true, "HolidayAirport", "HolidayAirportJet"},
+		{"jets", "holiday_airport_id", false, "airports", "id", true, "holiday_airport", "holiday_airport_jets"},
+		{"jets", "holiday_airport_id", true, "airports", "id", true, "holiday_airport", "holiday_airport_jet"},
 
-		{"jets", "jet_id", false, "jets", "id", true, "Jet", "Jets"},
-		{"jets", "jet_id", true, "jets", "id", true, "Jet", "Jet"},
-		{"jets", "plane_id", false, "jets", "id", true, "Plane", "PlaneJets"},
-		{"jets", "plane_id", true, "jets", "id", true, "Plane", "PlaneJet"},
+		{"jets", "jet_id", false, "jets", "id", true, "jet", "jets"},
+		{"jets", "jet_id", true, "jets", "id", true, "jet", "jet"},
+		{"jets", "plane_id", false, "jets", "id", true, "plane", "plane_jets"},
+		{"jets", "plane_id", true, "jets", "id", true, "plane", "plane_jet"},
 
-		{"race_result_scratchings", "results_id", false, "race_results", "id", true, "Result", "ResultRaceResultScratchings"},
+		{"race_result_scratchings", "results_id", false, "race_results", "id", true, "result", "result_race_result_scratchings"},
 	}
 
 	for i, test := range tests {
@@ -227,20 +237,20 @@ func TestTxtNameToMany(t *testing.T) {
 		LocalFn   string
 		ForeignFn string
 	}{
-		{"airports", "id", "jets", "airport_id", false, "", "", "Jets", "Airport"},
-		{"airports", "id", "jets", "holiday_airport_id", false, "", "", "HolidayAirportJets", "HolidayAirport"},
+		{"airports", "id", "jets", "airport_id", false, "", "", "jets", "airport"},
+		{"airports", "id", "jets", "holiday_airport_id", false, "", "", "holiday_airport_jets", "holiday_airport"},
 
-		{"jets", "id", "jets", "jet_id", false, "", "", "Jets", "Jet"},
-		{"jets", "id", "jets", "plane_id", false, "", "", "PlaneJets", "Plane"},
+		{"jets", "id", "jets", "jet_id", false, "", "", "jets", "jet"},
+		{"jets", "id", "jets", "plane_id", false, "", "", "plane_jets", "plane"},
 
-		{"pilots", "id", "languages", "id", true, "pilot_id", "language_id", "Languages", "Pilots"},
-		{"pilots", "id", "languages", "id", true, "captain_id", "lingo_id", "LingoLanguages", "CaptainPilots"},
+		{"pilots", "id", "languages", "id", true, "pilot_id", "language_id", "languages", "pilots"},
+		{"pilots", "id", "languages", "id", true, "captain_id", "lingo_id", "lingo_languages", "captain_pilots"},
 
-		{"pilots", "id", "pilots", "id", true, "pilot_id", "mentor_id", "MentorPilots", "Pilots"},
-		{"pilots", "id", "pilots", "id", true, "mentor_id", "pilot_id", "Pilots", "MentorPilots"},
-		{"pilots", "id", "pilots", "id", true, "captain_id", "mentor_id", "MentorPilots", "CaptainPilots"},
+		{"pilots", "id", "pilots", "id", true, "pilot_id", "mentor_id", "mentor_pilots", "pilots"},
+		{"pilots", "id", "pilots", "id", true, "mentor_id", "pilot_id", "pilots", "mentor_pilots"},
+		{"pilots", "id", "pilots", "id", true, "captain_id", "mentor_id", "mentor_pilots", "captain_pilots"},
 
-		{"race_results", "id", "race_result_scratchings", "results_id", false, "", "", "ResultRaceResultScratchings", "Result"},
+		{"race_results", "id", "race_result_scratchings", "results_id", false, "", "", "result_race_result_scratchings", "result"},
 	}
 
 	for i, test := range tests {
