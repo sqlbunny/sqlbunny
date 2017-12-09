@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	null "gopkg.in/volatiletech/null.v6"
+	null "github.com/volatiletech/sqlboiler/types/null"
 
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"

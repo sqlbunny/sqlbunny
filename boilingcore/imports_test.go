@@ -246,7 +246,7 @@ func TestCombineTypeImports(t *testing.T) {
 		},
 		thirdParty: importList{
 			`"github.com/volatiletech/sqlboiler/boil"`,
-			`"gopkg.in/volatiletech/null.v6"`,
+			`"github.com/volatiletech/sqlboiler/types/null"`,
 		},
 	}
 
@@ -281,7 +281,7 @@ func TestCombineTypeImports(t *testing.T) {
 		},
 		thirdParty: importList{
 			`"github.com/volatiletech/sqlboiler/boil"`,
-			`"gopkg.in/volatiletech/null.v6"`,
+			`"github.com/volatiletech/sqlboiler/types/null"`,
 		},
 	}
 
@@ -297,7 +297,7 @@ func TestCombineImports(t *testing.T) {
 
 	a := imports{
 		standard:   importList{"fmt"},
-		thirdParty: importList{"github.com/volatiletech/sqlboiler", "gopkg.in/volatiletech/null.v6"},
+		thirdParty: importList{"github.com/volatiletech/sqlboiler", "github.com/volatiletech/sqlboiler/types/null"},
 	}
 	b := imports{
 		standard:   importList{"os"},
@@ -309,8 +309,8 @@ func TestCombineImports(t *testing.T) {
 	if c.standard[0] != "fmt" && c.standard[1] != "os" {
 		t.Errorf("Wanted: fmt, os got: %#v", c.standard)
 	}
-	if c.thirdParty[0] != "github.com/volatiletech/sqlboiler" && c.thirdParty[1] != "gopkg.in/volatiletech/null.v6" {
-		t.Errorf("Wanted: github.com/volatiletech/sqlboiler, gopkg.in/volatiletech/null.v6 got: %#v", c.thirdParty)
+	if c.thirdParty[0] != "github.com/volatiletech/sqlboiler" && c.thirdParty[1] != "github.com/volatiletech/sqlboiler/types/null" {
+		t.Errorf("Wanted: github.com/volatiletech/sqlboiler, github.com/volatiletech/sqlboiler/types/null got: %#v", c.thirdParty)
 	}
 }
 

@@ -312,55 +312,58 @@ func newImporter() importer {
 	// TranslateColumnType to see the type assignments.
 	imp.BasedOnType = mapImports{
 		"null.Float32": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Float64": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Int": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Int8": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Int16": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Int32": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Int64": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Uint": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Uint8": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Uint16": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Uint32": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Uint64": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.String": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Bool": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Time": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.JSON": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"null.Bytes": {
-			thirdParty: importList{`"gopkg.in/volatiletech/null.v6"`},
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
+		},
+		"null.ID": {
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types/null"`},
 		},
 		"time.Time": {
 			standard: importList{`"time"`},
@@ -386,14 +389,14 @@ func newImporter() importer {
 		"types.Hstore": {
 			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types"`},
 		},
-		"ktypes.ID": {
-			thirdParty: importList{`ktypes "github.com/KernelPay/kernel/types"`},
+		"types.ID": {
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types"`},
 		},
-		"ktypes.Amount": {
-			thirdParty: importList{`ktypes "github.com/KernelPay/kernel/types"`},
+		"types.Amount": {
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types"`},
 		},
-		"ktypes.Currency": {
-			thirdParty: importList{`ktypes "github.com/KernelPay/kernel/types"`},
+		"types.Currency": {
+			thirdParty: importList{`"github.com/volatiletech/sqlboiler/types"`},
 		},
 	}
 

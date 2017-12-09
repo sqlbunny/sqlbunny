@@ -324,13 +324,13 @@ func (p *PostgresDriver) TranslateColumnType(c bdb.Column) bdb.Column {
 		switch c.DBType {
 		case "bigint", "bigserial":
 			if hasNameSuffix(c.Name, "amount") {
-				c.Type = "*ktypes.Amount"
+				c.Type = "*types.Amount" // TODO
 			} else {
 				c.Type = "null.Int64"
 			}
 		case "integer", "serial":
 			if hasNameSuffix(c.Name, "currency") {
-				c.Type = "*ktypes.Currency"
+				c.Type = "*types.Currency" // TODO
 			} else {
 				c.Type = "null.Int"
 			}
@@ -346,7 +346,7 @@ func (p *PostgresDriver) TranslateColumnType(c bdb.Column) bdb.Column {
 			c.Type = "null.Byte"
 		case "bytea":
 			if hasNameSuffix(c.Name, "id") {
-				c.Type = "ktypes.ID"
+				c.Type = "null.ID"
 			} else {
 				c.Type = "null.Bytes"
 			}
@@ -378,13 +378,13 @@ func (p *PostgresDriver) TranslateColumnType(c bdb.Column) bdb.Column {
 		switch c.DBType {
 		case "bigint", "bigserial":
 			if hasNameSuffix(c.Name, "amount") {
-				c.Type = "ktypes.Amount"
+				c.Type = "types.Amount"
 			} else {
 				c.Type = "int64"
 			}
 		case "integer", "serial":
 			if hasNameSuffix(c.Name, "currency") {
-				c.Type = "ktypes.Currency"
+				c.Type = "types.Currency"
 			} else {
 				c.Type = "int"
 			}
@@ -402,7 +402,7 @@ func (p *PostgresDriver) TranslateColumnType(c bdb.Column) bdb.Column {
 			c.Type = "types.JSON"
 		case "bytea":
 			if hasNameSuffix(c.Name, "id") {
-				c.Type = "ktypes.ID"
+				c.Type = "types.ID"
 			} else {
 				c.Type = "[]byte"
 			}

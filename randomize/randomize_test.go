@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	null "gopkg.in/volatiletech/null.v6"
+	null "github.com/volatiletech/sqlboiler/types/null"
 )
 
 func TestRandomizeStruct(t *testing.T) {
