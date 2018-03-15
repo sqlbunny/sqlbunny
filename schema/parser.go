@@ -56,9 +56,13 @@ func MakeGrammar() *p.Grammar {
 		p.Require(NL),
 	)
 	gField.Node(func(m p.Match) (p.Match, error) {
+		tags, err := TagsFromString(p.String(p.GetTag(m, "Tag")))
+		if err != nil {
+			return nil, err
+		}
 		f := &Field{
 			Name:       p.GetTag(m, "Name").(string),
-			Tag:        p.String(p.GetTag(m, "Tag")),
+			Tags:       tags,
 			typeName:   p.GetTag(m, "Type").(string),
 			Nullable:   p.GetTag(m, "Null") != nil,
 			index:      p.GetTag(m, "Index") != nil,

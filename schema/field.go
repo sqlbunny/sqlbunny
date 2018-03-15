@@ -1,14 +1,12 @@
 package schema
 
-import "reflect"
-
 // Field holds information about a database field.
 // Types are Go types, converted by TranslateFieldType.
 type Field struct {
 	Name string
 
 	Type Type
-	Tag  string
+	Tags Tags
 
 	Nullable bool
 
@@ -20,9 +18,26 @@ type Field struct {
 	foreignKey string
 }
 
+func (f *Field) GenerateTags() string {
+	if _, ok := f.Tags["boil"]; !ok {
+		f.Tags["boil"] = f.Name
+		if f.IsStruct() {
+			f.Tags["boil"] += ","
+		}
+	}
+	if _, ok := f.Tags["json"]; !ok {
+		f.Tags["json"] = f.Name
+		if f.Nullable {
+			f.Tags["json"] += ",omitempty"
+		}
+	}
+	return f.Tags.String()
+}
+
+//generateTags $dot.Tags $field.Name}}boil:"{{$field.Name}}" json:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name}}" yaml:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" {{$field.Tag}}
+
 func (f *Field) HasTag(tag string) bool {
-	z := reflect.StructTag(f.Tag)
-	_, ok := z.Lookup(tag)
+	_, ok := f.Tags[tag]
 	return ok
 }
 

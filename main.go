@@ -56,7 +56,6 @@ func main() {
 	cmdGen.Flags().BoolVarP(&cmdConfig.NoTests, "no-tests", "", false, "Disable generated go test files")
 	cmdGen.Flags().BoolVarP(&cmdConfig.NoHooks, "no-hooks", "", false, "Disable hooks feature for your models")
 	cmdGen.Flags().BoolVarP(&cmdConfig.Wipe, "wipe", "", false, "Delete the output folder (rm -rf) before generation to ensure sanity")
-	cmdGen.Flags().StringVarP(&cmdConfig.StructTagCasing, "struct-tag-casing", "", "snake", "Decides the casing for go structure tag names. camel or snake (default snake)")
 
 	// hide flags not recommended for use
 	rootCmd.PersistentFlags().MarkHidden("replace")
