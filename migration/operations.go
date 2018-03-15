@@ -14,6 +14,8 @@ func getDefaultForType(dbType string) string {
 	switch dbType {
 	case "integer", "bigint":
 		return "0"
+	case "boolean":
+		return "false"
 	case "varchar", "text":
 		return "''"
 	case "bytea":

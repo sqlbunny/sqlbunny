@@ -30,12 +30,8 @@ import {{$import}}
 // {{$modelName}} is an object representing the database model.
 type {{$modelName}} struct {
 	{{range $field := .Model.Fields }}
-	{{- if eq $dot.StructTagCasing "camel"}}
-	{{titleCase $field.Name}} {{$field.TypeGo}} `{{generateTags $dot.Tags $field.Name}}boil:"{{$field.Name}}{{ if $field.IsStruct }},{{end}}" json:"{{$field.Name | camelCase}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name | camelCase}}" yaml:"{{$field.Name | camelCase}}{{if $field.Nullable}},omitempty{{end}} {{$field.Tag}}`
-	{{- else -}}
-	{{titleCase $field.Name}} {{$field.TypeGo}} `{{generateTags $dot.Tags $field.Name}}boil:"{{$field.Name}}{{ if $field.IsStruct }},{{end}}" json:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name}}" yaml:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" {{$field.Tag}}`
-	{{end -}}
-	{{end -}}
+    {{titleCase $field.Name}} {{$field.TypeGo}} `{{$field.GenerateTags}}`
+	{{- end -}}
 	{{- if .Model.IsJoinModel -}}
 	{{- else}}
 	R *{{$modelNameCamel}}R `{{generateIgnoreTags $dot.Tags}}boil:"-" json:"-" toml:"-" yaml:"-"`
