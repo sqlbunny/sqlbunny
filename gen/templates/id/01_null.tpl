@@ -111,3 +111,10 @@ func (u Null{{$modelName}}ID) Value() (driver.Value, error) {
 	}
 	return u.ID.Value()
 }
+
+func (u Null{{$modelName}}ID) String() string {
+	if !u.Valid {
+		return "<null {{$modelName}}ID>"
+	}
+	return u.ID.String()
+}
