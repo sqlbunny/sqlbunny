@@ -1,6 +1,6 @@
-FROM centurylink/ca-certs
+FROM ubuntu:16.04
 
-COPY sqlboiler /
+COPY sqlboiler /usr/local/bin
 
 USER 1000
-ENTRYPOINT ["/sqlboiler"]
+ENTRYPOINT ["/usr/local/bin/sqlboiler"]
