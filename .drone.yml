@@ -1,0 +1,14 @@
+workspace:
+  base: /go
+  path: src/github.com/KernelPay/sqlboiler
+
+pipeline:
+  build:
+    image: golang:1.9
+    commands:
+    - go get .
+    - CGO_ENABLED=0 go build .
+  docker:
+    image: eu.gcr.io/kernel-prod/drone-docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
