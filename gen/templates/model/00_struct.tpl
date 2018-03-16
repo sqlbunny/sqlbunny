@@ -34,8 +34,8 @@ type {{$modelName}} struct {
 	{{- end -}}
 	{{- if .Model.IsJoinModel -}}
 	{{- else}}
-	R *{{$modelNameCamel}}R `{{generateIgnoreTags $dot.Tags}}boil:"-" json:"-" toml:"-" yaml:"-"`
-	L {{$modelNameCamel}}L `{{generateIgnoreTags $dot.Tags}}boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *{{$modelNameCamel}}R `boil:"-" json:"-" toml:"-" yaml:"-"`
+	L {{$modelNameCamel}}L `boil:"-" json:"-" toml:"-" yaml:"-"`
 	{{end -}}
 }
 

@@ -12,11 +12,7 @@
 type {{$modelNameCamel}}JSON struct {
 	{{range $field := .Model.Fields }}
     {{- if not ( $field.HasTag "private" ) }}
-	{{ if eq $dot.StructTagCasing "camel" -}}
-	{{titleCase $field.Name}} {{$field.TypeGo}} `{{generateTags $dot.Tags $field.Name}}boil:"{{$field.Name}}" json:"{{$field.Name | camelCase}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name | camelCase}}" yaml:"{{$field.Name | camelCase}}{{if $field.Nullable}},omitempty{{end}}"`
-	{{- else -}}
-	{{titleCase $field.Name}} {{$field.TypeGo}} `{{generateTags $dot.Tags $field.Name}}boil:"{{$field.Name}}" json:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name}}" yaml:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}"`
-	{{- end -}}
+	{{titleCase $field.Name}} {{$field.TypeGo}} `json:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name}}" yaml:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}"`
     {{- end }}
 	{{- end }}
 
