@@ -8,8 +8,8 @@
 
 {{ if .Model.IsStandardModel }}
 
-// {{$modelNameCamel}}JSON is an object representing the JSON serialized form of {{$modelName}}.
-type {{$modelNameCamel}}JSON struct {
+// {{$modelName}}JSON is an object representing the JSON serialized form of {{$modelName}}.
+type {{$modelName}}JSON struct {
 	{{range $field := .Model.Fields }}
     {{- if not ( $field.HasTag "private" ) }}
 	{{titleCase $field.Name}} {{$field.TypeGo}} `json:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name}}" yaml:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}"`
@@ -25,12 +25,12 @@ type {{$modelNameCamel}}JSON struct {
 }
 
 
-func (o *{{$modelName}}) MarshalJSON() ([]byte, error) {
+func (o *{{$modelName}}) JSON() *{{$modelName}}JSON {
     if o == nil {
-        return []byte("null"), nil
+        return nil
     }
 
-    res := &{{$modelNameCamel}}JSON{
+    res := &{{$modelName}}JSON{
         {{- range $field := .Model.Fields -}}
         {{- if not ( $field.HasTag "private" ) }}
         {{titleCase $field.Name}}: o.{{titleCase $field.Name}},
@@ -47,7 +47,11 @@ func (o *{{$modelName}}) MarshalJSON() ([]byte, error) {
 
     res.CreatedAt = o.CreatedAt()
 
-    return json.Marshal(res)
+    return res
+}
+
+func (o *{{$modelName}}) MarshalJSON() ([]byte, error) {
+    return json.Marshal(o.JSON())
 }
 
 func (o {{$modelName}}Slice) ToModelSlice() []boil.Model {
@@ -66,6 +70,9 @@ func (o *{{$modelName}}) CreatedAt() time.Time {
 }
 
 func (o *{{$modelName}}) GetID() boil.ID {
+    return o.ID
+}
+func (o *{{$modelName}}JSON) GetID() boil.ID {
     return o.ID
 }
 {{ end }}
