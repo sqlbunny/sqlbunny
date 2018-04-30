@@ -56,6 +56,9 @@ func (id *IDData) Decode(src []byte) bool {
 			return false
 		}
 	}
+	if idDec[src[19]]&0x0F != 0 {
+		return false
+	}
 	id[0] = idDec[src[0]]<<3 | idDec[src[1]]>>2
 	id[1] = idDec[src[1]]<<6 | idDec[src[2]]<<1 | idDec[src[3]]>>4
 	id[2] = idDec[src[3]]<<4 | idDec[src[4]]>>1
