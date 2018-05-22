@@ -38,7 +38,7 @@ func Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, e
 	begin := time.Now()
 	res, err := exec.ExecContext(ctx, query, args...)
 	if queryLogger != nil {
-		queryLogger.LogQuery(ctx, query, time.Since(begin), args...)
+		queryLogger.LogQuery(ctx, query, time.Since(begin), err, args...)
 	}
 	return res, err
 }
@@ -48,7 +48,7 @@ func Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, e
 	begin := time.Now()
 	res, err := exec.QueryContext(ctx, query, args...)
 	if queryLogger != nil {
-		queryLogger.LogQuery(ctx, query, time.Since(begin), args...)
+		queryLogger.LogQuery(ctx, query, time.Since(begin), err, args...)
 	}
 	return res, err
 }
@@ -58,7 +58,7 @@ func QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	begin := time.Now()
 	res := exec.QueryRowContext(ctx, query, args...)
 	if queryLogger != nil {
-		queryLogger.LogQuery(ctx, query, time.Since(begin), args...)
+		queryLogger.LogQuery(ctx, query, time.Since(begin), nil, args...) // TODO how to get the error.
 	}
 	return res
 }
@@ -109,66 +109,130 @@ func shouldRetryTransaction(err error) bool {
 // rollbackOnPanic rolls the passed transaction back if the code in the calling
 // function panics. This is needed in order to not leak transactions in case
 // of panic.
-func rollbackOnPanic(ctx context.Context, tx *sql.Tx, begin time.Time) {
+func rollbackOnPanic(ctx context.Context, tx *txNode, begin time.Time) {
 	if err := recover(); err != nil {
 		if queryLogger != nil {
 			queryLogger.LogRollback(ctx, time.Since(begin), fmt.Errorf("panic %v", err))
 		}
 
-		_ = tx.Rollback()
+		err2 := tx.Rollback()
+		if err2 != nil {
+			panic(err2)
+		}
 		panic(err)
 	}
+}
+
+type txNode struct {
+	dbTx   *sql.Tx
+	parent *txNode
+	child  *txNode
+	depth  int
+}
+
+func (t *txNode) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	if t.child != nil {
+		panic("Transaction has a subtransaction active, can't run statements in it.")
+	}
+	return t.dbTx.ExecContext(ctx, query, args...)
+}
+func (t *txNode) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	if t.child != nil {
+		panic("Transaction has a subtransaction active, can't run statements in it.")
+	}
+	return t.dbTx.QueryContext(ctx, query, args...)
+}
+func (t *txNode) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	if t.child != nil {
+		panic("Transaction has a subtransaction active, can't run statements in it.")
+	}
+	return t.dbTx.QueryRowContext(ctx, query, args...)
+}
+
+func (t *txNode) Commit() error {
+	if t.parent == nil {
+		return t.dbTx.Commit()
+	}
+	_, err := t.dbTx.Exec(fmt.Sprintf("RELEASE SAVEPOINT savepoint_%d", t.depth))
+	t.parent.child = nil
+	return err
+}
+
+func (t *txNode) Rollback() error {
+	if t.parent == nil {
+		return t.dbTx.Rollback()
+	}
+	_, err := t.dbTx.Exec(fmt.Sprintf("ROLLBACK TO SAVEPOINT savepoint_%d", t.depth))
+	t.parent.child = nil
+	return err
 }
 
 // Transaction invokes the passed function in the context of a managed SQL
 // transaction.  Any errors returned from
 // the user-supplied function are returned from this function.
 func doTransaction(ctx context.Context, fn func(ctx context.Context) error, readOnly bool) error {
-	db, ok := ExecutorFromContext(ctx).(*sql.DB)
-	if !ok {
-		panic("database does not support transactions")
-	}
-
 	if queryLogger != nil {
 		ctx = queryLogger.LogBegin(ctx, readOnly)
 	}
 	begin := time.Now()
 
-	tx, err := db.BeginTx(ctx, &sql.TxOptions{
-		Isolation: sql.LevelSerializable,
-		ReadOnly:  readOnly,
-	})
-	if err != nil {
-		if queryLogger != nil {
-			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "BeginTx:"))
+	var node *txNode
+	switch db := ExecutorFromContext(ctx).(type) {
+	case *sql.DB:
+		tx, err := db.BeginTx(ctx, &sql.TxOptions{
+			Isolation: sql.LevelSerializable,
+			ReadOnly:  readOnly,
+		})
+		if err != nil {
+			if queryLogger != nil {
+				queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "BeginTx"))
+			}
+			_ = tx.Rollback()
+			return err
 		}
-		_ = tx.Rollback()
-		return err
+		node = &txNode{
+			dbTx:  tx,
+			depth: 0,
+		}
+	case *txNode:
+		node = &txNode{
+			dbTx:   db.dbTx,
+			parent: db,
+			depth:  db.depth + 1,
+		}
+		_, err := db.dbTx.Exec(fmt.Sprintf("SAVEPOINT savepoint_%d", node.depth))
+		if err != nil {
+			return err
+		}
+		db.child = node
+	default:
+		panic("database does not support transactions")
 	}
 
-	ctx2 := WithExecutor(ctx, tx)
+	ctx2 := WithExecutor(ctx, node)
 
 	// Since the user-provided function might panic, ensure the transaction
 	// releases all resources.
-	defer rollbackOnPanic(ctx, tx, begin)
+	defer rollbackOnPanic(ctx, node, begin)
 
-	err = fn(ctx2)
+	err := fn(ctx2)
 	if err != nil {
-		// Error ignored here, maybe we should do something with it?
-		// Not sure what though.
 		if queryLogger != nil {
-			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "tx function returned error:"))
+			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "tx function returned error"))
 		}
-		_ = tx.Rollback()
+		err2 := node.Rollback()
+		if err2 != nil {
+			panic(err2)
+		}
 		return err
 	}
 
-	err = tx.Commit()
+	err = node.Commit()
 	if err != nil {
 		if queryLogger != nil {
-			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "Commit:"))
+			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "commit"))
 		}
-		_ = tx.Rollback()
+		_ = node.Rollback()
 		return err
 	}
 	if queryLogger != nil {
