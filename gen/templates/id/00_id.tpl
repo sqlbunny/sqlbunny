@@ -30,12 +30,7 @@ func (id {{$modelName}}ID) IDBytes() []byte {
 
 // New{{$modelName}}ID generates a globaly unique {{$modelName}}ID
 func New{{$modelName}}ID() {{$modelName}}ID {
-	var id {{$modelName}}ID
-	binary.BigEndian.PutUint64(id.IDData[:], uint64(time.Now().UnixNano()))
-	if _, err := rand.Read(id.IDData[6:12]); err != nil {
-		panic(errors.Errorf("cannot generate random number: %v;", err))
-	}
-	return id
+    return {{$modelName}}IDFromTime(time.Now())
 }
 
 // NextAfter returns the next sequential ID after prev.
@@ -49,11 +44,47 @@ func (id {{$modelName}}ID) NextAfter() {{$modelName}}ID {
 	return id
 }
 
-// FromString reads an ID from its string representation
+// After returns true if this ID is after the given ID in chronological order.
+func (id {{$modelName}}ID) After(other {{$modelName}}ID) bool {
+	for i := 0; i < boil.IDRawLen; i++ {
+        if id.IDData[i] > other.IDData[i] {
+            return true
+        }
+        if id.IDData[i] < other.IDData[i] {
+            return false
+        }
+	}
+	return false
+}
+
+// Before returns true if this ID is before the given ID in chronological order.
+func (id {{$modelName}}ID) Before(other {{$modelName}}ID) bool {
+	for i := 0; i < boil.IDRawLen; i++ {
+		if id.IDData[i] < other.IDData[i] {
+            return true
+        }
+        if id.IDData[i] > other.IDData[i] {
+            return false
+        }
+	}
+	return false
+}
+
+// {{$modelName}}IDFromString reads an ID from its string representation
 func {{$modelName}}IDFromString(id string) ({{$modelName}}ID, error) {
 	i := &{{$modelName}}ID{}
 	err := i.UnmarshalText([]byte(id))
 	return *i, err
+}
+
+// {{$modelName}}IDFromTime creates an ID from the given time.
+func {{$modelName}}IDFromTime(t time.Time) {{$modelName}}ID {
+    var id {{$modelName}}ID
+	binary.BigEndian.PutUint64(id.IDData[:], uint64(t.UnixNano()))
+	if _, err := rand.Read(id.IDData[6:12]); err != nil {
+		panic(errors.Errorf("cannot generate random number: %v;", err))
+	}
+	return id
 }
 
 // String returns a base32 hex lowercased with no padding representation of the id (char set is 0-9, a-v).
