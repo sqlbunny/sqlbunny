@@ -114,6 +114,9 @@ func (id {{$modelName}}ID) MarshalJSON() ([]byte, error) {
 
 // UnmarshalText implements encoding/text TextUnmarshaler interface
 func (id *{{$modelName}}ID) UnmarshalText(text []byte) error {
+    if len(text) < {{$modelNameCamel}}PrefixLength {
+        return apierrors.New(apierrors.TypeInvalidRequest, "Invalid {{.IDType.Name}} ID '%s'", text)
+	}
     if !bytes.Equal(text[:{{$modelNameCamel}}PrefixLength], {{$modelNameCamel}}Prefix) {
 		parts := strings.Split(string(text), "_")
 		if idType, ok := idPrefixes[parts[0]]; ok {
