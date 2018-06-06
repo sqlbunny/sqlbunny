@@ -66,7 +66,7 @@ func txtsFromFKey(models []*schema.Model, model *schema.Model, fkey *schema.Fore
 
 	r.Function.ForeignAssignment = strmangle.TitleCaseIdentifier(fkey.ForeignColumn)
 	if fkey.ForeignColumnNullable {
-		r.Function.LocalAssignment += "." + ForeignColumn.Type.(schema.NullableType).TypeGoNullField()
+		r.Function.ForeignAssignment += "." + ForeignColumn.Type.(schema.NullableType).TypeGoNullField()
 	}
 
 	r.Function.UsesBytes = ForeignColumn.Type.TypeGo() == "[]byte"
