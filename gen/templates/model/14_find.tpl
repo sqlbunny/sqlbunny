@@ -20,9 +20,6 @@ func Find{{$modelNameSingular}}(ctx context.Context, {{$pkArgs}}, selectCols ...
 
 	err := q.Bind({{$varNameSingular}}Obj)
 	if err != nil {
-		if errors.Cause(err) == sql.ErrNoRows {
-			return nil, sql.ErrNoRows
-		}
 		return nil, errors.Wrap(err, "{{.PkgName}}: unable to select from {{.Model.Name}}")
 	}
 
