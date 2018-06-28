@@ -224,7 +224,7 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 		if err2 != nil {
 			panic(err2)
 		}
-		return err
+		return errors.Wrap(err, "tx function returned error")
 	}
 
 	err = node.Commit()
