@@ -17,8 +17,11 @@ type {{$modelName}}JSON struct {
 	{{- end }}
 
 	{{range .Model.ForeignKeys -}}
+    {{- $field := $dot.Model.GetField .Column -}}
+    {{- if not ( $field.HasTag "private" ) }}
 	{{- $txt := txtsFromFKey $dot.Models $dot.Model . -}}
 	{{$txt.Function.NameGo}} *{{.ForeignModel | titleCase}} `json:"{{$txt.Function.Name}},omitempty"`
+    {{- end }}
 	{{end }}
 
     CreatedAt time.Time `json:"created_at"`
@@ -40,8 +43,11 @@ func (o *{{$modelName}}) JSON() *{{$modelName}}JSON {
 
     if o.R != nil {
         {{range .Model.ForeignKeys -}}
+        {{- $field := $dot.Model.GetField .Column -}}
+        {{- if not ( $field.HasTag "private" ) }}
         {{- $txt := txtsFromFKey $dot.Models $dot.Model . -}}
         res.{{$txt.Function.NameGo}} = o.R.{{$txt.Function.NameGo}}
+        {{end -}}
         {{end -}}
     }
 
