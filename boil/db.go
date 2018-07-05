@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/lib/pq"
@@ -69,14 +70,7 @@ func QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 //
 // Retries are automatically performed in case of serialization failures or deadlocks.
 func Atomic(ctx context.Context, fn func(ctx context.Context) error) error {
-	var err error
-	for try := 0; try < 5; try++ {
-		err = doTransaction(ctx, fn, false)
-		if err == nil || !shouldRetryTransaction(err) {
-			return err
-		}
-	}
-	return err
+	return doAtomic(ctx, fn, false)
 }
 
 // AtomicReadOnly invokes the passed function in the context of a managed SQL
@@ -85,12 +79,22 @@ func Atomic(ctx context.Context, fn func(ctx context.Context) error) error {
 //
 // Retries are automatically performed in case of serialization failures or deadlocks.
 func AtomicReadOnly(ctx context.Context, fn func(ctx context.Context) error) error {
+	return doAtomic(ctx, fn, true)
+}
+
+func doAtomic(ctx context.Context, fn func(ctx context.Context) error, readOnly bool) error {
 	var err error
-	for try := 0; try < 5; try++ {
-		err = doTransaction(ctx, fn, true)
-		if err == nil || !shouldRetryTransaction(err) {
+	for try := uint(0); try < 12; try++ {
+		err = doTransaction(ctx, fn, readOnly)
+		if err == nil {
+			return nil
+		}
+
+		if !shouldRetryTransaction(err) {
 			return err
 		}
+
+		time.Sleep(time.Millisecond * time.Duration(rand.Int31n(1<<try)))
 	}
 	return err
 }
