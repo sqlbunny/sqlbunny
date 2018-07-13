@@ -139,7 +139,7 @@ func (o *{{$modelNameSingular}}) Upsert(ctx context.Context, updateOnConflict bo
 	{{- else}}
 	if len(cache.retMapping) != 0 {
 		err = boil.QueryRow(ctx, cache.query, vals...).Scan(returns...)
-		if err == sql.ErrNoRows {
+		if boil.IsErrNoRows(err) {
 			err = nil // Postgres doesn't return anything when there's no update
 		}
 	} else {
