@@ -47,7 +47,7 @@ func IDFromString(s string) (boil.ID, error) {
 	switch parts[0] {
     {{- range $t := .IDTypes }}
 	case "{{$t.Prefix}}":
-		return {{$t.Name | titleCase}}IDFromString(s)
+		return {{$t.Name | titleCase}}FromString(s)
     {{- end}}
 	}
 	return nil, fmt.Errorf("Unknown ID type %s", parts[0])
