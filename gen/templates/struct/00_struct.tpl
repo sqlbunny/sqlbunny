@@ -6,5 +6,5 @@
 type {{$modelName}} struct {
 	{{range $field := .Struct.Fields }}
 	{{titleCase $field.Name}} {{$field.TypeGo}} `{{$field.GenerateTags}}`
-	{{end -}}
+	{{- end -}}
 }
