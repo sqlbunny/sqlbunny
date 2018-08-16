@@ -123,7 +123,7 @@ func (s *State) Run(includeTests bool) error {
 		}
 
 		// Generate the regular templates
-		if err := s.executeTemplates(data, s.IDTemplates, e.Name+"_id.go"); err != nil {
+		if err := s.executeTemplates(data, s.IDTemplates, e.Name+".go"); err != nil {
 			return errors.Wrap(err, "unable to generate output")
 		}
 	}

@@ -5,7 +5,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/KernelPay/sqlboiler/boil/strmangle"
 	"github.com/pkg/errors"
 )
 
@@ -35,17 +34,10 @@ func (s *Schema) ResolveTypes() error {
 	s.ModelsByName = make(map[string]*Model)
 
 	for _, t := range s.IDTypes {
-		name := t.Name + "_id"
-		if _, ok := s.TypesByName[name]; ok {
-			return fmt.Errorf("Duplicated type %s", name)
+		if _, ok := s.TypesByName[t.Name]; ok {
+			return fmt.Errorf("Duplicated type %s", t.Name)
 		}
-		s.TypesByName[name] = &BaseTypeNullable{
-			Name:        name,
-			Go:          strmangle.TitleCase(t.Name) + "ID",
-			GoNull:      "Null" + strmangle.TitleCase(t.Name) + "ID",
-			GoNullField: "ID",
-			Postgres:    "bytea",
-		}
+		s.TypesByName[t.Name] = t
 	}
 
 	for _, o := range s.BaseTypes {
@@ -55,18 +47,21 @@ func (s *Schema) ResolveTypes() error {
 		s.TypesByName[o.GetName()] = o
 		s.BaseTypesByName[o.GetName()] = o
 	}
+
 	for _, o := range s.Enums {
 		if _, ok := s.TypesByName[o.Name]; ok {
 			return fmt.Errorf("Duplicated type %s", o.Name)
 		}
 		s.TypesByName[o.Name] = o
 	}
+
 	for _, o := range s.Structs {
 		if _, ok := s.TypesByName[o.Name]; ok {
 			return fmt.Errorf("Duplicated type %s", o.Name)
 		}
 		s.TypesByName[o.Name] = o
 	}
+
 	for _, o := range s.Models {
 		if _, ok := s.TypesByName[o.Name]; ok {
 			return fmt.Errorf("Duplicated type %s", o.Name)

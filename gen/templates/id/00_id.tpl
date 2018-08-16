@@ -20,21 +20,21 @@ const {{$modelNameCamel}}PrefixLength = {{ len .IDType.Prefix }} + 1
 var {{$modelNameCamel}}Prefix = []byte("{{.IDType.Prefix}}_")
 
 // ID represents a unique request id
-type {{$modelName}}ID struct{
+type {{$modelName}} struct{
     boil.IDData
 }
 
-func (id {{$modelName}}ID) IDBytes() []byte {
+func (id {{$modelName}}) IDBytes() []byte {
     return id.IDData[:]
 }
 
-// New{{$modelName}}ID generates a globaly unique {{$modelName}}ID
-func New{{$modelName}}ID() {{$modelName}}ID {
-    return {{$modelName}}IDFromTime(time.Now())
+// New{{$modelName}} generates a globaly unique {{$modelName}}
+func New{{$modelName}}() {{$modelName}} {
+    return {{$modelName}}FromTime(time.Now())
 }
 
 // NextAfter returns the next sequential ID after prev.
-func (id {{$modelName}}ID) NextAfter() {{$modelName}}ID {
+func (id {{$modelName}}) NextAfter() {{$modelName}} {
 	for i := boil.IDRawLen - 1; i >= 0; i-- {
 		id.IDData[i]++
 		if id.IDData[i] != 0 {
@@ -45,7 +45,7 @@ func (id {{$modelName}}ID) NextAfter() {{$modelName}}ID {
 }
 
 // After returns true if this ID is after the given ID in chronological order.
-func (id {{$modelName}}ID) After(other {{$modelName}}ID) bool {
+func (id {{$modelName}}) After(other {{$modelName}}) bool {
 	for i := 0; i < boil.IDRawLen; i++ {
         if id.IDData[i] > other.IDData[i] {
             return true
@@ -58,7 +58,7 @@ func (id {{$modelName}}ID) After(other {{$modelName}}ID) bool {
 }
 
 // Before returns true if this ID is before the given ID in chronological order.
-func (id {{$modelName}}ID) Before(other {{$modelName}}ID) bool {
+func (id {{$modelName}}) Before(other {{$modelName}}) bool {
 	for i := 0; i < boil.IDRawLen; i++ {
 		if id.IDData[i] < other.IDData[i] {
             return true
@@ -70,16 +70,16 @@ func (id {{$modelName}}ID) Before(other {{$modelName}}ID) bool {
 	return false
 }
 
-// {{$modelName}}IDFromString reads an ID from its string representation
-func {{$modelName}}IDFromString(id string) ({{$modelName}}ID, error) {
-	i := &{{$modelName}}ID{}
+// {{$modelName}}FromString reads an ID from its string representation
+func {{$modelName}}FromString(id string) ({{$modelName}}, error) {
+	i := &{{$modelName}}{}
 	err := i.UnmarshalText([]byte(id))
 	return *i, err
 }
 
-// {{$modelName}}IDFromTime creates an ID from the given time.
-func {{$modelName}}IDFromTime(t time.Time) {{$modelName}}ID {
-    var id {{$modelName}}ID
+// {{$modelName}}FromTime creates an ID from the given time.
+func {{$modelName}}FromTime(t time.Time) {{$modelName}} {
+    var id {{$modelName}}
 	binary.BigEndian.PutUint64(id.IDData[:], uint64(t.UnixNano()))
 	if _, err := rand.Read(id.IDData[6:12]); err != nil {
 		panic(errors.Errorf("cannot generate random number: %v;", err))
@@ -88,7 +88,7 @@ func {{$modelName}}IDFromTime(t time.Time) {{$modelName}}ID {
 }
 
 // String returns a base32 hex lowercased with no padding representation of the id (char set is 0-9, a-v).
-func (id {{$modelName}}ID) String() string {
+func (id {{$modelName}}) String() string {
 	text := make([]byte, {{$modelNameCamel}}PrefixLength + boil.IDEncodedLen)
     copy(text, {{$modelNameCamel}}Prefix)
 	id.IDData.Encode(text[{{$modelNameCamel}}PrefixLength:])
@@ -96,14 +96,14 @@ func (id {{$modelName}}ID) String() string {
 }
 
 // MarshalText implements encoding/text TextMarshaler interface
-func (id {{$modelName}}ID) MarshalText() ([]byte, error) {
+func (id {{$modelName}}) MarshalText() ([]byte, error) {
 	text := make([]byte, {{$modelNameCamel}}PrefixLength + boil.IDEncodedLen)
     copy(text, {{$modelNameCamel}}Prefix)
     id.IDData.Encode(text[{{$modelNameCamel}}PrefixLength:])
 	return text, nil
 }
 
-func (id {{$modelName}}ID) MarshalJSON() ([]byte, error) {
+func (id {{$modelName}}) MarshalJSON() ([]byte, error) {
 	text := make([]byte, {{$modelNameCamel}}PrefixLength + boil.IDEncodedLen+2)
 	text[0] = '"'
     copy(text[1:], {{$modelNameCamel}}Prefix)
@@ -113,7 +113,7 @@ func (id {{$modelName}}ID) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding/text TextUnmarshaler interface
-func (id *{{$modelName}}ID) UnmarshalText(text []byte) error {
+func (id *{{$modelName}}) UnmarshalText(text []byte) error {
     if len(text) < {{$modelNameCamel}}PrefixLength {
         return apierrors.New(apierrors.TypeInvalidRequest, "Invalid {{.IDType.Name}} ID '%s'", text)
 	}
@@ -136,7 +136,7 @@ func (id *{{$modelName}}ID) UnmarshalText(text []byte) error {
 
 // Time returns the timestamp part of the id.
 // It's a runtime error to call this method with an invalid id.
-func (id {{$modelName}}ID) Time() time.Time {
+func (id {{$modelName}}) Time() time.Time {
 	// First 6 bytes of ObjectId is 64-bit big-endian nanos from epoch.
 	var nowBytes [8]byte
 	copy(nowBytes[0:6], id.IDData[0:6])
@@ -146,19 +146,19 @@ func (id {{$modelName}}ID) Time() time.Time {
 
 // Counter returns the random value part of the id.
 // It's a runtime error to call this method with an invalid id.
-func (id {{$modelName}}ID) Counter() uint64 {
+func (id {{$modelName}}) Counter() uint64 {
 	b := id.IDData[6:]
 	// Counter is stored as big-endian 6-byte value
 	return uint64(uint64(b[0])<<40 | uint64(b[1])<<32 | uint64(b[2])<<24 | uint64(b[3])<<16 | uint64(b[4])<<8 | uint64(b[5]))
 }
 
 // Value implements the driver.Valuer interface.
-func (id {{$modelName}}ID) Value() (driver.Value, error) {
+func (id {{$modelName}}) Value() (driver.Value, error) {
 	return id.IDData[:], nil
 }
 
 // Scan implements the sql.Scanner interface.
-func (id *{{$modelName}}ID) Scan(value interface{}) (err error) {
+func (id *{{$modelName}}) Scan(value interface{}) (err error) {
 	switch val := value.(type) {
 	case string:
 		return id.UnmarshalText([]byte(val))
