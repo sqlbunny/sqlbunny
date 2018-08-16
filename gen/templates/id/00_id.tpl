@@ -141,7 +141,7 @@ func (id {{$modelName}}ID) Time() time.Time {
 	var nowBytes [8]byte
 	copy(nowBytes[0:6], id.IDData[0:6])
 	nanos := int64(binary.BigEndian.Uint64(nowBytes[:]))
-	return time.Unix(0, nanos)
+	return time.Unix(0, nanos).UTC()
 }
 
 // Counter returns the random value part of the id.
