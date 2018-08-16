@@ -1,6 +1,3 @@
-{{- define "relationship_to_one_struct_helper" -}}
-{{- end -}}
-
 {{- $dot := . -}}
 {{- $modelNameSingular := .Model.Name | singular -}}
 {{- $modelName := $modelNameSingular | titleCase -}}
