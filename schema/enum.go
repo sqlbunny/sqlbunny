@@ -17,6 +17,14 @@ func (e *Enum) TypeGo() string {
 	return strmangle.TitleCase(e.Name)
 }
 
+func (e *Enum) TypeGoNull() string {
+	return "Null" + strmangle.TitleCase(e.Name)
+}
+
+func (e *Enum) TypeGoNullField() string {
+	return strmangle.TitleCase(e.Name)
+}
+
 func (e *Enum) BaseTypeGo() string {
 	return e.Type.TypeGo()
 }

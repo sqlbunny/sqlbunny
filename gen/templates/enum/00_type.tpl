@@ -2,7 +2,16 @@
 {{- $enumName := .Enum.Name | titleCase -}}
 {{- $enumNameCamel := .Enum.Name | camelCase -}}
 
-import "github.com/KernelPay/toolkit/apierrors"
+import (
+    "bytes"
+    "database/sql/driver"
+    "encoding/json"
+    "bytes"
+
+    "github.com/KernelPay/sqlboiler/boil"
+    "github.com/KernelPay/sqlboiler/types/null/convert"
+    "github.com/KernelPay/toolkit/apierrors"
+)
 
 // {{$enumName}} is an enum type.
 type {{$enumName}} {{.Enum.BaseTypeGo}}
