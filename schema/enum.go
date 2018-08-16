@@ -13,18 +13,22 @@ func (e *Enum) GetName() string {
 	return e.Name
 }
 
-func (e *Enum) TypeGo() string {
-	return strmangle.TitleCase(e.Name)
+func (e *Enum) TypeGo() TypeGo {
+	return TypeGo{
+		Name: strmangle.TitleCase(e.Name),
+	}
 }
 
-func (e *Enum) TypeGoNull() string {
-	return "Null" + strmangle.TitleCase(e.Name)
+func (e *Enum) TypeGoNull() TypeGo {
+	return TypeGo{
+		Name: "Null" + strmangle.TitleCase(e.Name),
+	}
 }
 
 func (e *Enum) TypeGoNullField() string {
 	return strmangle.TitleCase(e.Name)
 }
 
-func (e *Enum) BaseTypeGo() string {
+func (e *Enum) BaseTypeGo() TypeGo {
 	return e.Type.TypeGo()
 }

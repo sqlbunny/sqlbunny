@@ -1,15 +1,50 @@
 package gen
 
-import "github.com/KernelPay/sqlboiler/schema"
+import (
+	"fmt"
 
-func buildImports(fields []*schema.Field) []string {
-	var res []string
-	for _, f := range fields {
-		if t, ok := f.Type.(schema.TypeWithImports); ok {
-			res = append(res, t.GetImports()...)
-		}
+	"github.com/KernelPay/sqlboiler/schema"
+)
+
+var (
+	imports     map[string]string
+	importCount int
+)
+
+func resetImports() {
+	imports = make(map[string]string)
+	importCount = 0
+}
+
+func templateImport(name string, pkg string) string {
+	oldName, ok := imports[pkg]
+	if ok && oldName != name {
+		panic(fmt.Sprintf("package %s can't be imported with name %s, was already imported with name %s", pkg, name, oldName))
 	}
-	return removeDuplicates(res)
+	imports[pkg] = name
+	return ""
+}
+
+func templateTypesGo(t []schema.TypeGo) []string {
+	r := make([]string, len(t))
+	for i, j := range t {
+		r[i] = templateTypeGo(j)
+	}
+	return r
+}
+
+func templateTypeGo(t schema.TypeGo) string {
+	if t.Pkg == "" {
+		return t.Name
+	}
+
+	pkgName, ok := imports[t.Pkg]
+	if !ok {
+		pkgName = fmt.Sprintf("_import%02d", importCount)
+		imports[t.Pkg] = pkgName
+		importCount++
+	}
+	return pkgName + "." + t.Name
 }
 
 func removeDuplicates(dedup []string) []string {

@@ -2,38 +2,38 @@ package schema
 
 type Type interface {
 	GetName() string
-	TypeGo() string
+	TypeGo() TypeGo
 }
 
 type BaseType interface {
 	GetName() string
-	TypeGo() string
+	TypeGo() TypeGo
 	TypeDB() string
 }
 
 type NullableType interface {
 	GetName() string
-	TypeGo() string
-	TypeGoNull() string
+	TypeGo() TypeGo
+	TypeGoNull() TypeGo
 	TypeGoNullField() string
 }
 
-type TypeWithImports interface {
-	GetImports() []string
+type TypeGo struct {
+	Pkg  string
+	Name string
 }
 
 type BaseTypeNotNullable struct {
-	Name      string
-	Go        string
-	Postgres  string
-	GoImports []string
+	Name     string
+	Go       TypeGo
+	Postgres string
 }
 
 func (t *BaseTypeNotNullable) GetName() string {
 	return t.Name
 }
 
-func (t *BaseTypeNotNullable) TypeGo() string {
+func (t *BaseTypeNotNullable) TypeGo() TypeGo {
 	return t.Go
 }
 
@@ -41,26 +41,21 @@ func (t *BaseTypeNotNullable) TypeDB() string {
 	return t.Postgres
 }
 
-func (t *BaseTypeNotNullable) GetImports() []string {
-	return t.GoImports
-}
-
 type BaseTypeNullable struct {
 	Name        string
-	Go          string
-	GoNull      string
+	Go          TypeGo
+	GoNull      TypeGo
 	GoNullField string
 	Postgres    string
-	GoImports   []string
 }
 
 func (t *BaseTypeNullable) GetName() string {
 	return t.Name
 }
-func (t *BaseTypeNullable) TypeGo() string {
+func (t *BaseTypeNullable) TypeGo() TypeGo {
 	return t.Go
 }
-func (t *BaseTypeNullable) TypeGoNull() string {
+func (t *BaseTypeNullable) TypeGoNull() TypeGo {
 	return t.GoNull
 }
 func (t *BaseTypeNullable) TypeGoNullField() string {
@@ -68,7 +63,4 @@ func (t *BaseTypeNullable) TypeGoNullField() string {
 }
 func (t *BaseTypeNullable) TypeDB() string {
 	return t.Postgres
-}
-func (t *BaseTypeNullable) GetImports() []string {
-	return t.GoImports
 }

@@ -37,7 +37,7 @@ type ForeignKey struct {
 // SQLColumnDef formats a field name and type like an SQL field definition.
 type SQLColumnDef struct {
 	Name string
-	Type string
+	Type TypeGo
 }
 
 // String for fmt.Stringer
@@ -60,8 +60,8 @@ func (s SQLColumnDefs) Names() []string {
 }
 
 // Types returns all the types
-func (s SQLColumnDefs) Types() []string {
-	types := make([]string, len(s))
+func (s SQLColumnDefs) Types() []TypeGo {
+	types := make([]TypeGo, len(s))
 
 	for i, sqlDef := range s {
 		types[i] = sqlDef.Type
