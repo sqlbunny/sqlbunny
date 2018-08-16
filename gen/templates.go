@@ -24,8 +24,6 @@ type templateData struct {
 	Enum   *schema.Enum
 	IDType *schema.IDType
 
-	Imports []string
-
 	// Controls what names are output
 	PkgName string
 	Schema  string
@@ -185,6 +183,11 @@ var templateFunctions = template.FuncMap{
 
 	// String Map ops
 	"makeStringMap": strmangle.MakeStringMap,
+
+	// Imports
+	"import":  templateImport,
+	"typeGo":  templateTypeGo,
+	"typesGo": templateTypesGo,
 
 	// Set operations
 	"setInclude": strmangle.SetInclude,

@@ -1,23 +1,17 @@
-import (
-	"bytes"
-	"context"
-	"database/sql"
-    "encoding/json"
-	"fmt"
-	"reflect"
-	"strings"
-	"sync"
-	"time"
-
-	"github.com/KernelPay/sqlboiler/boil"
-	"github.com/KernelPay/sqlboiler/boil/queries"
-	"github.com/KernelPay/sqlboiler/boil/qm"
-	"github.com/KernelPay/sqlboiler/boil/strmangle"
-	"github.com/pkg/errors"
-)
-{{- range $import := .Imports }}
-import {{$import}}
-{{- end -}}
+{{ import "bytes" "bytes" }}
+{{ import "context" "context" }}
+{{ import "sql" "database/sql" }}
+{{ import "json" "encoding/json" }}
+{{ import "fmt" "fmt" }}
+{{ import "reflect" "reflect" }}
+{{ import "strings" "strings" }}
+{{ import "sync" "sync" }}
+{{ import "time" "time" }}
+{{ import "boil" "github.com/KernelPay/sqlboiler/boil" }}
+{{ import "queries" "github.com/KernelPay/sqlboiler/boil/queries" }}
+{{ import "qm" "github.com/KernelPay/sqlboiler/boil/qm" }}
+{{ import "strmangle" "github.com/KernelPay/sqlboiler/boil/strmangle" }}
+{{ import "errors" "github.com/pkg/errors" }}
 
 {{- $dot := . -}}
 {{- $modelNameSingular := .Model.Name | singular -}}
@@ -27,7 +21,7 @@ import {{$import}}
 // {{$modelName}} is an object representing the database model.
 type {{$modelName}} struct {
 	{{range $field := .Model.Fields }}
-    {{titleCase $field.Name}} {{$field.TypeGo}} `{{$field.GenerateTags}}`
+    {{titleCase $field.Name}} {{typeGo $field.TypeGo}} `{{$field.GenerateTags}}`
 	{{- end -}}
 	{{- if .Model.IsJoinModel -}}
 	{{- else}}

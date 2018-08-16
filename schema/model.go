@@ -167,7 +167,7 @@ func (t *Model) IsUniqueColumn(name string) bool {
 
 func (t *Model) IsStandardModel() bool {
 	for _, c := range t.Fields {
-		if c.Name == "id" && c.Type.TypeGo() == strmangle.TitleCase(t.Name)+"ID" {
+		if c.Name == "id" && c.Type.TypeGo().Name == strmangle.TitleCase(t.Name)+"ID" {
 			return true
 		}
 	}

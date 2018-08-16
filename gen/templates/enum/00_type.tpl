@@ -14,7 +14,7 @@ import (
 )
 
 // {{$enumName}} is an enum type.
-type {{$enumName}} {{.Enum.BaseTypeGo}}
+type {{$enumName}} {{typeGo .Enum.BaseTypeGo}}
 
 const (
     {{- range $index, $choice := .Enum.Choices }}

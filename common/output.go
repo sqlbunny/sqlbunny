@@ -44,6 +44,20 @@ func WritePackageName(out *bytes.Buffer, pkgName string) {
 	_, _ = fmt.Fprintf(out, "package %s\n\n", pkgName)
 }
 
+// WriteImports writes the import list, ignores errors
+// since it's to the concrete buffer type which produces none
+func WriteImports(out *bytes.Buffer, imports map[string]string) {
+	if len(imports) == 0 {
+		return
+	}
+
+	_, _ = fmt.Fprintf(out, "import (\n")
+	for pkg, name := range imports {
+		_, _ = fmt.Fprintf(out, "    %s \"%s\"\n", name, pkg)
+	}
+	_, _ = fmt.Fprintf(out, ")\n\n")
+}
+
 // WriteFile writes to the given folder and filename, formatting the buffer
 // given.
 func WriteFile(outFolder string, fileName string, input *bytes.Buffer) error {

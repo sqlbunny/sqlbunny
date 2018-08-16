@@ -2,7 +2,8 @@
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
 {{- $colDefs := sqlColDefinitions .Model.Columns .Model.PrimaryKey.Columns -}}
 {{- $pkNames := $colDefs.Names | stringMap .StringFuncs.camelCase | stringMap .StringFuncs.replaceReserved -}}
-{{- $pkArgs := joinSlices " " $pkNames $colDefs.Types | join ", "}}
+{{- $pkTypes := typesGo $colDefs.Types }}
+{{- $pkArgs := joinSlices " " $pkNames $pkTypes | join ", "}}
 // Find{{$modelNameSingular}} retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all fields.
 func Find{{$modelNameSingular}}(ctx context.Context, {{$pkArgs}}, selectCols ...string) (*{{$modelNameSingular}}, error) {

@@ -9,7 +9,7 @@
 type {{$modelName}}JSON struct {
 	{{range $field := .Model.Fields }}
     {{- if not ( $field.HasTag "private" ) }}
-	{{titleCase $field.Name}} {{$field.TypeGo}} `json:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name}}" yaml:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}"`
+	{{titleCase $field.Name}} {{typeGo $field.TypeGo}} `json:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name}}" yaml:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}"`
     {{- end }}
 	{{- end }}
 

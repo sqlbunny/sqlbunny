@@ -15,7 +15,6 @@ func MakeGrammar() *p.Grammar {
 	OpenPar := p.Set("(")
 	ClosePar := p.Set(")")
 	Comma := p.Set(",")
-	gQuotedString := p.And(p.Set("\""), p.Mult(0, 0, p.Set("^\"")), p.Set("\""))
 
 	WS := p.Ignore(p.Mult(0, 0, p.Set("\t\n\f\r ")))
 	RWS := p.Ignore(p.Mult(1, 0, p.Set("\t\n\f\r ")))
@@ -27,18 +26,24 @@ func MakeGrammar() *p.Grammar {
 		return p.String(m), nil
 	})
 
-	gTypeGo := p.Mult(1, 0, p.Or(Letter, Digit, p.Set(".\\[\\]")))
+	gTypeGo := p.And(
+		p.Optional(p.And(
+			p.Lit("\""),
+			p.Tag("Pkg", p.Mult(0, 0, p.Set("^\""))),
+			p.Lit("\"."),
+		)),
+		p.Tag("Name", p.Mult(1, 0, p.Or(Letter, Digit, p.Set("*\\[\\]")))),
+	)
 	gTypeGo.Node(func(m p.Match) (p.Match, error) {
-		return p.String(m), nil
+		t := TypeGo{
+			Pkg:  p.String(p.GetTag(m, "Pkg")),
+			Name: p.String(p.GetTag(m, "Name")),
+		}
+		return t, nil
 	})
 
 	gType := p.And(gIdentifier)
 	gType.Node(func(m p.Match) (p.Match, error) {
-		return p.String(m), nil
-	})
-
-	gStructTag := p.And(Tick, p.Mult(0, 0, p.Or(Any)), Tick)
-	gStructTag.Node(func(m p.Match) (p.Match, error) {
 		return p.String(m), nil
 	})
 
@@ -79,34 +84,26 @@ func MakeGrammar() *p.Grammar {
 			RWS,
 			p.Tag("Name", gIdentifier), WS,
 			p.Lit("{"), WS,
-			p.Mult(0, 0, p.And(p.Lit("import"), p.Require(RWS, p.Tag("Import", p.And(p.Optional(p.And(gIdentifier, RWS)), gQuotedString)), NL))),
-			p.Lit("not_null"), RWS, p.Tag("Go", gTypeGo), NL,
-			p.Optional(p.And(p.Lit("null"), p.Require(RWS, p.Tag("GoNull", gTypeGo), NL))),
-			p.Lit("postgres"), RWS, p.Tag("Postgres", gTypeGo), NL,
+			p.Lit("go"), RWS, p.Tag("Go", gTypeGo), NL,
+			p.Optional(p.And(p.Lit("go_null"), p.Require(RWS, p.Tag("GoNull", gTypeGo), NL))),
+			p.Lit("postgres"), RWS, p.Tag("Postgres", gIdentifier), NL,
 			p.Lit("}"), WS,
 		),
 	)
 	gBaseType.Node(func(m p.Match) (p.Match, error) {
-		var goImports []string
-		for _, v := range p.GetTags(m, "Import") {
-			goImports = append(goImports, p.String(v))
-		}
-
 		var s BaseType
 		if p.GetTag(m, "GoNull") != nil {
 			s = &BaseTypeNullable{
-				Name:      p.GetTag(m, "Name").(string),
-				Postgres:  p.GetTag(m, "Postgres").(string),
-				Go:        p.GetTag(m, "Go").(string),
-				GoNull:    p.GetTag(m, "GoNull").(string),
-				GoImports: goImports,
+				Name:     p.GetTag(m, "Name").(string),
+				Postgres: p.GetTag(m, "Postgres").(string),
+				Go:       p.GetTag(m, "Go").(TypeGo),
+				GoNull:   p.GetTag(m, "GoNull").(TypeGo),
 			}
 		} else {
 			s = &BaseTypeNotNullable{
-				Name:      p.GetTag(m, "Name").(string),
-				Postgres:  p.GetTag(m, "Postgres").(string),
-				Go:        p.GetTag(m, "Go").(string),
-				GoImports: goImports,
+				Name:     p.GetTag(m, "Name").(string),
+				Postgres: p.GetTag(m, "Postgres").(string),
+				Go:       p.GetTag(m, "Go").(TypeGo),
 			}
 		}
 		return p.TagMatch("BaseType", s), nil

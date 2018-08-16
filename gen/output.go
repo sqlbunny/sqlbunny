@@ -14,23 +14,30 @@ var (
 	// templateByteBuffer is re-used by all template construction to avoid
 	// allocating more memory than is needed. This will later be a problem for
 	// concurrency, address it then.
-	templateByteBuffer = &bytes.Buffer{}
+	templateByteBuffer      = &bytes.Buffer{}
+	templateByteBufferInner = &bytes.Buffer{}
 
 	rgxRemoveNumberedPrefix = regexp.MustCompile(`[0-9]+_`)
 )
 
 func (s *State) executeTemplates(data *templateData, templates *templateList, filename string) error {
+	resetImports()
+	innerOut := templateByteBufferInner
+	innerOut.Reset()
+
+	for _, tplName := range templates.Templates() {
+		if err := executeTemplate(innerOut, templates.Template, tplName, data); err != nil {
+			return err
+		}
+	}
+
 	out := templateByteBuffer
 	out.Reset()
 
 	common.WriteFileDisclaimer(out)
 	common.WritePackageName(out, s.Config.PkgName)
-
-	for _, tplName := range templates.Templates() {
-		if err := executeTemplate(out, templates.Template, tplName, data); err != nil {
-			return err
-		}
-	}
+	common.WriteImports(out, imports)
+	out.Write(innerOut.Bytes())
 
 	if err := common.WriteFile(s.Config.OutFolder, filename, out); err != nil {
 		return err

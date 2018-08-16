@@ -69,7 +69,7 @@ func txtsFromFKey(models []*schema.Model, model *schema.Model, fkey *schema.Fore
 		r.Function.ForeignAssignment += "." + ForeignColumn.Type.(schema.NullableType).TypeGoNullField()
 	}
 
-	r.Function.UsesBytes = ForeignColumn.Type.TypeGo() == "[]byte"
+	r.Function.UsesBytes = ForeignColumn.Type.TypeGo().Name == "[]byte"
 
 	return r
 }
@@ -95,7 +95,7 @@ func txtsFromOneToOne(models []*schema.Model, model *schema.Model, oneToOne *sch
 	rel.ForeignKey.Column, rel.ForeignKey.ForeignColumn = rel.ForeignKey.ForeignColumn, rel.ForeignKey.Column
 	rel.ForeignKey.Nullable, rel.ForeignKey.ForeignColumnNullable = rel.ForeignKey.ForeignColumnNullable, rel.ForeignKey.Nullable
 	rel.ForeignKey.Unique, rel.ForeignKey.ForeignColumnUnique = rel.ForeignKey.ForeignColumnUnique, rel.ForeignKey.Unique
-	rel.Function.UsesBytes = col.Type.TypeGo() == "[]byte"
+	rel.Function.UsesBytes = col.Type.TypeGo().Name == "[]byte"
 	rel.Function.ForeignName, rel.Function.Name = txtNameToOne(&schema.ForeignKey{
 		Model:         oneToOne.ForeignModel,
 		Column:        oneToOne.ForeignColumn,
@@ -167,7 +167,7 @@ func txtsFromToMany(models []*schema.Model, model *schema.Model, rel *schema.ToM
 		r.Function.ForeignAssignment += "." + ForeignColumn.Type.(schema.NullableType).TypeGoNullField()
 	}
 
-	r.Function.UsesBytes = col.Type.TypeGo() == "[]byte"
+	r.Function.UsesBytes = col.Type.TypeGo().Name == "[]byte"
 
 	return r
 }

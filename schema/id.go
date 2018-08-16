@@ -10,11 +10,15 @@ type IDType struct {
 func (t *IDType) GetName() string {
 	return t.Name
 }
-func (t *IDType) TypeGo() string {
-	return strmangle.TitleCase(t.Name)
+func (t *IDType) TypeGo() TypeGo {
+	return TypeGo{
+		Name: strmangle.TitleCase(t.Name),
+	}
 }
-func (t *IDType) TypeGoNull() string {
-	return "Null" + strmangle.TitleCase(t.Name)
+func (t *IDType) TypeGoNull() TypeGo {
+	return TypeGo{
+		Name: "Null" + strmangle.TitleCase(t.Name),
+	}
 }
 func (t *IDType) TypeGoNullField() string {
 	return "ID"

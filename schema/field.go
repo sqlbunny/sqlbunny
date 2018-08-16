@@ -46,7 +46,7 @@ func (f *Field) IsStruct() bool {
 	return ok
 }
 
-func (f *Field) TypeGo() string {
+func (f *Field) TypeGo() TypeGo {
 	if f.Nullable {
 		return f.Type.(NullableType).TypeGoNull()
 	} else {

@@ -184,8 +184,6 @@ func (s *State) Run(includeTests bool) error {
 			RQ:              strmangle.QuoteCharacter(s.Dialect.RQ),
 
 			StringFuncs: templateStringMappers,
-
-			Imports: buildImports(model.Fields),
 		}
 
 		// Generate the regular templates
