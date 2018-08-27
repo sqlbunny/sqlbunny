@@ -254,8 +254,7 @@ func BindMapping(typ reflect.Type, mapping map[string]uint64, cols []string) ([]
 	ptrs := make([]uint64, len(cols))
 
 ColLoop:
-	for i, c := range cols {
-		name := strmangle.TitleCaseIdentifier(c)
+	for i, name := range cols {
 		ptrMap, ok := mapping[name]
 		if ok {
 			ptrs[i] = ptrMap
@@ -341,43 +340,70 @@ func makeStructMappingHelper(typ reflect.Type, prefix string, current uint64, de
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
 
-		tag, recurse := getBoilTag(f)
-		if len(tag) == 0 {
-			tag = f.Name
-		} else if tag[0] == '-' {
+		tag, err := getBoilTag(f)
+		if err != nil {
+			panic(err)
+		}
+		if !tag.present {
 			continue
 		}
 
+		name := tag.name
 		if len(prefix) != 0 {
-			tag = fmt.Sprintf("%s.%s", prefix, tag)
+			name = fmt.Sprintf("%s%s", prefix, name)
 		}
 
-		if recurse {
-			makeStructMappingHelper(f.Type, tag, current|uint64(i)<<depth, depth+8, fieldMaps)
+		if tag.bind {
+			makeStructMappingHelper(f.Type, name+".", current|uint64(i)<<depth, depth+8, fieldMaps)
+			continue
+		}
+		if tag.structbind {
+			makeStructMappingHelper(f.Type, name+"__", current|uint64(i)<<depth, depth+8, fieldMaps)
 			continue
 		}
 
-		fieldMaps[tag] = current | (sentinel << (depth + 8)) | (uint64(i) << depth)
+		fieldMaps[name] = current | (sentinel << (depth + 8)) | (uint64(i) << depth)
 	}
 }
 
-func getBoilTag(field reflect.StructField) (name string, recurse bool) {
+type boilTag struct {
+	present    bool
+	name       string
+	bind       bool
+	structbind bool
+}
+
+func getBoilTag(field reflect.StructField) (boilTag, error) {
 	tag := field.Tag.Get("boil")
-	name = field.Name
 
+	// If there is no boil tag, don't use this field.
 	if len(tag) == 0 {
-		return name, false
+		return boilTag{
+			present: false,
+		}, nil
 	}
 
-	ind := strings.IndexByte(tag, ',')
-	if ind == -1 {
-		return strmangle.TitleCase(tag), false
-	} else if ind == 0 {
-		return name, true
+	parts := strings.Split(tag, ",")
+	res := boilTag{
+		present: true,
+		name:    parts[0],
+	}
+	for _, flag := range parts[1:] {
+		switch flag {
+		case "bind":
+			res.bind = true
+		case "structbind":
+			res.structbind = true
+		default:
+			return boilTag{}, fmt.Errorf("Invalid flag in boil tag in field '%s': '%s'", field.Name, flag)
+		}
 	}
 
-	nameFragment := tag[:ind]
-	return strmangle.TitleCase(nameFragment), true
+	if res.bind && res.structbind {
+		return boilTag{}, fmt.Errorf("Invalid flags in boil tag in field '%s': bind and structbind can't be active at the same time", field.Name)
+	}
+
+	return res, nil
 }
 
 func makeCacheKey(typ string, cols []string) string {

@@ -22,7 +22,7 @@ func (f *Field) GenerateTags() string {
 	if _, ok := f.Tags["boil"]; !ok {
 		f.Tags["boil"] = f.Name
 		if f.IsStruct() {
-			f.Tags["boil"] += ","
+			f.Tags["boil"] += ",structbind"
 		}
 	}
 	if _, ok := f.Tags["json"]; !ok {
