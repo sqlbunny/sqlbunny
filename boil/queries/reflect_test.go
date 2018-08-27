@@ -42,7 +42,7 @@ func TestBindStruct(t *testing.T) {
 	t.Parallel()
 
 	testResults := struct {
-		ID   int
+		ID   int    `boil:"id"`
 		Name string `boil:"test"`
 	}{}
 
@@ -82,7 +82,7 @@ func TestBindSlice(t *testing.T) {
 	t.Parallel()
 
 	testResults := []struct {
-		ID   int
+		ID   int    `boil:"id"`
 		Name string `boil:"test"`
 	}{}
 
@@ -133,7 +133,7 @@ func TestBindPtrSlice(t *testing.T) {
 	t.Parallel()
 
 	testResults := []*struct {
-		ID   int
+		ID   int    `boil:"id"`
 		Name string `boil:"test"`
 	}{}
 
@@ -195,31 +195,35 @@ func TestMakeStructMapping(t *testing.T) {
 	var testStruct = struct {
 		LastName    string `boil:"different"`
 		AwesomeName string `boil:"awesome_name"`
-		Face        string `boil:"-"`
-		Nose        string
+		Face        string
+		Nose        string `boil:"nose"`
 
 		Nested struct {
 			LastName    string `boil:"different"`
 			AwesomeName string `boil:"awesome_name"`
-			Face        string `boil:"-"`
-			Nose        string
+			Face        string
+			Nose        string `boil:"nose"`
 
 			Nested2 struct {
-				Nose string
-			} `boil:",bind"`
-		} `boil:",bind"`
+				Nose string `boil:"nose"`
+			} `boil:"nested2,bind"`
+			Nested3 struct {
+				Nose string `boil:"nose"`
+			} `boil:"nested3,structbind"`
+		} `boil:"nested,bind"`
 	}{}
 
 	got := MakeStructMapping(reflect.TypeOf(testStruct))
 
 	expectMap := map[string]uint64{
-		"Different":           testMakeMapping(0),
-		"AwesomeName":         testMakeMapping(1),
-		"Nose":                testMakeMapping(3),
-		"Nested.Different":    testMakeMapping(4, 0),
-		"Nested.AwesomeName":  testMakeMapping(4, 1),
-		"Nested.Nose":         testMakeMapping(4, 3),
-		"Nested.Nested2.Nose": testMakeMapping(4, 4, 0),
+		"different":            testMakeMapping(0),
+		"awesome_name":         testMakeMapping(1),
+		"nose":                 testMakeMapping(3),
+		"nested.different":     testMakeMapping(4, 0),
+		"nested.awesome_name":  testMakeMapping(4, 1),
+		"nested.nose":          testMakeMapping(4, 3),
+		"nested.nested2.nose":  testMakeMapping(4, 4, 0),
+		"nested.nested3__nose": testMakeMapping(4, 5, 0),
 	}
 
 	for expName, expVal := range expectMap {
@@ -350,10 +354,10 @@ func TestGetBoilTag(t *testing.T) {
 		FirstName   string `boil:"test_one,bind"`
 		LastName    string `boil:"test_two"`
 		MiddleName  string `boil:"middle_name,bind"`
-		AwesomeName string `boil:"awesome_name"`
-		Age         string `boil:",bind"`
-		Face        string `boil:"-"`
+		AwesomeName string `boil:"awesome_name,structbind"`
+		Age         string `boil:"age,bind,structbind"`
 		Nose        string
+		Fail        string `boil:"fail,invalidflag"`
 	}
 
 	var structFields []reflect.StructField
@@ -369,28 +373,30 @@ func TestGetBoilTag(t *testing.T) {
 	structFields = append(structFields, removeOk(typ.FieldByName("MiddleName")))
 	structFields = append(structFields, removeOk(typ.FieldByName("AwesomeName")))
 	structFields = append(structFields, removeOk(typ.FieldByName("Age")))
-	structFields = append(structFields, removeOk(typ.FieldByName("Face")))
 	structFields = append(structFields, removeOk(typ.FieldByName("Nose")))
+	structFields = append(structFields, removeOk(typ.FieldByName("Fail")))
 
-	expect := []struct {
-		Name    string
-		Recurse bool
-	}{
-		{"TestOne", true},
-		{"TestTwo", false},
-		{"MiddleName", true},
-		{"AwesomeName", false},
-		{"Age", true},
-		{"-", false},
-		{"Nose", false},
+	expect := []*boilTag{
+		{present: true, name: "test_one", bind: true},
+		{present: true, name: "test_two"},
+		{present: true, name: "middle_name", bind: true},
+		{present: true, name: "awesome_name", structbind: true},
+		nil,
+		{present: false},
+		nil,
 	}
 	for i, s := range structFields {
-		name, recurse := getBoilTag(s)
-		if expect[i].Name != name {
-			t.Errorf("Invalid name, expect %q, got %q", expect[i].Name, name)
-		}
-		if expect[i].Recurse != recurse {
-			t.Errorf("Invalid recurse, expect %v, got %v", !recurse, recurse)
+		tag, err := getBoilTag(s)
+		if err != nil {
+			if expect[i] != nil {
+				t.Errorf("Invalid tag, expected %v, got error %v", expect[i], err)
+			}
+		} else {
+			if expect[i] == nil {
+				t.Errorf("Invalid tag, expected error, got %v", tag)
+			} else if tag != *expect[i] {
+				t.Errorf("Invalid tag, expect %v, got %v", expect[i], tag)
+			}
 		}
 	}
 }
@@ -442,7 +448,7 @@ func TestBindSingular(t *testing.T) {
 	t.Parallel()
 
 	testResults := struct {
-		ID   int
+		ID   int    `boil:"id"`
 		Name string `boil:"test"`
 	}{}
 
@@ -539,11 +545,11 @@ func TestBind_InnerJoinSelect(t *testing.T) {
 
 	testResults := []*struct {
 		Happy struct {
-			ID int
+			ID int `boil:"id"`
 		} `boil:"h,bind"`
 		Fun struct {
-			ID int
-		} `boil:",bind"`
+			ID int `boil:"id"`
+		} `boil:"fun,bind"`
 	}{}
 
 	query := &Query{

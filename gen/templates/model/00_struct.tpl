@@ -25,8 +25,8 @@ type {{$modelName}} struct {
 	{{- end -}}
 	{{- if .Model.IsJoinModel -}}
 	{{- else}}
-	R *{{$modelNameCamel}}R `boil:"-" json:"-" toml:"-" yaml:"-"`
-	L {{$modelNameCamel}}L `boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *{{$modelNameCamel}}R `json:"-" toml:"-" yaml:"-"`
+	L {{$modelNameCamel}}L `json:"-" toml:"-" yaml:"-"`
 	{{end -}}
 }
 
