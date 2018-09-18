@@ -146,7 +146,7 @@ func ParseSchema(rs io.ReadSeeker) (*Schema, error) {
 	// TODO check FK columns match type (Go type? or just Postgres type?)
 
 	for _, o := range schema.Models {
-		o.Columns = makeColumns(nil, o.Fields, "")
+		o.Columns = makeColumns(nil, o.Fields, "", false)
 	}
 
 	for _, o := range schema.Models {
@@ -185,25 +185,38 @@ func (s *Schema) fillKeyNames() {
 	}
 }
 
-func makeColumns(cols []*Column, fields []*Field, prefix string) []*Column {
+func makeColumns(cols []*Column, fields []*Field, prefix string, forceNullable bool) []*Column {
 	for _, f := range fields {
 		switch t := f.Type.(type) {
 		case BaseType:
+			// BaseTypeNotNullable, BaseTypeNullable, Enum structs
 			cols = append(cols, &Column{
 				Name:     prefix + f.Name,
 				Type:     t,
 				DBType:   t.TypeDB(),
-				Nullable: f.Nullable,
-			})
-		case *Enum:
-			cols = append(cols, &Column{
-				Name:     prefix + f.Name,
-				Type:     t,
-				DBType:   t.Type.TypeDB(),
-				Nullable: f.Nullable,
+				Nullable: f.Nullable || forceNullable,
 			})
 		case *Struct:
-			cols = makeColumns(cols, t.Fields, prefix+f.Name+"__")
+			if f.Nullable {
+				cols = append(cols, &Column{
+					Name: prefix + f.Name,
+					Type: &BaseTypeNullable{
+						Name: "bool",
+						Go: TypeGo{
+							Name: "bool",
+						},
+						GoNull: TypeGo{
+							Pkg:  "github.com/KernelPay/sqlboiler/types/null",
+							Name: "Bool",
+						},
+						GoNullField: "Bool",
+						Postgres:    "boolean",
+					},
+					DBType:   "boolean",
+					Nullable: forceNullable,
+				})
+			}
+			cols = makeColumns(cols, t.Fields, prefix+f.Name+"__", forceNullable || f.Nullable)
 		}
 	}
 	return cols

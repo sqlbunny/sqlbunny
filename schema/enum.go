@@ -32,3 +32,7 @@ func (e *Enum) TypeGoNullField() string {
 func (e *Enum) BaseTypeGo() TypeGo {
 	return e.Type.TypeGo()
 }
+
+func (e *Enum) TypeDB() string {
+	return e.Type.TypeDB()
+}

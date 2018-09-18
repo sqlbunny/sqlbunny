@@ -317,6 +317,10 @@ func ptrFromMapping(val reflect.Value, mapping uint64, addressOf bool) reflect.V
 		val = val.Field(int(v))
 		if val.Kind() == reflect.Ptr {
 			val = reflect.Indirect(val)
+			if !val.IsValid() {
+				var nothing interface{}
+				return reflect.ValueOf(&nothing)
+			}
 		}
 	}
 
@@ -359,6 +363,9 @@ func makeStructMappingHelper(typ reflect.Type, prefix string, current uint64, de
 		}
 		if tag.structbind {
 			makeStructMappingHelper(f.Type, name+"__", current|uint64(i)<<depth, depth+8, fieldMaps)
+			if f.Type.Kind() == reflect.Ptr {
+				fieldMaps[name] = current | (sentinel << (depth + 8)) | (uint64(i) << depth)
+			}
 			continue
 		}
 

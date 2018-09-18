@@ -16,5 +16,10 @@ func (s *Struct) TypeGo() TypeGo {
 	}
 }
 func (s *Struct) TypeGoNull() TypeGo {
-	panic("Nullable structs not supported")
+	return TypeGo{
+		Name: "*" + strmangle.TitleCase(s.Name),
+	}
+}
+func (s *Struct) TypeGoNullField() string {
+	return "*"
 }
