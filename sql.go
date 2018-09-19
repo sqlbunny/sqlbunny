@@ -3,7 +3,6 @@ package geo
 import (
 	"database/sql/driver"
 	"errors"
-	"fmt"
 )
 
 type geom interface {
@@ -30,13 +29,11 @@ func scan(value interface{}, g geom) error {
 	if ewkbType != g.ewkbType() {
 		return errors.New("Incorrect EWKB type")
 	}
-	fmt.Println("Have SRID", haveSRID)
 	var srid uint32
 	if haveSRID {
 		srid = r.ReadUint32()
 	}
 	if s, ok := g.(geomS); ok {
-		fmt.Println("asdfasdf", haveSRID)
 		s.setSRID(srid)
 	}
 
