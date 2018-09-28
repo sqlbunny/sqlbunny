@@ -25,6 +25,10 @@ func MakeGrammar() *p.Grammar {
 	gIdentifier.Node(func(m p.Match) (p.Match, error) {
 		return p.String(m), nil
 	})
+	gRawIdentifier := p.Mult(0, 0, p.Set("^\n"))
+	gRawIdentifier.Node(func(m p.Match) (p.Match, error) {
+		return p.String(m), nil
+	})
 
 	gTypeGo := p.And(
 		p.Optional(p.And(
@@ -86,7 +90,7 @@ func MakeGrammar() *p.Grammar {
 			p.Lit("{"), WS,
 			p.Lit("go"), RWS, p.Tag("Go", gTypeGo), NL,
 			p.Optional(p.And(p.Lit("go_null"), p.Require(RWS, p.Tag("GoNull", gTypeGo), NL))),
-			p.Lit("postgres"), RWS, p.Tag("Postgres", gIdentifier), NL,
+			p.Lit("postgres"), RWS, p.Tag("Postgres", gRawIdentifier), NL,
 			p.Lit("}"), WS,
 		),
 	)
