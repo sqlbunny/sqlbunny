@@ -10,7 +10,6 @@ import (
 
     "github.com/KernelPay/sqlboiler/boil"
     "github.com/KernelPay/sqlboiler/types/null/convert"
-    "github.com/KernelPay/toolkit/apierrors"
 )
 
 // {{$enumName}} is an enum type.
@@ -53,7 +52,7 @@ func (o {{$enumName}}) MarshalText() ([]byte, error) {
 func (o *{{$enumName}}) UnmarshalText(text []byte) error {
 	val, ok := {{$enumNameCamel}}Values[string(text)]
 	if !ok {
-        return apierrors.New(apierrors.TypeInvalidRequest, "Invalid {{$enumName}} '%s'", text)
+        return &boil.InvalidEnumError{Value: text, Type: "{{$enumName}}"}
 	}
 	*o = val
 	return nil

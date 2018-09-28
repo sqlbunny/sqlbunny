@@ -13,7 +13,6 @@ import (
 
     "github.com/pkg/errors"
     "github.com/KernelPay/sqlboiler/boil"
-    "github.com/KernelPay/toolkit/apierrors"
 )
 
 const {{$modelNameCamel}}PrefixLength = {{ len .IDType.Prefix }} + 1
@@ -115,21 +114,21 @@ func (id {{$modelName}}) MarshalJSON() ([]byte, error) {
 // UnmarshalText implements encoding/text TextUnmarshaler interface
 func (id *{{$modelName}}) UnmarshalText(text []byte) error {
     if len(text) < {{$modelNameCamel}}PrefixLength {
-        return apierrors.New(apierrors.TypeInvalidRequest, "Invalid {{.IDType.Name}} ID '%s'", text)
+        return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
 	}
     if !bytes.Equal(text[:{{$modelNameCamel}}PrefixLength], {{$modelNameCamel}}Prefix) {
 		parts := strings.Split(string(text), "_")
 		if idType, ok := idPrefixes[parts[0]]; ok {
-			return apierrors.New(apierrors.TypeInvalidRequest, "Invalid {{.IDType.Name}} ID '%s': You're passing a %s ID, but we need a {{.IDType.Name}} ID here.", text, idType)
+            return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}", DetectedType: idType}
 		}
-		return apierrors.New(apierrors.TypeInvalidRequest, "Invalid {{.IDType.Name}} ID '%s'", text)
+        return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
 	}
     if len(text) != {{$modelNameCamel}}PrefixLength + boil.IDEncodedLen {
-		return apierrors.New(apierrors.TypeInvalidRequest, "Invalid {{.IDType.Name}} ID '%s'", text)
+        return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
 	}
     text = text[{{$modelNameCamel}}PrefixLength:]
     if !id.IDData.Decode(text) {
-        return apierrors.New(apierrors.TypeInvalidRequest, "Invalid {{.IDType.Name}} ID '%s'", text)
+        return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
     }
 	return nil
 }
