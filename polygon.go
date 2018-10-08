@@ -5,8 +5,8 @@ import (
 )
 
 type Polygon struct {
-	Boundary LineString   `json:"boundary"`
-	Holes    []LineString `json:"holes,omitempty"`
+	Coordinates LineString   `json:"coordinates"`
+	Holes       []LineString `json:"holes,omitempty"`
 }
 
 type PolygonS struct {
@@ -21,7 +21,7 @@ func (p *Polygon) ewkbRead(r *ewkbReader) {
 	} else {
 		p.Holes = make([]LineString, n-1)
 	}
-	p.Boundary.ewkbRead(r)
+	p.Coordinates.ewkbRead(r)
 	for i := range p.Holes {
 		p.Holes[i].ewkbRead(r)
 	}
@@ -29,6 +29,7 @@ func (p *Polygon) ewkbRead(r *ewkbReader) {
 
 func (p *Polygon) ewkbWrite(w *ewkbWriter) {
 	w.WriteUint32(uint32(len(p.Holes) + 1))
+	p.Coordinates.ewkbWrite(w)
 	for i := range p.Holes {
 		p.Holes[i].ewkbWrite(w)
 	}

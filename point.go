@@ -5,8 +5,8 @@ import (
 )
 
 type Point struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
+	X float64 `json:"longitude"`
+	Y float64 `json:"latitude"`
 }
 
 type PointS struct {
