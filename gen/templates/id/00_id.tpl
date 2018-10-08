@@ -12,7 +12,7 @@ import (
     "strings"
 
     "github.com/pkg/errors"
-    "github.com/KernelPay/sqlboiler/boil"
+    "github.com/KernelPay/sqlbunny/bunny"
 )
 
 const {{$modelNameCamel}}PrefixLength = {{ len .IDType.Prefix }} + 1
@@ -20,7 +20,7 @@ var {{$modelNameCamel}}Prefix = []byte("{{.IDType.Prefix}}_")
 
 // ID represents a unique request id
 type {{$modelName}} struct{
-    boil.IDData
+    bunny.IDData
 }
 
 func (id {{$modelName}}) IDBytes() []byte {
@@ -34,7 +34,7 @@ func New{{$modelName}}() {{$modelName}} {
 
 // NextAfter returns the next sequential ID after prev.
 func (id {{$modelName}}) NextAfter() {{$modelName}} {
-	for i := boil.IDRawLen - 1; i >= 0; i-- {
+	for i := bunny.IDRawLen - 1; i >= 0; i-- {
 		id.IDData[i]++
 		if id.IDData[i] != 0 {
 			break
@@ -45,7 +45,7 @@ func (id {{$modelName}}) NextAfter() {{$modelName}} {
 
 // After returns true if this ID is after the given ID in chronological order.
 func (id {{$modelName}}) After(other {{$modelName}}) bool {
-	for i := 0; i < boil.IDRawLen; i++ {
+	for i := 0; i < bunny.IDRawLen; i++ {
         if id.IDData[i] > other.IDData[i] {
             return true
         }
@@ -58,7 +58,7 @@ func (id {{$modelName}}) After(other {{$modelName}}) bool {
 
 // Before returns true if this ID is before the given ID in chronological order.
 func (id {{$modelName}}) Before(other {{$modelName}}) bool {
-	for i := 0; i < boil.IDRawLen; i++ {
+	for i := 0; i < bunny.IDRawLen; i++ {
 		if id.IDData[i] < other.IDData[i] {
             return true
         }
@@ -88,7 +88,7 @@ func {{$modelName}}FromTime(t time.Time) {{$modelName}} {
 
 // String returns a base32 hex lowercased with no padding representation of the id (char set is 0-9, a-v).
 func (id {{$modelName}}) String() string {
-	text := make([]byte, {{$modelNameCamel}}PrefixLength + boil.IDEncodedLen)
+	text := make([]byte, {{$modelNameCamel}}PrefixLength + bunny.IDEncodedLen)
     copy(text, {{$modelNameCamel}}Prefix)
 	id.IDData.Encode(text[{{$modelNameCamel}}PrefixLength:])
 	return string(text)
@@ -96,14 +96,14 @@ func (id {{$modelName}}) String() string {
 
 // MarshalText implements encoding/text TextMarshaler interface
 func (id {{$modelName}}) MarshalText() ([]byte, error) {
-	text := make([]byte, {{$modelNameCamel}}PrefixLength + boil.IDEncodedLen)
+	text := make([]byte, {{$modelNameCamel}}PrefixLength + bunny.IDEncodedLen)
     copy(text, {{$modelNameCamel}}Prefix)
     id.IDData.Encode(text[{{$modelNameCamel}}PrefixLength:])
 	return text, nil
 }
 
 func (id {{$modelName}}) MarshalJSON() ([]byte, error) {
-	text := make([]byte, {{$modelNameCamel}}PrefixLength + boil.IDEncodedLen+2)
+	text := make([]byte, {{$modelNameCamel}}PrefixLength + bunny.IDEncodedLen+2)
 	text[0] = '"'
     copy(text[1:], {{$modelNameCamel}}Prefix)
     id.IDData.Encode(text[1+{{$modelNameCamel}}PrefixLength:])
@@ -114,21 +114,21 @@ func (id {{$modelName}}) MarshalJSON() ([]byte, error) {
 // UnmarshalText implements encoding/text TextUnmarshaler interface
 func (id *{{$modelName}}) UnmarshalText(text []byte) error {
     if len(text) < {{$modelNameCamel}}PrefixLength {
-        return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
+        return &bunny.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
 	}
     if !bytes.Equal(text[:{{$modelNameCamel}}PrefixLength], {{$modelNameCamel}}Prefix) {
 		parts := strings.Split(string(text), "_")
 		if idType, ok := idPrefixes[parts[0]]; ok {
-            return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}", DetectedType: idType}
+            return &bunny.InvalidIDError{Value: text, Type: "{{.IDType.Name}}", DetectedType: idType}
 		}
-        return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
+        return &bunny.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
 	}
-    if len(text) != {{$modelNameCamel}}PrefixLength + boil.IDEncodedLen {
-        return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
+    if len(text) != {{$modelNameCamel}}PrefixLength + bunny.IDEncodedLen {
+        return &bunny.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
 	}
     text = text[{{$modelNameCamel}}PrefixLength:]
     if !id.IDData.Decode(text) {
-        return &boil.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
+        return &bunny.InvalidIDError{Value: text, Type: "{{.IDType.Name}}"}
     }
 	return nil
 }

@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/KernelPay/sqlboiler/boil/strmangle"
+	"github.com/KernelPay/sqlbunny/bunny/strmangle"
 )
 
 var (

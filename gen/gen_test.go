@@ -22,7 +22,7 @@ func TestNew(t *testing.T) {
 	}
 
 	var err error
-	out, err := ioutil.TempDir("", "boil_templates")
+	out, err := ioutil.TempDir("", "bunny_templates")
 	if err != nil {
 		t.Fatalf("unable to create tempdir: %s", err)
 	}

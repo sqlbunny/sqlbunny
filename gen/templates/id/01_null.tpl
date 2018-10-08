@@ -29,7 +29,7 @@ func Null{{$modelName}}FromPtr(i *{{$modelName}}) Null{{$modelName}} {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (u *Null{{$modelName}}) UnmarshalJSON(data []byte) error {
-	if bytes.Equal(data, boil.IDNullBytes) {
+	if bytes.Equal(data, bunny.IDNullBytes) {
 		u.ID = {{$modelName}}{}
 		u.Valid = false
 		return nil
@@ -61,7 +61,7 @@ func (u *Null{{$modelName}}) UnmarshalText(text []byte) error {
 // MarshalJSON implements json.Marshaler.
 func (u Null{{$modelName}}) MarshalJSON() ([]byte, error) {
 	if !u.Valid {
-		return boil.IDNullBytes, nil
+		return bunny.IDNullBytes, nil
 	}
 	return u.ID.MarshalJSON()
 }

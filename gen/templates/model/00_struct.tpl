@@ -7,10 +7,10 @@
 {{ import "strings" "strings" }}
 {{ import "sync" "sync" }}
 {{ import "time" "time" }}
-{{ import "boil" "github.com/KernelPay/sqlboiler/boil" }}
-{{ import "queries" "github.com/KernelPay/sqlboiler/boil/queries" }}
-{{ import "qm" "github.com/KernelPay/sqlboiler/boil/qm" }}
-{{ import "strmangle" "github.com/KernelPay/sqlboiler/boil/strmangle" }}
+{{ import "bunny" "github.com/KernelPay/sqlbunny/bunny" }}
+{{ import "queries" "github.com/KernelPay/sqlbunny/bunny/queries" }}
+{{ import "qm" "github.com/KernelPay/sqlbunny/bunny/qm" }}
+{{ import "strmangle" "github.com/KernelPay/sqlbunny/bunny/strmangle" }}
 {{ import "errors" "github.com/pkg/errors" }}
 
 {{- $dot := . -}}

@@ -8,7 +8,7 @@
 	{{- $foreignVarNameSingular := .ForeignModel | singular | camelCase -}}
 func test{{$txt.LocalModel.NameGo}}ToMany{{$txt.Function.NameGo}}(t *testing.T) {
 	var err error
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 
 	var a {{$txt.LocalModel.NameGo}}

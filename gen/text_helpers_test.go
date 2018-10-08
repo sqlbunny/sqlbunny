@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/KernelPay/sqlboiler/schema"
+	"github.com/KernelPay/sqlbunny/schema"
 	"github.com/davecgh/go-spew/spew"
 )
 

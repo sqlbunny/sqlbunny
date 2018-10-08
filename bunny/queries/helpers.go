@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/KernelPay/sqlboiler/boil/strmangle"
+	"github.com/KernelPay/sqlbunny/bunny/strmangle"
 )
 
 // NonZeroDefaultSet returns the fields included in the

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/KernelPay/sqlboiler/boil/strmangle"
+	"github.com/KernelPay/sqlbunny/bunny/strmangle"
 	"github.com/pkg/errors"
 )
 
@@ -39,7 +39,7 @@ const (
 // result into the passed in object pointer
 //
 // Bind rules:
-//   - Struct tags control bind, in the form of: `boil:"name,bind"`
+//   - Struct tags control bind, in the form of: `bunny:"name,bind"`
 //   - If "name" is omitted the sql field names that come back are TitleCased
 //     and matched against the field name.
 //   - If the "name" part of the struct tag is specified, the given name will
@@ -55,13 +55,13 @@ const (
 //     // ,bind in the struct tag, it will look specifically for
 //     // fields that are prefixed with "user." returning from the query.
 //     // For example "user.id" field name will bind to User1.ID
-//     User1      *models.User `boil:"user,bind"`
+//     User1      *models.User `bunny:"user,bind"`
 //     // User2 will follow the same rules as noted above except it will use
 //     // "friend." as the prefix it's looking for.
-//     User2      *models.User `boil:"friend,bind"`
+//     User2      *models.User `bunny:"friend,bind"`
 //     // RandomData will not be recursed into to look for fields to
 //     // bind and will not be bound to because of the - for the name.
-//     RandomData myStruct     `boil:"-"`
+//     RandomData myStruct     `bunny:"-"`
 //     // Date will not be recursed into to look for fields to bind because
 //     // it does not specify ,bind in the struct tag. But it can be bound to
 //     // as it does not specify a - for the name.
@@ -84,7 +84,7 @@ func Bind(rows *sql.Rows, obj interface{}) error {
 // Bind executes the query and inserts the
 // result into the passed in object pointer
 //
-// See documentation for boil.Bind()
+// See documentation for bunny.Bind()
 func (q *Query) Bind(obj interface{}) error {
 	structType, sliceType, bkind, err := bindChecks(obj)
 	if err != nil {
@@ -340,7 +340,7 @@ func makeStructMappingHelper(typ reflect.Type, prefix string, current uint64, de
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
 
-		tag, err := getBoilTag(f)
+		tag, err := getBunnyTag(f)
 		if err != nil {
 			panic(err)
 		}
@@ -366,25 +366,25 @@ func makeStructMappingHelper(typ reflect.Type, prefix string, current uint64, de
 	}
 }
 
-type boilTag struct {
+type bunnyTag struct {
 	present    bool
 	name       string
 	bind       bool
 	structbind bool
 }
 
-func getBoilTag(field reflect.StructField) (boilTag, error) {
-	tag := field.Tag.Get("boil")
+func getBunnyTag(field reflect.StructField) (bunnyTag, error) {
+	tag := field.Tag.Get("bunny")
 
-	// If there is no boil tag, don't use this field.
+	// If there is no bunny tag, don't use this field.
 	if len(tag) == 0 {
-		return boilTag{
+		return bunnyTag{
 			present: false,
 		}, nil
 	}
 
 	parts := strings.Split(tag, ",")
-	res := boilTag{
+	res := bunnyTag{
 		present: true,
 		name:    parts[0],
 	}
@@ -395,12 +395,12 @@ func getBoilTag(field reflect.StructField) (boilTag, error) {
 		case "structbind":
 			res.structbind = true
 		default:
-			return boilTag{}, fmt.Errorf("Invalid flag in boil tag in field '%s': '%s'", field.Name, flag)
+			return bunnyTag{}, fmt.Errorf("Invalid flag in bunny tag in field '%s': '%s'", field.Name, flag)
 		}
 	}
 
 	if res.bind && res.structbind {
-		return boilTag{}, fmt.Errorf("Invalid flags in boil tag in field '%s': bind and structbind can't be active at the same time", field.Name)
+		return bunnyTag{}, fmt.Errorf("Invalid flags in bunny tag in field '%s': bind and structbind can't be active at the same time", field.Name)
 	}
 
 	return res, nil

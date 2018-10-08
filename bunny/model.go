@@ -1,4 +1,4 @@
-package boil
+package bunny
 
 type Model interface {
 	GetID() ID

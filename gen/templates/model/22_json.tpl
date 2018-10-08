@@ -57,11 +57,11 @@ func (o *{{$modelName}}) MarshalJSON() ([]byte, error) {
     return json.Marshal(o.JSON())
 }
 
-func (o {{$modelName}}Slice) ToModelSlice() []boil.Model {
+func (o {{$modelName}}Slice) ToModelSlice() []bunny.Model {
     if o == nil {
-        return make([]boil.Model, 0)
+        return make([]bunny.Model, 0)
     }
-    res := make([]boil.Model, len(o))
+    res := make([]bunny.Model, len(o))
     for i := range o {
         res[i] = o[i]
     }
@@ -72,10 +72,10 @@ func (o *{{$modelName}}) CreatedAt() time.Time {
     return o.ID.Time()
 }
 
-func (o *{{$modelName}}) GetID() boil.ID {
+func (o *{{$modelName}}) GetID() bunny.ID {
     return o.ID
 }
-func (o *{{$modelName}}JSON) GetID() boil.ID {
+func (o *{{$modelName}}JSON) GetID() bunny.ID {
     return o.ID
 }
 {{ end }}

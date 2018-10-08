@@ -17,7 +17,7 @@ func (o *{{$modelNameSingular}}) Delete(ctx context.Context) error {
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), {{$varNameSingular}}PrimaryKeyMapping)
 	sql := "DELETE FROM {{$schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Columns}}{{end}}"
 
-	_, err := boil.Exec(ctx, sql, args...)
+	_, err := bunny.Exec(ctx, sql, args...)
 	if err != nil {
 	return errors.Wrap(err, "{{.PkgName}}: unable to delete from {{.Model.Name}}")
 	}
@@ -76,7 +76,7 @@ func (o {{$modelNameSingular}}Slice) DeleteAll(ctx context.Context) error {
 	sql := "DELETE FROM {{$schemaModel}} WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns, len(o))
 
-	_, err := boil.Exec(ctx, sql, args...)
+	_, err := bunny.Exec(ctx, sql, args...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to delete all from {{$varNameSingular}} slice")
 	}

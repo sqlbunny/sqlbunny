@@ -8,13 +8,13 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/KernelPay/sqlboiler/boil/queries"
-	"github.com/KernelPay/sqlboiler/boil/strmangle"
-	"github.com/KernelPay/sqlboiler/schema"
+	"github.com/KernelPay/sqlbunny/bunny/queries"
+	"github.com/KernelPay/sqlbunny/bunny/strmangle"
+	"github.com/KernelPay/sqlbunny/schema"
 	"github.com/pkg/errors"
 )
 
-// templateData for sqlboiler templates
+// templateData for sqlbunny templates
 type templateData struct {
 	Models  []*schema.Model
 	IDTypes []*schema.IDType

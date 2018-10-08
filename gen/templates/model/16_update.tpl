@@ -43,7 +43,7 @@ func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... strin
 
 	values := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), cache.valueMapping)
 
-	_, err = boil.Exec(ctx, cache.query, values...)
+	_, err = bunny.Exec(ctx, cache.query, values...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to update {{.Model.Name}} row")
 	}
@@ -104,7 +104,7 @@ func (o {{$modelNameSingular}}Slice) UpdateAll(ctx context.Context, cols M) erro
 		strmangle.SetParamNames("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, colNames),
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), {{if .Dialect.IndexPlaceholders}}len(colNames)+1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns, len(o)))
 
-	_, err := boil.Exec(ctx, sql, args...)
+	_, err := bunny.Exec(ctx, sql, args...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to update all in {{$varNameSingular}} slice")
 	}

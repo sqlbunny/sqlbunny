@@ -17,7 +17,7 @@ func test{{$modelNamePlural}}Upsert(t *testing.T) {
 		t.Errorf("Unable to randomize {{$modelNameSingular}} struct: %s", err)
 	}
 
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 	if err = {{$varNameSingular}}.Upsert(tx, {{if eq .DriverName "postgres"}}false, nil, {{end}}nil); err != nil {
 		t.Errorf("Unable to upsert {{$modelNameSingular}}: %s", err)

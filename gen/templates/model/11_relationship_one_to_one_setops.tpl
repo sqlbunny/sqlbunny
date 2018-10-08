@@ -30,7 +30,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Set{{$txt.Function.NameGo}}(ctx context.Con
 		)
 		values := []interface{}{o.{{$txt.LocalModel.ColumnNameGo}}, related.{{$foreignPrimaryKeyCols | stringMap $dot.StringFuncs.titleCaseIdentifier | join ", related."}}{{"}"}}
 
-		if _, err = boil.Exec(ctx, updateQuery, values...); err != nil {
+		if _, err = bunny.Exec(ctx, updateQuery, values...); err != nil {
 			return errors.Wrap(err, "failed to update foreign model")
 		}
 

@@ -1,6 +1,6 @@
 var dbNameRand *rand.Rand
 
-func MustTx(transactor boil.Transactor, err error) boil.Transactor {
+func MustTx(transactor bunny.Transactor, err error) bunny.Transactor {
 	if err != nil {
 		panic(fmt.Sprintf("Cannot create a transactor: %s", err))
 	}

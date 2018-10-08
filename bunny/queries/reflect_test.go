@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/KernelPay/sqlboiler/boil"
+	"github.com/KernelPay/sqlbunny/bunny"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func execToContext(exec boil.Executor) context.Context {
-	return boil.WithExecutor(context.Background(), exec)
+func execToContext(exec bunny.Executor) context.Context {
+	return bunny.WithExecutor(context.Background(), exec)
 }
 func bin64(i uint64) string {
 	str := strconv.FormatUint(i, 2)
@@ -42,8 +42,8 @@ func TestBindStruct(t *testing.T) {
 	t.Parallel()
 
 	testResults := struct {
-		ID   int    `boil:"id"`
-		Name string `boil:"test"`
+		ID   int    `bunny:"id"`
+		Name string `bunny:"test"`
 	}{}
 
 	query := &Query{
@@ -82,8 +82,8 @@ func TestBindSlice(t *testing.T) {
 	t.Parallel()
 
 	testResults := []struct {
-		ID   int    `boil:"id"`
-		Name string `boil:"test"`
+		ID   int    `bunny:"id"`
+		Name string `bunny:"test"`
 	}{}
 
 	query := &Query{
@@ -133,8 +133,8 @@ func TestBindPtrSlice(t *testing.T) {
 	t.Parallel()
 
 	testResults := []*struct {
-		ID   int    `boil:"id"`
-		Name string `boil:"test"`
+		ID   int    `bunny:"id"`
+		Name string `bunny:"test"`
 	}{}
 
 	query := &Query{
@@ -193,24 +193,24 @@ func TestMakeStructMapping(t *testing.T) {
 	t.Parallel()
 
 	var testStruct = struct {
-		LastName    string `boil:"different"`
-		AwesomeName string `boil:"awesome_name"`
+		LastName    string `bunny:"different"`
+		AwesomeName string `bunny:"awesome_name"`
 		Face        string
-		Nose        string `boil:"nose"`
+		Nose        string `bunny:"nose"`
 
 		Nested struct {
-			LastName    string `boil:"different"`
-			AwesomeName string `boil:"awesome_name"`
+			LastName    string `bunny:"different"`
+			AwesomeName string `bunny:"awesome_name"`
 			Face        string
-			Nose        string `boil:"nose"`
+			Nose        string `bunny:"nose"`
 
 			Nested2 struct {
-				Nose string `boil:"nose"`
-			} `boil:"nested2,bind"`
+				Nose string `bunny:"nose"`
+			} `bunny:"nested2,bind"`
 			Nested3 struct {
-				Nose string `boil:"nose"`
-			} `boil:"nested3,structbind"`
-		} `boil:"nested,bind"`
+				Nose string `bunny:"nose"`
+			} `bunny:"nested3,structbind"`
+		} `bunny:"nested,bind"`
 	}{}
 
 	got := MakeStructMapping(reflect.TypeOf(testStruct))
@@ -347,17 +347,17 @@ func TestPtrsFromMapping(t *testing.T) {
 	}
 }
 
-func TestGetBoilTag(t *testing.T) {
+func TestGetBunnyTag(t *testing.T) {
 	t.Parallel()
 
 	type TestStruct struct {
-		FirstName   string `boil:"test_one,bind"`
-		LastName    string `boil:"test_two"`
-		MiddleName  string `boil:"middle_name,bind"`
-		AwesomeName string `boil:"awesome_name,structbind"`
-		Age         string `boil:"age,bind,structbind"`
+		FirstName   string `bunny:"test_one,bind"`
+		LastName    string `bunny:"test_two"`
+		MiddleName  string `bunny:"middle_name,bind"`
+		AwesomeName string `bunny:"awesome_name,structbind"`
+		Age         string `bunny:"age,bind,structbind"`
 		Nose        string
-		Fail        string `boil:"fail,invalidflag"`
+		Fail        string `bunny:"fail,invalidflag"`
 	}
 
 	var structFields []reflect.StructField
@@ -376,7 +376,7 @@ func TestGetBoilTag(t *testing.T) {
 	structFields = append(structFields, removeOk(typ.FieldByName("Nose")))
 	structFields = append(structFields, removeOk(typ.FieldByName("Fail")))
 
-	expect := []*boilTag{
+	expect := []*bunnyTag{
 		{present: true, name: "test_one", bind: true},
 		{present: true, name: "test_two"},
 		{present: true, name: "middle_name", bind: true},
@@ -386,7 +386,7 @@ func TestGetBoilTag(t *testing.T) {
 		nil,
 	}
 	for i, s := range structFields {
-		tag, err := getBoilTag(s)
+		tag, err := getBunnyTag(s)
 		if err != nil {
 			if expect[i] != nil {
 				t.Errorf("Invalid tag, expected %v, got error %v", expect[i], err)
@@ -448,8 +448,8 @@ func TestBindSingular(t *testing.T) {
 	t.Parallel()
 
 	testResults := struct {
-		ID   int    `boil:"id"`
-		Name string `boil:"test"`
+		ID   int    `bunny:"id"`
+		Name string `bunny:"test"`
 	}{}
 
 	query := &Query{
@@ -489,11 +489,11 @@ func TestBind_InnerJoin(t *testing.T) {
 
 	testResults := []*struct {
 		Happy struct {
-			ID int `boil:"identifier"`
-		} `boil:",bind"`
+			ID int `bunny:"identifier"`
+		} `bunny:",bind"`
 		Fun struct {
-			ID int `boil:"id"`
-		} `boil:",bind"`
+			ID int `bunny:"id"`
+		} `bunny:",bind"`
 	}{}
 
 	query := &Query{
@@ -545,11 +545,11 @@ func TestBind_InnerJoinSelect(t *testing.T) {
 
 	testResults := []*struct {
 		Happy struct {
-			ID int `boil:"id"`
-		} `boil:"h,bind"`
+			ID int `bunny:"id"`
+		} `bunny:"h,bind"`
 		Fun struct {
-			ID int `boil:"id"`
-		} `boil:"fun,bind"`
+			ID int `bunny:"id"`
+		} `bunny:"fun,bind"`
 	}{}
 
 	query := &Query{

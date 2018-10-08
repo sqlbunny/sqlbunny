@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/KernelPay/sqlboiler/types/null/convert"
+	"github.com/KernelPay/sqlbunny/types/null/convert"
 )
 
 // Bool is a nullable bool.

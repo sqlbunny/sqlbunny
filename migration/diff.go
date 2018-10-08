@@ -3,7 +3,7 @@ package migration
 import (
 	"reflect"
 
-	"github.com/KernelPay/sqlboiler/schema"
+	"github.com/KernelPay/sqlbunny/schema"
 )
 
 func Diff(ops OperationList, s1, s2 *schema.Schema) OperationList {

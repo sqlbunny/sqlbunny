@@ -12,7 +12,7 @@ func test{{$modelNamePlural}}Bind(t *testing.T) {
 		t.Errorf("Unable to randomize {{$modelNameSingular}} struct: %s", err)
 	}
 
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 	if err = {{$varNameSingular}}.Insert(tx); err != nil {
 		t.Error(err)
@@ -33,7 +33,7 @@ func test{{$modelNamePlural}}One(t *testing.T) {
 		t.Errorf("Unable to randomize {{$modelNameSingular}} struct: %s", err)
 	}
 
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 	if err = {{$varNameSingular}}.Insert(tx); err != nil {
 		t.Error(err)
@@ -60,7 +60,7 @@ func test{{$modelNamePlural}}All(t *testing.T) {
 		t.Errorf("Unable to randomize {{$modelNameSingular}} struct: %s", err)
 	}
 
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 	if err = {{$varNameSingular}}One.Insert(tx); err != nil {
 		t.Error(err)
@@ -93,7 +93,7 @@ func test{{$modelNamePlural}}Count(t *testing.T) {
 		t.Errorf("Unable to randomize {{$modelNameSingular}} struct: %s", err)
 	}
 
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 	if err = {{$varNameSingular}}One.Insert(tx); err != nil {
 		t.Error(err)

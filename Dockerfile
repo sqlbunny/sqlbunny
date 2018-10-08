@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
-COPY gen/templates /sqlboiler/templates
-COPY gen/templates_test /sqlboiler/templates_test
-COPY sqlboiler /usr/local/bin
+COPY gen/templates /sqlbunny/templates
+COPY gen/templates_test /sqlbunny/templates_test
+COPY sqlbunny /usr/local/bin
 
-ENTRYPOINT ["/usr/local/bin/sqlboiler", "--basedir", "/sqlboiler"]
+ENTRYPOINT ["/usr/local/bin/sqlbunny", "--basedir", "/sqlbunny"]

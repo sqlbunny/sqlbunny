@@ -9,7 +9,7 @@
 func test{{$txt.LocalModel.NameGo}}OneToOneSetOp{{$txt.ForeignModel.NameGo}}Using{{$txt.Function.NameGo}}(t *testing.T) {
 	var err error
 
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 
 	var a {{$txt.LocalModel.NameGo}}
@@ -87,7 +87,7 @@ func test{{$txt.LocalModel.NameGo}}OneToOneSetOp{{$txt.ForeignModel.NameGo}}Usin
 func test{{$txt.LocalModel.NameGo}}OneToOneRemoveOp{{$txt.ForeignModel.NameGo}}Using{{$txt.Function.NameGo}}(t *testing.T) {
 	var err error
 
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 
 	var a {{$txt.LocalModel.NameGo}}

@@ -9,8 +9,8 @@ import (
 	"os/exec"
 	"plugin"
 
-	"github.com/KernelPay/sqlboiler/common"
-	"github.com/KernelPay/sqlboiler/schema"
+	"github.com/KernelPay/sqlbunny/common"
+	"github.com/KernelPay/sqlbunny/schema"
 )
 
 func Run(s2 *schema.Schema) error {
@@ -31,7 +31,7 @@ func Run(s2 *schema.Schema) error {
 
 	var buf bytes.Buffer
 	common.WritePackageName(&buf, "migrations")
-	buf.WriteString("import \"github.com/KernelPay/sqlboiler/migration\"\n")
+	buf.WriteString("import \"github.com/KernelPay/sqlbunny/migration\"\n")
 	buf.WriteString(fmt.Sprintf("func init() {\nMigrations.Register(%d, ", migrationNumber))
 	ops.Dump(&buf)
 	buf.WriteString(")\n}")
@@ -49,10 +49,10 @@ import "%s/migrations"
 var Migrations = &migrations.Migrations`
 
 func LoadMigrations() (*MigrationStore, error) {
-	if err := os.RemoveAll("sqlboiler_tmp"); err != nil {
+	if err := os.RemoveAll("sqlbunny_tmp"); err != nil {
 		return nil, err
 	}
-	if err := os.Mkdir("sqlboiler_tmp", 0777); err != nil {
+	if err := os.Mkdir("sqlbunny_tmp", 0777); err != nil {
 		return nil, err
 	}
 
@@ -66,10 +66,10 @@ func LoadMigrations() (*MigrationStore, error) {
 		return nil, fmt.Errorf("Error finding package for cwd: %v", err)
 	}
 
-	if err := ioutil.WriteFile("./sqlboiler_tmp/main.go", []byte(fmt.Sprintf(loaderProgram, pkg.ImportPath)), 0666); err != nil {
+	if err := ioutil.WriteFile("./sqlbunny_tmp/main.go", []byte(fmt.Sprintf(loaderProgram, pkg.ImportPath)), 0666); err != nil {
 		return nil, err
 	}
-	cmd := exec.Command("go", "build", "-buildmode=plugin", "-o=./sqlboiler_tmp/migrations.so", "./sqlboiler_tmp")
+	cmd := exec.Command("go", "build", "-buildmode=plugin", "-o=./sqlbunny_tmp/migrations.so", "./sqlbunny_tmp")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -77,7 +77,7 @@ func LoadMigrations() (*MigrationStore, error) {
 		return nil, fmt.Errorf("Error compiling migrations package: %v", err)
 	}
 
-	p, err := plugin.Open("./sqlboiler_tmp/migrations.so")
+	p, err := plugin.Open("./sqlbunny_tmp/migrations.so")
 	if err != nil {
 		return nil, fmt.Errorf("Error loading migrations package: %v", err)
 	}
@@ -91,7 +91,7 @@ func LoadMigrations() (*MigrationStore, error) {
 		return nil, fmt.Errorf("'Migrations' variable is the wrong type, should be migration.MigrationStore")
 	}
 
-	os.RemoveAll("sqlboiler_tmp")
+	os.RemoveAll("sqlbunny_tmp")
 
 	return *ops, nil
 }

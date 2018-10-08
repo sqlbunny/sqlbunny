@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/KernelPay/sqlboiler/boil"
+	"github.com/KernelPay/sqlbunny/bunny"
 )
 
 // joinKind is the type of join
@@ -99,19 +99,19 @@ func Raw(ctx context.Context, query string, args ...interface{}) *Query {
 // Exec executes a query that does not need a row returned
 func (q *Query) Exec() (sql.Result, error) {
 	qs, args := buildQuery(q)
-	return boil.Exec(q.ctx, qs, args...)
+	return bunny.Exec(q.ctx, qs, args...)
 }
 
 // QueryRow executes the query for the One finisher and returns a row
 func (q *Query) QueryRow() *sql.Row {
 	qs, args := buildQuery(q)
-	return boil.QueryRow(q.ctx, qs, args...)
+	return bunny.QueryRow(q.ctx, qs, args...)
 }
 
 // Query executes the query for the All finisher and returns multiple rows
 func (q *Query) Query() (*sql.Rows, error) {
 	qs, args := buildQuery(q)
-	return boil.Query(q.ctx, qs, args...)
+	return bunny.Query(q.ctx, qs, args...)
 }
 
 // SetContext on the query.

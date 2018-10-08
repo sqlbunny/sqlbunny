@@ -1,8 +1,8 @@
 import (
 	"context"
 
-	"github.com/KernelPay/sqlboiler/boil/queries"
-	"github.com/KernelPay/sqlboiler/boil/qm"
+	"github.com/KernelPay/sqlbunny/bunny/queries"
+	"github.com/KernelPay/sqlbunny/bunny/qm"
 )
 
 var dialect = queries.Dialect{

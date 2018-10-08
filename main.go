@@ -1,18 +1,18 @@
-// Package main defines a command line interface for the sqlboiler package
+// Package main defines a command line interface for the sqlbunny package
 package main
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/KernelPay/sqlboiler/gen"
-	"github.com/KernelPay/sqlboiler/migration"
-	"github.com/KernelPay/sqlboiler/schema"
+	"github.com/KernelPay/sqlbunny/gen"
+	"github.com/KernelPay/sqlbunny/migration"
+	"github.com/KernelPay/sqlbunny/schema"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-const sqlBoilerVersion = "2.6.0"
+const sqlbunnyVersion = "2.6.0"
 
 var cmdConfig gen.Config
 var schemaFile string
@@ -40,11 +40,11 @@ func main() {
 	var cmdVersion = &cobra.Command{
 		Use: "version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("SQLBoiler v" + sqlBoilerVersion)
+			fmt.Println("sqlbunny v" + sqlbunnyVersion)
 		},
 	}
 
-	var rootCmd = &cobra.Command{Use: "sqlboiler"}
+	var rootCmd = &cobra.Command{Use: "sqlbunny"}
 	rootCmd.AddCommand(cmdGen, cmdVersion, cmdMigration)
 
 	// Set up the cobra root command flags

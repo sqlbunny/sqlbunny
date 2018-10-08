@@ -70,9 +70,9 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 	{{if .UseLastInsertID -}}
 	{{- $canLastInsertID := .Model.CanLastInsertID -}}
 	{{if $canLastInsertID -}}
-	result, err := boil.Exec(ctx, cache.query, vals...)
+	result, err := bunny.Exec(ctx, cache.query, vals...)
 	{{else -}}
-	_, err = boil.Exec(ctx, cache.query, vals...)
+	_, err = bunny.Exec(ctx, cache.query, vals...)
 	{{- end}}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to insert into {{.Model.Name}}")
@@ -108,15 +108,15 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 		{{end -}}
 	}
 
-	err = boil.QueryRow(ctx, cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
+	err = bunny.QueryRow(ctx, cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to populate default values for {{.Model.Name}}")
 	}
 	{{else}}
 	if len(cache.retMapping) != 0 {
-		err = boil.QueryRow(ctx, cache.query, vals...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
+		err = bunny.QueryRow(ctx, cache.query, vals...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
 	} else {
-		_, err = boil.Exec(ctx, cache.query, vals...)
+		_, err = bunny.Exec(ctx, cache.query, vals...)
 	}
 
 	if err != nil {

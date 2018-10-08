@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 
 	// Set DebugMode so we can see generated sql statements
 	flag.Parse()
-	boil.DebugMode = *flagDebugMode
+	bunny.DebugMode = *flagDebugMode
 
 	if err = dbMain.setup(); err != nil {
 		fmt.Println("Unable to execute setup:", err)
@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
   }
 
 	var code int
-	boil.SetDB(conn)
+	bunny.SetDB(conn)
 	code = m.Run()
 
 	if err = dbMain.teardown(); err != nil {
@@ -61,7 +61,7 @@ func TestMain(m *testing.M) {
 func initViper() error {
   var err error
 
-	viper.SetConfigName("sqlboiler")
+	viper.SetConfigName("sqlbunny")
 
 	configHome := os.Getenv("XDG_CONFIG_HOME")
 	homePath := os.Getenv("HOME")
@@ -74,9 +74,9 @@ func initViper() error {
 
 	configPaths := []string{wd}
 	if len(configHome) > 0 {
-		configPaths = append(configPaths, filepath.Join(configHome, "sqlboiler"))
+		configPaths = append(configPaths, filepath.Join(configHome, "sqlbunny"))
 	} else {
-		configPaths = append(configPaths, filepath.Join(homePath, ".config/sqlboiler"))
+		configPaths = append(configPaths, filepath.Join(homePath, ".config/sqlbunny"))
 	}
 
 	for _, p := range configPaths {

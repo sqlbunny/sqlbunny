@@ -32,7 +32,7 @@ func Null{{$enumName}}FromPtr(i *{{$enumName}}) Null{{$enumName}} {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (u *Null{{$enumName}}) UnmarshalJSON(data []byte) error {
-	if bytes.Equal(data, boil.IDNullBytes) {
+	if bytes.Equal(data, bunny.IDNullBytes) {
         var z {{$enumName}}
 		u.{{$enumName}} = z
 		u.Valid = false
@@ -65,7 +65,7 @@ func (u *Null{{$enumName}}) UnmarshalText(text []byte) error {
 // MarshalJSON implements json.Marshaler.
 func (u Null{{$enumName}}) MarshalJSON() ([]byte, error) {
 	if !u.Valid {
-		return boil.IDNullBytes, nil
+		return bunny.IDNullBytes, nil
 	}
 	return json.Marshal(u.{{$enumName}})
 }

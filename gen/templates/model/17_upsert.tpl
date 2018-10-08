@@ -94,9 +94,9 @@ func (o *{{$modelNameSingular}}) Upsert(ctx context.Context, updateOnConflict bo
 	{{if .UseLastInsertID -}}
 	{{- $canLastInsertID := .Model.CanLastInsertID -}}
 	{{if $canLastInsertID -}}
-	result, err := boil.Exec(ctx, cache.query, vals...)
+	result, err := bunny.Exec(ctx, cache.query, vals...)
 	{{else -}}
-	_, err = boil.Exec(ctx, cache.query, vals...)
+	_, err = bunny.Exec(ctx, cache.query, vals...)
 	{{- end}}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to upsert for {{.Model.Name}}")
@@ -132,18 +132,18 @@ func (o *{{$modelNameSingular}}) Upsert(ctx context.Context, updateOnConflict bo
 		{{end -}}
 	}
 
-	err = boil.QueryRow(ctx, cache.retQuery, identifierCols...).Scan(returns...)
+	err = bunny.QueryRow(ctx, cache.retQuery, identifierCols...).Scan(returns...)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to populate default values for {{.Model.Name}}")
 	}
 	{{- else}}
 	if len(cache.retMapping) != 0 {
-		err = boil.QueryRow(ctx, cache.query, vals...).Scan(returns...)
-		if boil.IsErrNoRows(err) {
+		err = bunny.QueryRow(ctx, cache.query, vals...).Scan(returns...)
+		if bunny.IsErrNoRows(err) {
 			err = nil // Postgres doesn't return anything when there's no update
 		}
 	} else {
-		_, err = boil.Exec(ctx, cache.query, vals...)
+		_, err = bunny.Exec(ctx, cache.query, vals...)
 	}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to upsert {{.Model.Name}}")

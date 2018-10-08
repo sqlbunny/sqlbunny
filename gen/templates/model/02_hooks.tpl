@@ -112,25 +112,25 @@ func (o *{{$modelNameSingular}}) doAfterUpsertHooks(ctx context.Context) (err er
 }
 
 // Add{{$modelNameSingular}}Hook registers your hook function for all future operations.
-func Add{{$modelNameSingular}}Hook(hookPoint boil.HookPoint, {{$varNameSingular}}Hook {{$modelNameSingular}}Hook) {
+func Add{{$modelNameSingular}}Hook(hookPoint bunny.HookPoint, {{$varNameSingular}}Hook {{$modelNameSingular}}Hook) {
 	switch hookPoint {
-		case boil.BeforeInsertHook:
+		case bunny.BeforeInsertHook:
 			{{$varNameSingular}}BeforeInsertHooks = append({{$varNameSingular}}BeforeInsertHooks, {{$varNameSingular}}Hook)
-		case boil.BeforeUpdateHook:
+		case bunny.BeforeUpdateHook:
 			{{$varNameSingular}}BeforeUpdateHooks = append({{$varNameSingular}}BeforeUpdateHooks, {{$varNameSingular}}Hook)
-		case boil.BeforeDeleteHook:
+		case bunny.BeforeDeleteHook:
 			{{$varNameSingular}}BeforeDeleteHooks = append({{$varNameSingular}}BeforeDeleteHooks, {{$varNameSingular}}Hook)
-		case boil.BeforeUpsertHook:
+		case bunny.BeforeUpsertHook:
 			{{$varNameSingular}}BeforeUpsertHooks = append({{$varNameSingular}}BeforeUpsertHooks, {{$varNameSingular}}Hook)
-		case boil.AfterInsertHook:
+		case bunny.AfterInsertHook:
 			{{$varNameSingular}}AfterInsertHooks = append({{$varNameSingular}}AfterInsertHooks, {{$varNameSingular}}Hook)
-		case boil.AfterSelectHook:
+		case bunny.AfterSelectHook:
 			{{$varNameSingular}}AfterSelectHooks = append({{$varNameSingular}}AfterSelectHooks, {{$varNameSingular}}Hook)
-		case boil.AfterUpdateHook:
+		case bunny.AfterUpdateHook:
 			{{$varNameSingular}}AfterUpdateHooks = append({{$varNameSingular}}AfterUpdateHooks, {{$varNameSingular}}Hook)
-		case boil.AfterDeleteHook:
+		case bunny.AfterDeleteHook:
 			{{$varNameSingular}}AfterDeleteHooks = append({{$varNameSingular}}AfterDeleteHooks, {{$varNameSingular}}Hook)
-		case boil.AfterUpsertHook:
+		case bunny.AfterUpsertHook:
 			{{$varNameSingular}}AfterUpsertHooks = append({{$varNameSingular}}AfterUpsertHooks, {{$varNameSingular}}Hook)
 	}
 }

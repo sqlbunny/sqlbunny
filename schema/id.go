@@ -1,6 +1,6 @@
 package schema
 
-import "github.com/KernelPay/sqlboiler/boil/strmangle"
+import "github.com/KernelPay/sqlbunny/bunny/strmangle"
 
 type IDType struct {
 	Name   string

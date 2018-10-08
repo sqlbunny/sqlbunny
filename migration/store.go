@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/KernelPay/sqlboiler/boil"
-	"github.com/KernelPay/sqlboiler/schema"
+	"github.com/KernelPay/sqlbunny/bunny"
+	"github.com/KernelPay/sqlbunny/schema"
 )
 
 type MigrationStore struct {
@@ -22,17 +22,17 @@ const (
 
 func (m *MigrationStore) Run(ctx context.Context) error {
 	var count int64
-	if err := boil.QueryRow(ctx, checkMigrationsTableSQL).Scan(&count); err != nil {
+	if err := bunny.QueryRow(ctx, checkMigrationsTableSQL).Scan(&count); err != nil {
 		return err
 	}
 	if count == 0 {
-		if _, err := boil.Exec(ctx, createMigrationsTableSQL); err != nil {
+		if _, err := bunny.Exec(ctx, createMigrationsTableSQL); err != nil {
 			return err
 		}
 	}
 
 	var max int64
-	if err := boil.QueryRow(ctx, maxMigrationSQL).Scan(&max); err != nil {
+	if err := bunny.QueryRow(ctx, maxMigrationSQL).Scan(&max); err != nil {
 		return err
 	}
 
@@ -51,7 +51,7 @@ func (m *MigrationStore) Run(ctx context.Context) error {
 				}
 			}
 
-			if _, err := boil.Exec(ctx, insertMigrationSQL, i, time.Now()); err != nil {
+			if _, err := bunny.Exec(ctx, insertMigrationSQL, i, time.Now()); err != nil {
 				return err
 			}
 		}
