@@ -34,7 +34,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Add{{$txt.Function.NameGo}}(ctx context.Con
 			)
 			values := []interface{}{o.{{$txt.LocalModel.ColumnNameGo}}, rel.{{$foreignPrimaryKeyCols | stringMap $dot.StringFuncs.titleCaseIdentifier | join ", rel."}}{{"}"}}
 
-			if _, err = boil.Exec(ctx, updateQuery, values...); err != nil {
+			if _, err = bunny.Exec(ctx, updateQuery, values...); err != nil {
 				return errors.Wrap(err, "failed to update foreign model")
 			}
 
@@ -50,7 +50,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Add{{$txt.Function.NameGo}}(ctx context.Con
 		query := "insert into {{.JoinModel | $dot.SchemaModel}} ({{.JoinLocalField | $dot.Quotes}}, {{.JoinForeignColumn | $dot.Quotes}}) values {{if $dot.Dialect.IndexPlaceholders}}($1, $2){{else}}(?, ?){{end}}"
 		values := []interface{}{{"{"}}o.{{$txt.LocalModel.ColumnNameGo}}, rel.{{$txt.ForeignModel.ColumnNameGo}}}
 
-		_, err = boil.Exec(ctx, query, values...)
+		_, err = bunny.Exec(ctx, query, values...)
 		if err != nil {
 			return errors.Wrap(err, "failed to insert into join model")
 		}
@@ -105,7 +105,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Set{{$txt.Function.NameGo}}(ctx context.Con
 	query := "update {{.ForeignModel | $dot.SchemaModel}} set {{.ForeignColumn | $dot.Quotes}} = null where {{.ForeignColumn | $dot.Quotes}} = {{if $dot.Dialect.IndexPlaceholders}}$1{{else}}?{{end}}"
 	values := []interface{}{{"{"}}o.{{$txt.LocalModel.ColumnNameGo}}}
 	{{end -}}
-	_, err := boil.Exec(ctx, query, values...)
+	_, err := bunny.Exec(ctx, query, values...)
 	if err != nil {
 		return errors.Wrap(err, "failed to remove relationships before set")
 	}
@@ -148,7 +148,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Remove{{$txt.Function.NameGo}}(ctx context.
 		values = append(values, rel.{{$txt.ForeignModel.ColumnNameGo}})
 	}
 
-	_, err = boil.Exec(ctx, query, values...)
+	_, err = bunny.Exec(ctx, query, values...)
 	if err != nil {
 		return errors.Wrap(err, "failed to remove relationships before set")
 	}

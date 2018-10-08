@@ -1,14 +1,14 @@
-![sqlboiler logo](http://i.imgur.com/ilkv0r9.png)
+![sqlbunny logo](http://i.imgur.com/ilkv0r9.png)
 
-[![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://github.com/KernelPay/sqlboiler/blob/master/LICENSE)
-[![GoDoc](https://godoc.org/github.com/KernelPay/sqlboiler?status.svg)](https://godoc.org/github.com/KernelPay/sqlboiler)
-[![Mail](https://img.shields.io/badge/mail%20list-sqlboiler-lightgrey.svg)](https://groups.google.com/a/volatile.tech/forum/#!forum/sqlboiler)
-[![Mail-Annc](https://img.shields.io/badge/mail%20list-sqlboiler--announce-lightgrey.svg)](https://groups.google.com/a/volatile.tech/forum/#!forum/sqlboiler-announce)
-[![Slack](https://img.shields.io/badge/slack-%23general-lightgrey.svg)](https://sqlboiler.from-the.cloud)
-[![CircleCI](https://circleci.com/gh/volatiletech/sqlboiler.svg?style=shield)](https://circleci.com/gh/volatiletech/sqlboiler)
-[![Go Report Card](https://goreportcard.com/badge/volatiletech/sqlboiler)](http://goreportcard.com/report/volatiletech/sqlboiler)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://github.com/KernelPay/sqlbunny/blob/master/LICENSE)
+[![GoDoc](https://godoc.org/github.com/KernelPay/sqlbunny?status.svg)](https://godoc.org/github.com/KernelPay/sqlbunny)
+[![Mail](https://img.shields.io/badge/mail%20list-sqlbunny-lightgrey.svg)](https://groups.google.com/a/volatile.tech/forum/#!forum/sqlbunny)
+[![Mail-Annc](https://img.shields.io/badge/mail%20list-sqlbunny--announce-lightgrey.svg)](https://groups.google.com/a/volatile.tech/forum/#!forum/sqlbunny-announce)
+[![Slack](https://img.shields.io/badge/slack-%23general-lightgrey.svg)](https://sqlbunny.from-the.cloud)
+[![CircleCI](https://circleci.com/gh/volatiletech/sqlbunny.svg?style=shield)](https://circleci.com/gh/volatiletech/sqlbunny)
+[![Go Report Card](https://goreportcard.com/badge/volatiletech/sqlbunny)](http://goreportcard.com/report/volatiletech/sqlbunny)
 
-SQLBoiler is a tool to generate a Go ORM tailored to your database schema.
+sqlbunny is a tool to generate a Go ORM tailored to your database schema.
 
 It is a "database-first" ORM as opposed to "code-first" (like gorm/gorp).
 That means you must first create your database schema. Please use something
@@ -23,12 +23,12 @@ Being Go veterans we knew the state of ORMs was shaky, and after a quick review 
 there are code-first, reflect-based and have a very weak story around relationships between models. So with that we set out with these goals:
 
 * Work with existing databases: Don't be the tool to define the schema, that's better left to other tools.
-* ActiveRecord-like productivity: Eliminate all sql boilerplate, have relationships as a first-class concept.
+* ActiveRecord-like productivity: Eliminate all sql bunnyerplate, have relationships as a first-class concept.
 * Go-like feel: Work with normal structs, call functions, no hyper-magical struct tags, small interfaces.
 * Go-like performance: [Benchmark](#benchmarks) and optimize the hot-paths, perform like hand-rolled `sql.DB` code.
 
-We believe with SQLBoiler and our database-first code-generation approach we've been able to successfully meet all of these goals. On top
-of that SQLBoiler also confers the following benefits:
+We believe with sqlbunny and our database-first code-generation approach we've been able to successfully meet all of these goals. On top
+of that sqlbunny also confers the following benefits:
 
 * The models package is type safe. This means no chance of random panics due to passing in the wrong type. No need for interface{}.
 * Our types closely correlate to your database field types. This is expanded by our extended null package which supports nearly all Go data types.
@@ -38,9 +38,9 @@ of that SQLBoiler also confers the following benefits:
 Model of Contents
 =================
 
-  * [SQLBoiler](#sqlboiler)
+  * [sqlbunny](#sqlbunny)
     * [Why another ORM](#why-another-orm)
-    * [About SQL Boiler](#about-sql-boiler)
+    * [About SQL Bunnyer](#about-sql-bunnyer)
       * [Features](#features)
       * [Supported Databases](#supported-databases)
       * [A Small Taste](#a-small-taste)
@@ -80,14 +80,14 @@ Model of Contents
         * [Missing imports for generated package](#missing-imports-for-generated-package)
   * [Benchmarks](#benchmarks)
 
-## About SQL Boiler
+## About SQL Bunnyer
 
 ### Features
 
 - Full model generation
 - Extremely fast code generation
 - High performance through generation & intelligent caching
-- Uses boil.Executor (simple interface, sql.DB, sqlx.DB etc. compatible)
+- Uses bunny.Executor (simple interface, sql.DB, sqlx.DB etc. compatible)
 - Easy workflow (models can always be regenerated, full auto-complete)
 - Strongly typed querying (usually no converting or binding to pointers)
 - Hooks (Before/After Create/Select/Update/Delete/Upsert)
@@ -121,7 +121,7 @@ For a comprehensive list of available operations and examples please see [Featur
 ```go
 import (
   // Import this so we don't have to use qm.Limit etc.
-  . "github.com/KernelPay/sqlboiler/boil/qm"
+  . "github.com/KernelPay/sqlbunny/bunny/qm"
 )
 
 // Open handle to database like normal
@@ -131,9 +131,9 @@ if err != nil {
 }
 
 // If you don't want to pass in db to all generated methods
-// you can use boil.SetDB to set it globally, and then use
+// you can use bunny.SetDB to set it globally, and then use
 // the G variant methods like so:
-boil.SetDB(db)
+bunny.SetDB(db)
 users, err := models.UsersG().All()
 
 // Query all users
@@ -158,7 +158,7 @@ users, err := models.Users(db,
   Offset(6),
 ).All()
 
-// Use any "boil.Executor" implementation (*sql.DB, *sql.Tx, data-dog mock db)
+// Use any "bunny.Executor" implementation (*sql.DB, *sql.Tx, data-dog mock db)
 // for any query.
 tx, err := db.Begin()
 if err != nil {
@@ -196,7 +196,7 @@ fmt.Println(len(users.R.FavoriteMovies))
   and `video_id` being foreign key fields to the users and videos models respectively.
 * For MySQL if using the `github.com/go-sql-driver/mysql` driver, please activate
   [time.Time parsing](https://github.com/go-sql-driver/mysql#timetime-support) when making your
-  MySQL database connection. SQLBoiler uses `time.Time` and `null.Time` to represent time in
+  MySQL database connection. sqlbunny uses `time.Time` and `null.Time` to represent time in
   it's models and without this enabled any models with `DATE`/`DATETIME` fields will not work.
 
 ### Pro Tips
@@ -208,12 +208,12 @@ fmt.Println(len(users.R.FavoriteMovies))
 
 ## Getting started
 
-[SQLBoiler Screencast #1: How to get started](https://www.youtube.com/watch?v=fKmRemtmi0Y)
+[sqlbunny Screencast #1: How to get started](https://www.youtube.com/watch?v=fKmRemtmi0Y)
 
 #### Download
 
 ```shell
-go get -u -t github.com/KernelPay/sqlboiler
+go get -u -t github.com/KernelPay/sqlbunny
 ```
 
 #### Configuration
@@ -222,12 +222,12 @@ Create a configuration file. Because the project uses [viper](https://github.com
 are all supported. Environment variables are also able to be used.
 We will assume TOML for the rest of the documentation.
 
-The configuration file should be named `sqlboiler.toml` and is searched for in the following directories in this
+The configuration file should be named `sqlbunny.toml` and is searched for in the following directories in this
 order:
 
 - `./`
-- `$XDG_CONFIG_HOME/sqlboiler/`
-- `$HOME/.config/sqlboiler/`
+- `$XDG_CONFIG_HOME/sqlbunny/`
+- `$HOME/.config/sqlbunny/`
 
 We require you pass in your `postgres` and `mysql` database configuration via the configuration file rather than env vars.
 There is no command line argument support for database configuration. Values given under the `postgres` and `mysql`
@@ -289,17 +289,17 @@ schema="myschema"
 #### Initial Generation
 
 After creating a configuration file that points at the database we want to
-generate models for, we can invoke the sqlboiler command line utility.
+generate models for, we can invoke the sqlbunny command line utility.
 
 ```text
-SQL Boiler generates a Go ORM from template files, tailored to your database schema.
-Complete documentation is available at http://github.com/KernelPay/sqlboiler
+SQL Bunnyer generates a Go ORM from template files, tailored to your database schema.
+Complete documentation is available at http://github.com/KernelPay/sqlbunny
 
 Usage:
-  sqlboiler [flags] <driver>
+  sqlbunny [flags] <driver>
 
 Examples:
-sqlboiler postgres
+sqlbunny postgres
 
 Flags:
       --basedir string          The base directory has the templates and templates_test folders
@@ -318,12 +318,12 @@ Flags:
 Follow the steps below to do some basic model generation. Once you've generated
 your models, you can run the compatibility tests which will exercise the entirety
 of the generated code. This way you can ensure that your database is compatible
-with SQLBoiler. If you find there are some failing tests, please check the
+with sqlbunny. If you find there are some failing tests, please check the
 [Diagnosing Problems](#diagnosing-problems) section.
 
 ```sh
 # Generate our models and exclude the migrations model
-sqlboiler -b goose_migrations postgres
+sqlbunny -b goose_migrations postgres
 
 # Run the generated tests
 go test ./models
@@ -332,7 +332,7 @@ go test ./models
 *Note: No `mysqldump` or `pg_dump` equivalent for Microsoft SQL Server, so generated tests must be supplemented by `models_schema.sql` with `CREATE TABLE ...` queries*
 
 
-You can use `go generate` for SQLBoiler if you want to to make it easy to
+You can use `go generate` for sqlbunny if you want to to make it easy to
 run the command.
 
 It's important to not modify anything in the output folder, which brings us to
@@ -341,11 +341,11 @@ the next topic: regeneration.
 #### Regeneration
 
 When regenerating the models it's recommended that you completely delete the
-generated directory in a build script or use the `--wipe` flag in SQLBoiler.
-The reasons for this are that sqlboiler doesn't try to diff your files in any
+generated directory in a build script or use the `--wipe` flag in sqlbunny.
+The reasons for this are that sqlbunny doesn't try to diff your files in any
 smart way, it simply writes the files it's going to write whether they're there
 or not and doesn't delete any files that were added by you or previous runs of
-SQLBoiler. In the best case this can cause compilation errors, in the worst case
+sqlbunny. In the best case this can cause compilation errors, in the worst case
 this may leave extraneous and unusable code that was generated against models
 that are no longer in the database.
 
@@ -365,7 +365,7 @@ extend the models, the first way is the most desirable:
 **Method 1: Simple Functions**
 
 ```go
-// Package modext is for SQLBoiler helper methods
+// Package modext is for sqlbunny helper methods
 package modext
 
 // UserFirstTimeSetup is an extension of the user model.
@@ -387,13 +387,13 @@ err = modext.UserFirstTimeSetup(db, user)
 
 **Method 2: Empty struct methods**
 
-The above is the best way to code extensions for SQLBoiler, however there may
+The above is the best way to code extensions for sqlbunny, however there may
 be times when the number of methods grows too large and code completion is
 not as helpful anymore. In these cases you may consider structuring the code
 like this:
 
 ```go
-// Package modext is for SQLBoiler helper methods
+// Package modext is for sqlbunny helper methods
 package modext
 
 type users struct {}
@@ -422,7 +422,7 @@ much benefit over it.
 **Method 3: Embedding**
 
 This pattern is not for the faint of heart, what it provides in benefits it
-more than makes up for in downsides. It's possible to embed the SQLBoiler
+more than makes up for in downsides. It's possible to embed the sqlbunny
 structs inside your own to enhance them. However it's subject to easy breakages
 and a dependency on these additional objects. It can also introduce
 inconsistencies as some objects may have no extended functionality and therefore
@@ -450,13 +450,13 @@ The most common causes of problems and panics are:
 - Models without a primary key. All models require one.
 - Forgetting to put foreign key constraints on your fields that reference other models.
 - The compatibility tests require privileges to create a database for testing purposes, ensure the user
-  supplied in your `sqlboiler.toml` config has adequate privileges.
-- A nil or closed database handle. Ensure your passed in `boil.Executor` is not nil.
+  supplied in your `sqlbunny.toml` config has adequate privileges.
+- A nil or closed database handle. Ensure your passed in `bunny.Executor` is not nil.
   - If you decide to use the `G` variant of functions instead, make sure you've initialized your
-    global database handle using `boil.SetDB()`.
+    global database handle using `bunny.SetDB()`.
 
 For errors with other causes, it may be simple to debug yourself by looking at the generated code.
-Setting `boil.DebugMode` to `true` can help with this. You can change the output using `boil.DebugWriter` (defaults to `os.Stdout`).
+Setting `bunny.DebugMode` to `true` can help with this. You can change the output using `bunny.DebugWriter` (defaults to `os.Stdout`).
 
 If you're still stuck and/or you think you've found a bug, feel free to leave an issue and we'll do our best to help you.
 
@@ -507,11 +507,11 @@ structs as well so you can see how it all pieces together:
 
 ```go
 type Pilot struct {
-  ID   int    `boil:"id" json:"id" toml:"id" yaml:"id"`
-  Name string `boil:"name" json:"name" toml:"name" yaml:"name"`
+  ID   int    `bunny:"id" json:"id" toml:"id" yaml:"id"`
+  Name string `bunny:"name" json:"name" toml:"name" yaml:"name"`
 
-  R *pilotR `boil:"-" json:"-" toml:"-" yaml:"-"`
-  L pilotR  `boil:"-" json:"-" toml:"-" yaml:"-"`
+  R *pilotR `bunny:"-" json:"-" toml:"-" yaml:"-"`
+  L pilotR  `bunny:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 type pilotR struct {
@@ -521,14 +521,14 @@ type pilotR struct {
 }
 
 type Jet struct {
-  ID      int    `boil:"id" json:"id" toml:"id" yaml:"id"`
-  PilotID int    `boil:"pilot_id" json:"pilot_id" toml:"pilot_id" yaml:"pilot_id"`
-  Age     int    `boil:"age" json:"age" toml:"age" yaml:"age"`
-  Name    string `boil:"name" json:"name" toml:"name" yaml:"name"`
-  Color   string `boil:"color" json:"color" toml:"color" yaml:"color"`
+  ID      int    `bunny:"id" json:"id" toml:"id" yaml:"id"`
+  PilotID int    `bunny:"pilot_id" json:"pilot_id" toml:"pilot_id" yaml:"pilot_id"`
+  Age     int    `bunny:"age" json:"age" toml:"age" yaml:"age"`
+  Name    string `bunny:"name" json:"name" toml:"name" yaml:"name"`
+  Color   string `bunny:"color" json:"color" toml:"color" yaml:"color"`
 
-  R *jetR `boil:"-" json:"-" toml:"-" yaml:"-"`
-  L jetR  `boil:"-" json:"-" toml:"-" yaml:"-"`
+  R *jetR `bunny:"-" json:"-" toml:"-" yaml:"-"`
+  L jetR  `bunny:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 type jetR struct {
@@ -536,11 +536,11 @@ type jetR struct {
 }
 
 type Language struct {
-  ID       int    `boil:"id" json:"id" toml:"id" yaml:"id"`
-  Language string `boil:"language" json:"language" toml:"language" yaml:"language"`
+  ID       int    `bunny:"id" json:"id" toml:"id" yaml:"id"`
+  Language string `bunny:"language" json:"language" toml:"language" yaml:"language"`
 
-  R *languageR `boil:"-" json:"-" toml:"-" yaml:"-"`
-  L languageR  `boil:"-" json:"-" toml:"-" yaml:"-"`
+  R *languageR `bunny:"-" json:"-" toml:"-" yaml:"-"`
+  L languageR  `bunny:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 type languageR struct {
@@ -598,7 +598,7 @@ when performing query building. Here is a list of all of your generated query mo
 
 ```go
 // Dot import so we can access query mods directly instead of prefixing with "qm."
-import . "github.com/KernelPay/sqlboiler/boil/qm"
+import . "github.com/KernelPay/sqlbunny/bunny/qm"
 
 // Use a raw query against a generated struct (Pilot in this example)
 // If this query mod exists in your call, it will override the others.
@@ -651,17 +651,17 @@ You will find that most functions have the following variations. We've used the
 
 ```go
 // Set the global db handle for G method variants.
-boil.SetDB(db)
+bunny.SetDB(db)
 
 pilot, _ := models.FindPilot(db, 1)
 
-err := pilot.Delete(db) // Regular variant, takes a db handle (boil.Executor interface).
+err := pilot.Delete(db) // Regular variant, takes a db handle (bunny.Executor interface).
 pilot.DeleteP(db)       // Panic variant, takes a db handle and panics on error.
-err := pilot.DeleteG()  // Global variant, uses the globally set db handle (boil.SetDB()).
+err := pilot.DeleteG()  // Global variant, uses the globally set db handle (bunny.SetDB()).
 pilot.DeleteGP()        // Global&Panic variant, combines the global db handle and panic on error.
 
 db.Begin()              // Normal sql package way of creating a transaction
-boil.Begin()            // Uses the global database handle set by boil.SetDB()
+bunny.Begin()            // Uses the global database handle set by bunny.SetDB()
 ```
 
 Note that it's slightly different for query building.
@@ -709,7 +709,7 @@ in combination with your own custom, non-generated model.
 
 ### Binding
 
-For a comprehensive ruleset for `Bind()` you can refer to our [godoc](https://godoc.org/github.com/KernelPay/sqlboiler/boil/queries#Bind).
+For a comprehensive ruleset for `Bind()` you can refer to our [godoc](https://godoc.org/github.com/KernelPay/sqlbunny/bunny/queries#Bind).
 
 The `Bind()` [Finisher](#finisher) allows the results of a query built with
 the [Raw SQL](#raw-query) method or the [Query Builder](#query-building) methods to be bound
@@ -722,8 +722,8 @@ the following:
 ```go
 // Custom struct using two generated structs
 type PilotAndJet struct {
-  models.Pilot `boil:",bind"`
-  models.Jet   `boil:",bind"`
+  models.Pilot `bunny:",bind"`
+  models.Jet   `bunny:",bind"`
 }
 
 var paj PilotAndJet
@@ -746,8 +746,8 @@ err := models.NewQuery(db,
 ```go
 // Custom struct for selecting a subset of data
 type JetInfo struct {
-  AgeSum int `boil:"age_sum"`
-  Count int `boil:"juicy_count"`
+  AgeSum int `bunny:"age_sum"`
+  Count int `bunny:"juicy_count"`
 }
 
 var info JetInfo
@@ -769,21 +769,21 @@ type CoolObject struct {
 
   // Specify an alternative name for the field, it will
   // be titlecased for matching, can be whatever you like.
-  Cat int  `boil:"kitten"`
+  Cat int  `bunny:"kitten"`
 
   // Ignore this struct field, do not attempt to bind it.
-  Pig int  `boil:"-"`
+  Pig int  `bunny:"-"`
 
   // Instead of binding to this as a regular struct field
   // (like other sql-able structs eg. time.Time)
   // Recursively search inside the Dog struct for field names from the query.
-  Dog      `boil:",bind"`
+  Dog      `bunny:",bind"`
 
   // Same as the above, except specify a different model name
-  Mouse    `boil:"rodent,bind"`
+  Mouse    `bunny:"rodent,bind"`
 
   // Ignore this struct field, do not attempt to bind it.
-  Bird     `boil:"-"`
+  Bird     `bunny:"-"`
 }
 ```
 
@@ -806,7 +806,7 @@ pilot, err := jet.Pilot(db).One()
 languages, err := pilot.Languages(db).All()
 ```
 
-If your relationship involves a join model SQLBoiler will figure it out for you transparently.
+If your relationship involves a join model sqlbunny will figure it out for you transparently.
 
 It is important to note that you should use `Eager Loading` if you plan
 on loading large collections of rows, to avoid N+1 performance problems.
@@ -935,14 +935,14 @@ func myHook(ctx context.Context, p *Pilot) error {
 }
 
 // Register my before insert hook for pilots
-models.AddPilotHook(boil.BeforeInsertHook, myHook)
+models.AddPilotHook(bunny.BeforeInsertHook, myHook)
 ```
 
-Your `ModelHook` will always be defined as `func(boil.Executor, *Model) error`
+Your `ModelHook` will always be defined as `func(bunny.Executor, *Model) error`
 
 ### Transactions
 
-The boil.Executor interface powers all of SQLBoiler. This means anything that conforms
+The bunny.Executor interface powers all of sqlbunny. This means anything that conforms
 to the three `Exec/Query/QueryRow` methods can be used. `sql.DB`, `sql.Tx` as well as other
 libraries (`sqlx`) conform to this interface, and therefore any of these things may be
 used as an executor for any query in the system. This makes using transactions very simple:
@@ -962,8 +962,8 @@ tx.Commit()
 tx.Rollback()
 ```
 
-It's also worth noting that there's a way to take advantage of `boil.SetDB()`
-by using the [boil.Begin()](https://godoc.org/github.com/KernelPay/sqlboiler/boil#Begin) function.
+It's also worth noting that there's a way to take advantage of `bunny.SetDB()`
+by using the [bunny.Begin()](https://godoc.org/github.com/KernelPay/sqlbunny/bunny#Begin) function.
 This opens a transaction using the globally stored database.
 
 ### Debug Logging
@@ -972,11 +972,11 @@ Debug logging will print your generated SQL statement and the arguments it is us
 Debug logging can be toggled on globally by setting the following global variable to `true`:
 
 ```go
-boil.DebugMode = true
+bunny.DebugMode = true
 
 // Optionally set the writer as well. Defaults to os.Stdout
 fh, _ := os.Open("debug.txt")
-boil.DebugWriter = fh
+bunny.DebugWriter = fh
 ```
 
 Note: Debug output is messy at the moment. This is something we would like addressed.
@@ -1041,7 +1041,7 @@ p4.Name = "Nigel"
 err := p4.Insert(db, "id", "name") // Insert the fourth pilot with a zero value ID
 // The id for this row was inserted as 0 in the database.
 // Note: We had to use the whitelist for this, otherwise
-// SQLBoiler would presume you wanted to auto-increment
+// sqlbunny would presume you wanted to auto-increment
 ```
 
 ### Update
@@ -1270,12 +1270,12 @@ You *must* use a DSN flag in MySQL connections, see: [Requirements](#requirement
 
 #### Where is the homepage?
 
-The homepage for the [SQLBoiler](https://github.com/KernelPay/sqlboiler) [Golang ORM](https://github.com/KernelPay/sqlboiler)
-generator is located at: https://github.com/KernelPay/sqlboiler
+The homepage for the [sqlbunny](https://github.com/KernelPay/sqlbunny) [Golang ORM](https://github.com/KernelPay/sqlbunny)
+generator is located at: https://github.com/KernelPay/sqlbunny
 
 ## Benchmarks
 
-If you'd like to run the benchmarks yourself check out our [boilbench](https://github.com/volatiletech/boilbench) repo.
+If you'd like to run the benchmarks yourself check out our [bunnybench](https://github.com/volatiletech/bunnybench) repo.
 
 ```bash
 go test -bench . -benchmem
@@ -1299,44 +1299,44 @@ BenchmarkGORMSelectAll/gorm-8         20000   66500 ns/op   28998 B/op    455 al
 BenchmarkGORPSelectAll/gorp-8         50000   31305 ns/op    9141 B/op    318 allocs/op
 BenchmarkXORMSelectAll/xorm-8         20000   66074 ns/op   16317 B/op    417 allocs/op
 BenchmarkKallaxSelectAll/kallax-8    100000   18278 ns/op    7428 B/op    145 allocs/op
-BenchmarkBoilSelectAll/boil-8        100000   12759 ns/op    3145 B/op     67 allocs/op
+BenchmarkBunnySelectAll/bunny-8        100000   12759 ns/op    3145 B/op     67 allocs/op
 
 BenchmarkGORMSelectSubset/gorm-8      20000    69469 ns/op   30008 B/op   462 allocs/op
 BenchmarkGORPSelectSubset/gorp-8      50000    31102 ns/op    9141 B/op   318 allocs/op
 BenchmarkXORMSelectSubset/xorm-8      20000    64151 ns/op   15933 B/op   414 allocs/op
 BenchmarkKallaxSelectSubset/kallax-8 100000    16996 ns/op    6499 B/op   132 allocs/op
-BenchmarkBoilSelectSubset/boil-8     100000    13579 ns/op    3281 B/op    71 allocs/op
+BenchmarkBunnySelectSubset/bunny-8     100000    13579 ns/op    3281 B/op    71 allocs/op
 
 BenchmarkGORMSelectComplex/gorm-8     20000    76284 ns/op   34566 B/op   521 allocs/op
 BenchmarkGORPSelectComplex/gorp-8     50000    31886 ns/op    9501 B/op   328 allocs/op
 BenchmarkXORMSelectComplex/xorm-8     20000    68430 ns/op   17694 B/op   464 allocs/op
 BenchmarkKallaxSelectComplex/kallax-8 50000    26095 ns/op   10293 B/op   212 allocs/op
-BenchmarkBoilSelectComplex/boil-8    100000    16403 ns/op    4205 B/op   102 allocs/op
+BenchmarkBunnySelectComplex/bunny-8    100000    16403 ns/op    4205 B/op   102 allocs/op
 
 BenchmarkGORMDelete/gorm-8           200000    10356 ns/op    5059 B/op    98 allocs/op
 BenchmarkGORPDelete/gorp-8          1000000     1335 ns/op     352 B/op    13 allocs/op
 BenchmarkXORMDelete/xorm-8           200000    10796 ns/op    4146 B/op   122 allocs/op
 BenchmarkKallaxDelete/kallax-8       300000     5141 ns/op    2241 B/op    48 allocs/op
-BenchmarkBoilDelete/boil-8          2000000      796 ns/op     168 B/op     8 allocs/op
+BenchmarkBunnyDelete/bunny-8          2000000      796 ns/op     168 B/op     8 allocs/op
 
 BenchmarkGORMInsert/gorm-8           100000    15238 ns/op    8278 B/op   150 allocs/op
 BenchmarkGORPInsert/gorp-8           300000     4648 ns/op    1616 B/op    38 allocs/op
 BenchmarkXORMInsert/xorm-8           100000    12600 ns/op    6092 B/op   138 allocs/op
 BenchmarkKallaxInsert/kallax-8       100000    15115 ns/op    6003 B/op   126 allocs/op
-BenchmarkBoilInsert/boil-8          1000000     2249 ns/op     984 B/op    23 allocs/op
+BenchmarkBunnyInsert/bunny-8          1000000     2249 ns/op     984 B/op    23 allocs/op
 
 BenchmarkGORMUpdate/gorm-8           100000    18609 ns/op    9389 B/op   174 allocs/op
 BenchmarkGORPUpdate/gorp-8           500000     3180 ns/op    1536 B/op    35 allocs/op
 BenchmarkXORMUpdate/xorm-8           100000    13149 ns/op    5098 B/op   149 allocs/op
 BenchmarkKallaxUpdate/kallax-8       100000    22880 ns/op   11366 B/op   219 allocs/op
-BenchmarkBoilUpdate/boil-8          1000000     1810 ns/op     936 B/op    18 allocs/op
+BenchmarkBunnyUpdate/bunny-8          1000000     1810 ns/op     936 B/op    18 allocs/op
 
 BenchmarkGORMRawBind/gorm-8           20000    65821 ns/op   30502 B/op   444 allocs/op
 BenchmarkGORPRawBind/gorp-8           50000    31300 ns/op    9141 B/op   318 allocs/op
 BenchmarkXORMRawBind/xorm-8           20000    62024 ns/op   15588 B/op   403 allocs/op
 BenchmarkKallaxRawBind/kallax-8      200000     7843 ns/op    4380 B/op    46 allocs/op
 BenchmarkSQLXRawBind/sqlx-8          100000    13056 ns/op    4572 B/op    55 allocs/op
-BenchmarkBoilRawBind/boil-8          200000    11519 ns/op    4638 B/op    55 allocs/op
+BenchmarkBunnyRawBind/bunny-8          200000    11519 ns/op    4638 B/op    55 allocs/op
 ```
 
 <img src="http://i.imgur.com/SltE8UQ.png"/><img src="http://i.imgur.com/lzvM5jJ.png"/><img src="http://i.imgur.com/SS0zNd2.png"/>

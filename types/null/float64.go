@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/KernelPay/sqlboiler/types/null/convert"
+	"github.com/KernelPay/sqlbunny/types/null/convert"
 )
 
 // Float64 is a nullable float64.

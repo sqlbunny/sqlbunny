@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"text/template"
 
-	"github.com/KernelPay/sqlboiler/common"
+	"github.com/KernelPay/sqlbunny/common"
 	"github.com/pkg/errors"
 )
 

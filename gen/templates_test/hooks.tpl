@@ -61,7 +61,7 @@ func test{{$modelNamePlural}}Hooks(t *testing.T) {
 		t.Errorf("Unable to randomize {{$modelNameSingular}} object: %s", err)
 	}
 
-	Add{{$modelNameSingular}}Hook(boil.BeforeInsertHook, {{$varNameSingular}}BeforeInsertHook)
+	Add{{$modelNameSingular}}Hook(bunny.BeforeInsertHook, {{$varNameSingular}}BeforeInsertHook)
 	if err = o.doBeforeInsertHooks(nil); err != nil {
 		t.Errorf("Unable to execute doBeforeInsertHooks: %s", err)
 	}
@@ -70,7 +70,7 @@ func test{{$modelNamePlural}}Hooks(t *testing.T) {
 	}
 	{{$varNameSingular}}BeforeInsertHooks = []{{$modelNameSingular}}Hook{}
 
-	Add{{$modelNameSingular}}Hook(boil.AfterInsertHook, {{$varNameSingular}}AfterInsertHook)
+	Add{{$modelNameSingular}}Hook(bunny.AfterInsertHook, {{$varNameSingular}}AfterInsertHook)
 	if err = o.doAfterInsertHooks(nil); err != nil {
 		t.Errorf("Unable to execute doAfterInsertHooks: %s", err)
 	}
@@ -79,7 +79,7 @@ func test{{$modelNamePlural}}Hooks(t *testing.T) {
 	}
 	{{$varNameSingular}}AfterInsertHooks = []{{$modelNameSingular}}Hook{}
 
-	Add{{$modelNameSingular}}Hook(boil.AfterSelectHook, {{$varNameSingular}}AfterSelectHook)
+	Add{{$modelNameSingular}}Hook(bunny.AfterSelectHook, {{$varNameSingular}}AfterSelectHook)
 	if err = o.doAfterSelectHooks(nil); err != nil {
 		t.Errorf("Unable to execute doAfterSelectHooks: %s", err)
 	}
@@ -88,7 +88,7 @@ func test{{$modelNamePlural}}Hooks(t *testing.T) {
 	}
 	{{$varNameSingular}}AfterSelectHooks = []{{$modelNameSingular}}Hook{}
 
-	Add{{$modelNameSingular}}Hook(boil.BeforeUpdateHook, {{$varNameSingular}}BeforeUpdateHook)
+	Add{{$modelNameSingular}}Hook(bunny.BeforeUpdateHook, {{$varNameSingular}}BeforeUpdateHook)
 	if err = o.doBeforeUpdateHooks(nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpdateHooks: %s", err)
 	}
@@ -97,7 +97,7 @@ func test{{$modelNamePlural}}Hooks(t *testing.T) {
 	}
 	{{$varNameSingular}}BeforeUpdateHooks = []{{$modelNameSingular}}Hook{}
 
-	Add{{$modelNameSingular}}Hook(boil.AfterUpdateHook, {{$varNameSingular}}AfterUpdateHook)
+	Add{{$modelNameSingular}}Hook(bunny.AfterUpdateHook, {{$varNameSingular}}AfterUpdateHook)
 	if err = o.doAfterUpdateHooks(nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpdateHooks: %s", err)
 	}
@@ -106,7 +106,7 @@ func test{{$modelNamePlural}}Hooks(t *testing.T) {
 	}
 	{{$varNameSingular}}AfterUpdateHooks = []{{$modelNameSingular}}Hook{}
 
-	Add{{$modelNameSingular}}Hook(boil.BeforeDeleteHook, {{$varNameSingular}}BeforeDeleteHook)
+	Add{{$modelNameSingular}}Hook(bunny.BeforeDeleteHook, {{$varNameSingular}}BeforeDeleteHook)
 	if err = o.doBeforeDeleteHooks(nil); err != nil {
 		t.Errorf("Unable to execute doBeforeDeleteHooks: %s", err)
 	}
@@ -115,7 +115,7 @@ func test{{$modelNamePlural}}Hooks(t *testing.T) {
 	}
 	{{$varNameSingular}}BeforeDeleteHooks = []{{$modelNameSingular}}Hook{}
 
-	Add{{$modelNameSingular}}Hook(boil.AfterDeleteHook, {{$varNameSingular}}AfterDeleteHook)
+	Add{{$modelNameSingular}}Hook(bunny.AfterDeleteHook, {{$varNameSingular}}AfterDeleteHook)
 	if err = o.doAfterDeleteHooks(nil); err != nil {
 		t.Errorf("Unable to execute doAfterDeleteHooks: %s", err)
 	}
@@ -124,7 +124,7 @@ func test{{$modelNamePlural}}Hooks(t *testing.T) {
 	}
 	{{$varNameSingular}}AfterDeleteHooks = []{{$modelNameSingular}}Hook{}
 
-	Add{{$modelNameSingular}}Hook(boil.BeforeUpsertHook, {{$varNameSingular}}BeforeUpsertHook)
+	Add{{$modelNameSingular}}Hook(bunny.BeforeUpsertHook, {{$varNameSingular}}BeforeUpsertHook)
 	if err = o.doBeforeUpsertHooks(nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpsertHooks: %s", err)
 	}
@@ -133,7 +133,7 @@ func test{{$modelNamePlural}}Hooks(t *testing.T) {
 	}
 	{{$varNameSingular}}BeforeUpsertHooks = []{{$modelNameSingular}}Hook{}
 
-	Add{{$modelNameSingular}}Hook(boil.AfterUpsertHook, {{$varNameSingular}}AfterUpsertHook)
+	Add{{$modelNameSingular}}Hook(bunny.AfterUpsertHook, {{$varNameSingular}}AfterUpsertHook)
 	if err = o.doAfterUpsertHooks(nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpsertHooks: %s", err)
 	}

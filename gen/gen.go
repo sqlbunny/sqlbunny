@@ -1,4 +1,4 @@
-// Package boilingcore has types and methods useful for generating code that
+// Package bunnyingcore has types and methods useful for generating code that
 // acts as a fully dynamic ORM might.
 package gen
 
@@ -9,9 +9,9 @@ import (
 	"regexp"
 	"text/template"
 
-	"github.com/KernelPay/sqlboiler/boil/queries"
-	"github.com/KernelPay/sqlboiler/boil/strmangle"
-	"github.com/KernelPay/sqlboiler/schema"
+	"github.com/KernelPay/sqlbunny/bunny/queries"
+	"github.com/KernelPay/sqlbunny/bunny/strmangle"
+	"github.com/KernelPay/sqlbunny/schema"
 	"github.com/pkg/errors"
 )
 
@@ -78,7 +78,7 @@ func New(schema *schema.Schema, config *Config) (*State, error) {
 	return s, nil
 }
 
-// Run executes the sqlboiler templates and outputs them to files based on the
+// Run executes the sqlbunny templates and outputs them to files based on the
 // state given.
 func (s *State) Run(includeTests bool) error {
 	singletonData := &templateData{
@@ -253,7 +253,7 @@ func (s *State) initTemplates() error {
 	return nil
 }
 
-var basePackage = "github.com/KernelPay/sqlboiler/gen"
+var basePackage = "github.com/KernelPay/sqlbunny/gen"
 
 func getBasePath(baseDirConfig string) (string, error) {
 	if len(baseDirConfig) > 0 {

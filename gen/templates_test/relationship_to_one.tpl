@@ -6,7 +6,7 @@
 		{{- $varNameSingular := .Model | singular | camelCase -}}
 		{{- $foreignVarNameSingular := .ForeignModel | singular | camelCase}}
 func test{{$txt.LocalModel.NameGo}}ToOne{{$txt.ForeignModel.NameGo}}Using{{$txt.Function.NameGo}}(t *testing.T) {
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 
 	var local {{$txt.LocalModel.NameGo}}

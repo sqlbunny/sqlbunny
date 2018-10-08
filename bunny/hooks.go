@@ -1,4 +1,4 @@
-package boil
+package bunny
 
 // HookPoint is the point in time at which we hook
 type HookPoint int

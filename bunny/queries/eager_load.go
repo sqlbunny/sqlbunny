@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/KernelPay/sqlboiler/boil/strmangle"
+	"github.com/KernelPay/sqlbunny/bunny/strmangle"
 	"github.com/pkg/errors"
 )
 
@@ -71,7 +71,7 @@ func eagerLoad(ctx context.Context, toLoad []string, obj interface{}, bkind bind
 //
 // The arguments to this function are:
 //   - t is not considered here, and is always passed nil. The function exists on a loaded
-//     struct to avoid a circular dependency with boil, and the receiver is ignored.
+//     struct to avoid a circular dependency with bunny, and the receiver is ignored.
 //   - exec is used to perform additional queries that might be required for loading the relationships.
 //   - bkind is passed in to identify whether or not this was a single object
 //     or a slice that must be loaded into.

@@ -1,12 +1,12 @@
 # Contributing
 
-Thanks for your interest in contributing to SQLBoiler!
+Thanks for your interest in contributing to sqlbunny!
 
 We have a very lightweight process and aim to keep it that way.
 Read the sections for the piece you're interested in and go from
 there.
 
-If you need quick communication we're usually on [Slack](https://sqlboiler.from-the.cloud).
+If you need quick communication we're usually on [Slack](https://sqlbunny.from-the.cloud).
 
 # New Code / Features
 

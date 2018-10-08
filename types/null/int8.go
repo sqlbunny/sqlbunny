@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/KernelPay/sqlboiler/types/null/convert"
+	"github.com/KernelPay/sqlbunny/types/null/convert"
 )
 
 // Int8 is an nullable int8.

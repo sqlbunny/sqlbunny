@@ -8,8 +8,8 @@ import (
     "encoding/json"
     "bytes"
 
-    "github.com/KernelPay/sqlboiler/boil"
-    "github.com/KernelPay/sqlboiler/types/null/convert"
+    "github.com/KernelPay/sqlbunny/bunny"
+    "github.com/KernelPay/sqlbunny/types/null/convert"
 )
 
 // {{$enumName}} is an enum type.
@@ -52,7 +52,7 @@ func (o {{$enumName}}) MarshalText() ([]byte, error) {
 func (o *{{$enumName}}) UnmarshalText(text []byte) error {
 	val, ok := {{$enumNameCamel}}Values[string(text)]
 	if !ok {
-        return &boil.InvalidEnumError{Value: text, Type: "{{$enumName}}"}
+        return &bunny.InvalidEnumError{Value: text, Type: "{{$enumName}}"}
 	}
 	*o = val
 	return nil

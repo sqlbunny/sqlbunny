@@ -506,7 +506,7 @@ func (a *BoolArray) Scan(src interface{}) error {
 		return nil
 	}
 
-	return fmt.Errorf("boil: cannot convert %T to BoolArray", src)
+	return fmt.Errorf("bunny: cannot convert %T to BoolArray", src)
 }
 
 func (a *BoolArray) scanBytes(src []byte) error {
@@ -520,7 +520,7 @@ func (a *BoolArray) scanBytes(src []byte) error {
 		b := make(BoolArray, len(elems))
 		for i, v := range elems {
 			if len(v) != 1 {
-				return fmt.Errorf("boil: could not parse boolean array index %d: invalid boolean %q", i, v)
+				return fmt.Errorf("bunny: could not parse boolean array index %d: invalid boolean %q", i, v)
 			}
 			switch v[0] {
 			case 't':
@@ -528,7 +528,7 @@ func (a *BoolArray) scanBytes(src []byte) error {
 			case 'f':
 				b[i] = false
 			default:
-				return fmt.Errorf("boil: could not parse boolean array index %d: invalid boolean %q", i, v)
+				return fmt.Errorf("bunny: could not parse boolean array index %d: invalid boolean %q", i, v)
 			}
 		}
 		*a = b
@@ -580,7 +580,7 @@ func (a *BytesArray) Scan(src interface{}) error {
 		return nil
 	}
 
-	return fmt.Errorf("boil: cannot convert %T to BytesArray", src)
+	return fmt.Errorf("bunny: cannot convert %T to BytesArray", src)
 }
 
 func (a *BytesArray) scanBytes(src []byte) error {
@@ -652,7 +652,7 @@ func (a *Float64Array) Scan(src interface{}) error {
 		return nil
 	}
 
-	return fmt.Errorf("boil: cannot convert %T to Float64Array", src)
+	return fmt.Errorf("bunny: cannot convert %T to Float64Array", src)
 }
 
 func (a *Float64Array) scanBytes(src []byte) error {
@@ -666,7 +666,7 @@ func (a *Float64Array) scanBytes(src []byte) error {
 		b := make(Float64Array, len(elems))
 		for i, v := range elems {
 			if b[i], err = strconv.ParseFloat(string(v), 64); err != nil {
-				return fmt.Errorf("boil: parsing array element index %d: %v", i, err)
+				return fmt.Errorf("bunny: parsing array element index %d: %v", i, err)
 			}
 		}
 		*a = b
@@ -724,7 +724,7 @@ func (GenericArray) evaluateDestination(rt reflect.Type) (reflect.Type, func([]b
 		}
 
 		assign = func([]byte, reflect.Value) error {
-			return fmt.Errorf("boil: scanning to %s is not implemented; only sql.Scanner", rt)
+			return fmt.Errorf("bunny: scanning to %s is not implemented; only sql.Scanner", rt)
 		}
 	}
 
@@ -742,9 +742,9 @@ func (a GenericArray) Scan(src interface{}) error {
 	dpv := reflect.ValueOf(a.A)
 	switch {
 	case dpv.Kind() != reflect.Ptr:
-		return fmt.Errorf("boil: destination %T is not a pointer to array or slice", a.A)
+		return fmt.Errorf("bunny: destination %T is not a pointer to array or slice", a.A)
 	case dpv.IsNil():
-		return fmt.Errorf("boil: destination %T is nil", a.A)
+		return fmt.Errorf("bunny: destination %T is nil", a.A)
 	}
 
 	dv := dpv.Elem()
@@ -752,7 +752,7 @@ func (a GenericArray) Scan(src interface{}) error {
 	case reflect.Slice:
 	case reflect.Array:
 	default:
-		return fmt.Errorf("boil: destination %T is not a pointer to array or slice", a.A)
+		return fmt.Errorf("bunny: destination %T is not a pointer to array or slice", a.A)
 	}
 
 	switch src := src.(type) {
@@ -767,7 +767,7 @@ func (a GenericArray) Scan(src interface{}) error {
 		}
 	}
 
-	return fmt.Errorf("boil: cannot convert %T to %s", src, dv.Type())
+	return fmt.Errorf("bunny: cannot convert %T to %s", src, dv.Type())
 }
 
 func (a GenericArray) scanBytes(src []byte, dv reflect.Value) error {
@@ -780,7 +780,7 @@ func (a GenericArray) scanBytes(src []byte, dv reflect.Value) error {
 	// TODO allow multidimensional
 
 	if len(dims) > 1 {
-		return fmt.Errorf("boil: scanning from multidimensional ARRAY%s is not implemented",
+		return fmt.Errorf("bunny: scanning from multidimensional ARRAY%s is not implemented",
 			strings.Replace(fmt.Sprint(dims), " ", "][", -1))
 	}
 
@@ -794,7 +794,7 @@ func (a GenericArray) scanBytes(src []byte, dv reflect.Value) error {
 		case reflect.Slice:
 		case reflect.Array:
 			if rt.Len() != dims[i] {
-				return fmt.Errorf("boil: cannot convert ARRAY%s to %s",
+				return fmt.Errorf("bunny: cannot convert ARRAY%s to %s",
 					strings.Replace(fmt.Sprint(dims), " ", "][", -1), dv.Type())
 			}
 		default:
@@ -805,7 +805,7 @@ func (a GenericArray) scanBytes(src []byte, dv reflect.Value) error {
 	values := reflect.MakeSlice(reflect.SliceOf(dtype), len(elems), len(elems))
 	for i, e := range elems {
 		if err := assign(e, values.Index(i)); err != nil {
-			return fmt.Errorf("boil: parsing array element index %d: %v", i, err)
+			return fmt.Errorf("bunny: parsing array element index %d: %v", i, err)
 		}
 	}
 
@@ -838,7 +838,7 @@ func (a GenericArray) Value() (driver.Value, error) {
 		}
 	case reflect.Array:
 	default:
-		return nil, fmt.Errorf("boil: Unable to convert %T to array", a.A)
+		return nil, fmt.Errorf("bunny: Unable to convert %T to array", a.A)
 	}
 
 	if n := rv.Len(); n > 0 {
@@ -868,7 +868,7 @@ func (a *Int64Array) Scan(src interface{}) error {
 		return nil
 	}
 
-	return fmt.Errorf("boil: cannot convert %T to Int64Array", src)
+	return fmt.Errorf("bunny: cannot convert %T to Int64Array", src)
 }
 
 func (a *Int64Array) scanBytes(src []byte) error {
@@ -882,7 +882,7 @@ func (a *Int64Array) scanBytes(src []byte) error {
 		b := make(Int64Array, len(elems))
 		for i, v := range elems {
 			if b[i], err = strconv.ParseInt(string(v), 10, 64); err != nil {
-				return fmt.Errorf("boil: parsing array element index %d: %v", i, err)
+				return fmt.Errorf("bunny: parsing array element index %d: %v", i, err)
 			}
 		}
 		*a = b
@@ -929,7 +929,7 @@ func (a *StringArray) Scan(src interface{}) error {
 		return nil
 	}
 
-	return fmt.Errorf("boil: cannot convert %T to StringArray", src)
+	return fmt.Errorf("bunny: cannot convert %T to StringArray", src)
 }
 
 func (a *StringArray) scanBytes(src []byte) error {
@@ -943,7 +943,7 @@ func (a *StringArray) scanBytes(src []byte) error {
 		b := make(StringArray, len(elems))
 		for i, v := range elems {
 			if b[i] = string(v); v == nil {
-				return fmt.Errorf("boil: parsing array element index %d: cannot convert nil to string", i)
+				return fmt.Errorf("bunny: parsing array element index %d: cannot convert nil to string", i)
 			}
 		}
 		*a = b
@@ -1074,7 +1074,7 @@ func parseArray(src, del []byte) (dims []int, elems [][]byte, err error) {
 	var depth, i int
 
 	if len(src) < 1 || src[0] != '{' {
-		return nil, nil, fmt.Errorf("boil: unable to parse array; expected %q at offset %d", '{', 0)
+		return nil, nil, fmt.Errorf("bunny: unable to parse array; expected %q at offset %d", '{', 0)
 	}
 
 Open:
@@ -1127,7 +1127,7 @@ Element:
 				if bytes.HasPrefix(src[i:], del) || src[i] == '}' {
 					elem := src[start:i]
 					if len(elem) == 0 {
-						return nil, nil, fmt.Errorf("boil: unable to parse array; unexpected %q at offset %d", src[i], i)
+						return nil, nil, fmt.Errorf("bunny: unable to parse array; unexpected %q at offset %d", src[i], i)
 					}
 					if bytes.Equal(elem, []byte("NULL")) {
 						elem = nil
@@ -1149,7 +1149,7 @@ Element:
 			depth--
 			i++
 		} else {
-			return nil, nil, fmt.Errorf("boil: unable to parse array; unexpected %q at offset %d", src[i], i)
+			return nil, nil, fmt.Errorf("bunny: unable to parse array; unexpected %q at offset %d", src[i], i)
 		}
 	}
 
@@ -1159,16 +1159,16 @@ Close:
 			depth--
 			i++
 		} else {
-			return nil, nil, fmt.Errorf("boil: unable to parse array; unexpected %q at offset %d", src[i], i)
+			return nil, nil, fmt.Errorf("bunny: unable to parse array; unexpected %q at offset %d", src[i], i)
 		}
 	}
 	if depth > 0 {
-		err = fmt.Errorf("boil: unable to parse array; expected %q at offset %d", '}', i)
+		err = fmt.Errorf("bunny: unable to parse array; expected %q at offset %d", '}', i)
 	}
 	if err == nil {
 		for _, d := range dims {
 			if (len(elems) % d) != 0 {
-				err = fmt.Errorf("boil: multidimensional arrays must have elements with matching dimensions")
+				err = fmt.Errorf("bunny: multidimensional arrays must have elements with matching dimensions")
 			}
 		}
 	}
@@ -1181,7 +1181,7 @@ func scanLinearArray(src, del []byte, typ string) (elems [][]byte, err error) {
 		return nil, err
 	}
 	if len(dims) > 1 {
-		return nil, fmt.Errorf("boil: cannot convert ARRAY%s to %s", strings.Replace(fmt.Sprint(dims), " ", "][", -1), typ)
+		return nil, fmt.Errorf("bunny: cannot convert ARRAY%s to %s", strings.Replace(fmt.Sprint(dims), " ", "][", -1), typ)
 	}
 	return elems, err
 }

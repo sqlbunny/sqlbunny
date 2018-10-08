@@ -1,5 +1,5 @@
 // Package strmangle is a collection of string manipulation functions.
-// Primarily used by boil and templates for code generation.
+// Primarily used by bunny and templates for code generation.
 // Because it is focused on pipelining inside templates
 // you will see some odd parameter ordering.
 package strmangle
@@ -69,12 +69,12 @@ var reservedWords = map[string]struct{}{
 }
 
 func init() {
-	// Our Boil inflection Ruleset does not include uncounmodel inflections.
+	// Our Bunny inflection Ruleset does not include uncounmodel inflections.
 	// This way, people using words like Sheep will not have
 	// collisions with their model name (Sheep) and their
 	// function name (Sheep()). Instead, it will
 	// use the regular inflection rules: Sheep, Sheeps().
-	boilRuleset = newBoilRuleset()
+	bunnyRuleset = newBunnyRuleset()
 }
 
 // SchemaModel returns a model name with a schema prefixed if
@@ -181,7 +181,7 @@ func Plural(name string) string {
 		}
 
 		if i == len(splits)-1 {
-			buf.WriteString(boilRuleset.Pluralize(splits[len(splits)-1]))
+			buf.WriteString(bunnyRuleset.Pluralize(splits[len(splits)-1]))
 			break
 		}
 
@@ -204,7 +204,7 @@ func Singular(name string) string {
 		}
 
 		if i == len(splits)-1 {
-			buf.WriteString(boilRuleset.Singularize(splits[len(splits)-1]))
+			buf.WriteString(bunnyRuleset.Singularize(splits[len(splits)-1]))
 			break
 		}
 

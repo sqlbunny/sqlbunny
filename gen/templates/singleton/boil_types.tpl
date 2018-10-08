@@ -1,5 +1,5 @@
 import (
-	"github.com/KernelPay/sqlboiler/boil/strmangle"
+	"github.com/KernelPay/sqlbunny/bunny/strmangle"
 	"github.com/pkg/errors"
 )
 

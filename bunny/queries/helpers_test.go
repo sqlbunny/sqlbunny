@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	null "github.com/KernelPay/sqlboiler/types/null"
+	null "github.com/KernelPay/sqlbunny/types/null"
 )
 
 type testObj struct {

@@ -3,7 +3,7 @@ package gen
 import (
 	"fmt"
 
-	"github.com/KernelPay/sqlboiler/schema"
+	"github.com/KernelPay/sqlbunny/schema"
 )
 
 var (

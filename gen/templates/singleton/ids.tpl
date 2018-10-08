@@ -36,10 +36,10 @@ import (
 	"errors"
     "fmt"
     "strings"
-    "github.com/KernelPay/sqlboiler/boil"
+    "github.com/KernelPay/sqlbunny/bunny"
 )
 
-func IDFromString(s string) (boil.ID, error) {
+func IDFromString(s string) (bunny.ID, error) {
 	parts := strings.Split(s, "_")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("Wrong parts count, expected 2 got %d", len(parts))

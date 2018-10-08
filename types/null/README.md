@@ -10,11 +10,11 @@ All types implement `sql.Scanner` and `driver.Valuer`, so you can use this libra
 
 Install:
 
-`go get -u "github.com/KernelPay/sqlboiler/types/null"`
+`go get -u "github.com/KernelPay/sqlbunny/types/null"`
 
 ### null package
 
-`import "github.com/KernelPay/sqlboiler/types/null"`
+`import "github.com/KernelPay/sqlbunny/types/null"`
 
 The following are all types supported in this package. All types will marshal to JSON null if Invalid or SQL source data is null.
 

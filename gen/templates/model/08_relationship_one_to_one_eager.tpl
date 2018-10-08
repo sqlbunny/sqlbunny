@@ -39,7 +39,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
 	)
 
-	results, err := boil.Query(ctx, query, args...)
+	results, err := bunny.Query(ctx, query, args...)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load {{$txt.ForeignModel.NameGo}}")
 	}

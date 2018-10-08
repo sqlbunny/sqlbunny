@@ -16,7 +16,7 @@ func test{{$modelNamePlural}}Update(t *testing.T) {
 		t.Errorf("Unable to randomize {{$modelNameSingular}} struct: %s", err)
 	}
 
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 	if err = {{$varNameSingular}}.Insert(tx); err != nil {
 		t.Error(err)
@@ -54,7 +54,7 @@ func test{{$modelNamePlural}}SliceUpdateAll(t *testing.T) {
 		t.Errorf("Unable to randomize {{$modelNameSingular}} struct: %s", err)
 	}
 
-	tx := MustTx(boil.Begin())
+	tx := MustTx(bunny.Begin())
 	defer tx.Rollback()
 	if err = {{$varNameSingular}}.Insert(tx); err != nil {
 		t.Error(err)

@@ -2,11 +2,11 @@ package strmangle
 
 import "github.com/volatiletech/inflect"
 
-var boilRuleset *inflect.Ruleset
+var bunnyRuleset *inflect.Ruleset
 
 // create a new ruleset and load it with the default
 // set of common English pluralization rules
-func newBoilRuleset() *inflect.Ruleset {
+func newBunnyRuleset() *inflect.Ruleset {
 	rs := inflect.NewRuleset()
 	rs.AddPlural("s", "s")
 	rs.AddPlural("testis", "testes")

@@ -1,6 +1,6 @@
-/sqlboiler
-/cmd/sqlboiler/sqlboiler
-sqlboiler.toml
+/sqlbunny
+/cmd/sqlbunny/sqlbunny
+sqlbunny.toml
 models/
 testschema.sql
 .cover

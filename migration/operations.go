@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/KernelPay/sqlboiler/boil"
-	"github.com/KernelPay/sqlboiler/schema"
+	"github.com/KernelPay/sqlbunny/bunny"
+	"github.com/KernelPay/sqlbunny/schema"
 )
 
 func getDefaultForType(dbType string) string {
@@ -72,7 +72,7 @@ func (o CreateTableOperation) Run(ctx context.Context) error {
 		x = append(x, fmt.Sprintf("\"%s\" %s %s", c.Name, c.Type, n))
 	}
 	q := fmt.Sprintf("CREATE TABLE \"%s\" (%s)", o.Name, strings.Join(x, ","))
-	_, err := boil.Exec(ctx, q)
+	_, err := bunny.Exec(ctx, q)
 	return err
 }
 
@@ -112,7 +112,7 @@ type DropTableOperation struct {
 
 func (o DropTableOperation) Run(ctx context.Context) error {
 	q := fmt.Sprintf("DROP TABLE \"%s\"", o.Name)
-	_, err := boil.Exec(ctx, q)
+	_, err := bunny.Exec(ctx, q)
 	return err
 }
 func (o DropTableOperation) Apply(d *schema.Schema) {
@@ -420,7 +420,7 @@ func (o AlterTableOperation) Run(ctx context.Context) error {
 		buf.WriteString(op.AlterTableSQL(&o))
 		first = false
 	}
-	_, err := boil.Exec(ctx, buf.String())
+	_, err := bunny.Exec(ctx, buf.String())
 	return err
 }
 func (o AlterTableOperation) Apply(d *schema.Schema) {
@@ -453,7 +453,7 @@ type CreateIndexOperation struct {
 
 func (o CreateIndexOperation) Run(ctx context.Context) error {
 	q := fmt.Sprintf("CREATE INDEX CONCURRENTLY \"%s\" ON \"%s\" (%s) ", o.IndexName, o.Name, columnList(o.Columns))
-	_, err := boil.Exec(ctx, q)
+	_, err := bunny.Exec(ctx, q)
 	return err
 }
 func (o CreateIndexOperation) Apply(d *schema.Schema) {
@@ -485,7 +485,7 @@ type DropIndexOperation struct {
 
 func (o DropIndexOperation) Run(ctx context.Context) error {
 	q := fmt.Sprintf("DROP INDEX \"%s\"", o.IndexName)
-	_, err := boil.Exec(ctx, q)
+	_, err := bunny.Exec(ctx, q)
 	return err
 }
 func (o DropIndexOperation) Apply(d *schema.Schema) {
@@ -511,7 +511,7 @@ type SQLOperation struct {
 }
 
 func (o SQLOperation) Run(ctx context.Context) error {
-	_, err := boil.Exec(ctx, o.SQL)
+	_, err := bunny.Exec(ctx, o.SQL)
 	return err
 }
 func (o SQLOperation) Apply(d *schema.Schema) {
