@@ -1,4 +1,11 @@
+The following license shall not be granted to the
+following entities or any subsidiary thereof:
+- Verse Technologies Inc
+- Decentralized Global Payments SL
+
+
 Copyright (c) 2017 Volatile Technologies Inc. All rights reserved.
+Copyright (c) 2018 Kernel Labs SL. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -10,7 +17,7 @@ met:
   copyright notice, this list of conditions and the following disclaimer
   in the documentation and/or other materials provided with the
   distribution.
-* Neither the name of Vattle or Volatile Technologies Inc. nor the
+* Neither the name of Vattle, Volatile Technologies Inc, Kernel Payments, nor the
   names of its contributors may be used to endorse or promote products
   derived from this software without specific prior written permission.
 
