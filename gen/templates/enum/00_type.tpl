@@ -8,8 +8,8 @@ import (
     "encoding/json"
     "bytes"
 
-    "github.com/KernelPay/sqlbunny/bunny"
-    "github.com/KernelPay/sqlbunny/types/null/convert"
+    "github.com/kernelpayments/sqlbunny/bunny"
+    "github.com/kernelpayments/sqlbunny/types/null/convert"
 )
 
 // {{$enumName}} is an enum type.

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/KernelPay/sqlbunny/bunny"
+	"github.com/kernelpayments/sqlbunny/bunny"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 

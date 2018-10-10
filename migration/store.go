@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/KernelPay/sqlbunny/bunny"
-	"github.com/KernelPay/sqlbunny/schema"
+	"github.com/kernelpayments/sqlbunny/bunny"
+	"github.com/kernelpayments/sqlbunny/schema"
 )
 
 type MigrationStore struct {

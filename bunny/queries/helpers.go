@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/KernelPay/sqlbunny/bunny/strmangle"
+	"github.com/kernelpayments/sqlbunny/bunny/strmangle"
 )
 
 // NonZeroDefaultSet returns the fields included in the

@@ -3,7 +3,7 @@ package schema
 import (
 	"fmt"
 
-	"github.com/KernelPay/sqlbunny/bunny/strmangle"
+	"github.com/kernelpayments/sqlbunny/bunny/strmangle"
 )
 
 // Model metadata from the database schema.

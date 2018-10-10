@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"github.com/KernelPay/sqlbunny/types/null/convert"
+	"github.com/kernelpayments/sqlbunny/types/null/convert"
 )
 
 // NullBytes is a global byte slice of JSON null

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/KernelPay/sqlbunny/gen"
-	"github.com/KernelPay/sqlbunny/migration"
-	"github.com/KernelPay/sqlbunny/schema"
+	"github.com/kernelpayments/sqlbunny/gen"
+	"github.com/kernelpayments/sqlbunny/migration"
+	"github.com/kernelpayments/sqlbunny/schema"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

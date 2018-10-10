@@ -12,7 +12,7 @@ import (
     "strings"
 
     "github.com/pkg/errors"
-    "github.com/KernelPay/sqlbunny/bunny"
+    "github.com/kernelpayments/sqlbunny/bunny"
 )
 
 const {{$modelNameCamel}}PrefixLength = {{ len .IDType.Prefix }} + 1

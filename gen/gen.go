@@ -9,9 +9,9 @@ import (
 	"regexp"
 	"text/template"
 
-	"github.com/KernelPay/sqlbunny/bunny/queries"
-	"github.com/KernelPay/sqlbunny/bunny/strmangle"
-	"github.com/KernelPay/sqlbunny/schema"
+	"github.com/kernelpayments/sqlbunny/bunny/queries"
+	"github.com/kernelpayments/sqlbunny/bunny/strmangle"
+	"github.com/kernelpayments/sqlbunny/schema"
 	"github.com/pkg/errors"
 )
 
@@ -253,7 +253,7 @@ func (s *State) initTemplates() error {
 	return nil
 }
 
-var basePackage = "github.com/KernelPay/sqlbunny/gen"
+var basePackage = "github.com/kernelpayments/sqlbunny/gen"
 
 func getBasePath(baseDirConfig string) (string, error) {
 	if len(baseDirConfig) > 0 {

@@ -1,6 +1,6 @@
 workspace:
   base: /go
-  path: src/github.com/KernelPay/sqlbunny
+  path: src/github.com/kernelpayments/sqlbunny
 
 pipeline:
   build:

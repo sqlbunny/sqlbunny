@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/KernelPay/sqlbunny/types/null/convert"
+	"github.com/kernelpayments/sqlbunny/types/null/convert"
 )
 
 // Int16 is an nullable int16.

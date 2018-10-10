@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/KernelPay/sqlbunny/bunny"
-	"github.com/KernelPay/sqlbunny/schema"
+	"github.com/kernelpayments/sqlbunny/bunny"
+	"github.com/kernelpayments/sqlbunny/schema"
 )
 
 func getDefaultForType(dbType string) string {
