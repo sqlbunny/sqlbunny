@@ -2,22 +2,18 @@ package migration
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
-	"go/build"
-	"io/ioutil"
-	"os"
-	"os/exec"
-	"plugin"
 
 	"github.com/kernelpayments/sqlbunny/common"
 	"github.com/kernelpayments/sqlbunny/schema"
 )
 
-func Run(s2 *schema.Schema) error {
-	mstore, err := LoadMigrations()
-	if err != nil {
-		return err
+func Run(s2 *schema.Schema, mstore *MigrationStore) error {
+	if mstore == nil {
+		return errors.New("I don't have the existing migrations. Set them using migration.Set()")
 	}
+
 	s1 := schema.NewSchema()
 	mstore.applyAll(s1)
 
@@ -40,58 +36,4 @@ func Run(s2 *schema.Schema) error {
 		return err
 	}
 	return nil
-}
-
-const loaderProgram = `package main
-
-import "%s/migrations"
-
-var Migrations = &migrations.Migrations`
-
-func LoadMigrations() (*MigrationStore, error) {
-	if err := os.RemoveAll("sqlbunny_tmp"); err != nil {
-		return nil, err
-	}
-	if err := os.Mkdir("sqlbunny_tmp", 0777); err != nil {
-		return nil, err
-	}
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("Error getting cwd: %v", err)
-	}
-
-	pkg, err := build.Import(".", cwd, 0)
-	if err != nil {
-		return nil, fmt.Errorf("Error finding package for cwd: %v", err)
-	}
-
-	if err := ioutil.WriteFile("./sqlbunny_tmp/main.go", []byte(fmt.Sprintf(loaderProgram, pkg.ImportPath)), 0666); err != nil {
-		return nil, err
-	}
-	cmd := exec.Command("go", "build", "-buildmode=plugin", "-o=./sqlbunny_tmp/migrations.so", "./sqlbunny_tmp")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		return nil, fmt.Errorf("Error compiling migrations package: %v", err)
-	}
-
-	p, err := plugin.Open("./sqlbunny_tmp/migrations.so")
-	if err != nil {
-		return nil, fmt.Errorf("Error loading migrations package: %v", err)
-	}
-	m, err := p.Lookup("Migrations")
-	if err != nil {
-		return nil, fmt.Errorf("Error looking for 'Migrations' variable in migrations package: %v", err)
-	}
-
-	ops, ok := m.(**MigrationStore)
-	if !ok {
-		return nil, fmt.Errorf("'Migrations' variable is the wrong type, should be migration.MigrationStore")
-	}
-
-	os.RemoveAll("sqlbunny_tmp")
-
-	return *ops, nil
 }

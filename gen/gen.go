@@ -3,7 +3,7 @@
 package gen
 
 import (
-	"go/build"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,6 +13,7 @@ import (
 	"github.com/kernelpayments/sqlbunny/bunny/strmangle"
 	"github.com/kernelpayments/sqlbunny/schema"
 	"github.com/pkg/errors"
+	"golang.org/x/tools/go/packages"
 )
 
 const (
@@ -260,12 +261,12 @@ func getBasePath(baseDirConfig string) (string, error) {
 		return baseDirConfig, nil
 	}
 
-	p, _ := build.Default.Import(basePackage, "", build.FindOnly)
-	if p != nil && len(p.Dir) > 0 {
-		return p.Dir, nil
+	pkgs, err := packages.Load(nil, basePackage)
+	if err != nil {
+		return "", fmt.Errorf("Error finding package %s to load templates: %v", err)
 	}
 
-	return os.Getwd()
+	return filepath.Dir(pkgs[0].GoFiles[0]), nil
 }
 
 // Tags must be in a format like: json, xml, etc.
