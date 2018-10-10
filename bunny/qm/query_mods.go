@@ -1,6 +1,6 @@
 package qm
 
-import "github.com/KernelPay/sqlbunny/bunny/queries"
+import "github.com/kernelpayments/sqlbunny/bunny/queries"
 
 // QueryMod to modify the query object
 type QueryMod func(q *queries.Query)

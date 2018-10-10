@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/KernelPay/sqlbunny/types/null/convert"
+	"github.com/kernelpayments/sqlbunny/types/null/convert"
 )
 
 // Float32 is a nullable float32.

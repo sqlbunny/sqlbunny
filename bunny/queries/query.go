@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/KernelPay/sqlbunny/bunny"
+	"github.com/kernelpayments/sqlbunny/bunny"
 )
 
 // joinKind is the type of join

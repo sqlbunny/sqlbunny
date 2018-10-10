@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	null "github.com/KernelPay/sqlbunny/types/null"
+	null "github.com/kernelpayments/sqlbunny/types/null"
 )
 
 type testObj struct {

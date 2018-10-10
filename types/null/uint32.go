@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/KernelPay/sqlbunny/types/null/convert"
+	"github.com/kernelpayments/sqlbunny/types/null/convert"
 )
 
 // Uint32 is an nullable uint32.

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/KernelPay/sqlbunny/bunny/queries"
-	"github.com/KernelPay/sqlbunny/bunny/strmangle"
-	"github.com/KernelPay/sqlbunny/schema"
+	"github.com/kernelpayments/sqlbunny/bunny/queries"
+	"github.com/kernelpayments/sqlbunny/bunny/strmangle"
+	"github.com/kernelpayments/sqlbunny/schema"
 	"github.com/pkg/errors"
 )
 

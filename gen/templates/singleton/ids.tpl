@@ -36,7 +36,7 @@ import (
 	"errors"
     "fmt"
     "strings"
-    "github.com/KernelPay/sqlbunny/bunny"
+    "github.com/kernelpayments/sqlbunny/bunny"
 )
 
 func IDFromString(s string) (bunny.ID, error) {

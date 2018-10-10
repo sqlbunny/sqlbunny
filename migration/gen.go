@@ -9,8 +9,8 @@ import (
 	"os/exec"
 	"plugin"
 
-	"github.com/KernelPay/sqlbunny/common"
-	"github.com/KernelPay/sqlbunny/schema"
+	"github.com/kernelpayments/sqlbunny/common"
+	"github.com/kernelpayments/sqlbunny/schema"
 )
 
 func Run(s2 *schema.Schema) error {
@@ -31,7 +31,7 @@ func Run(s2 *schema.Schema) error {
 
 	var buf bytes.Buffer
 	common.WritePackageName(&buf, "migrations")
-	buf.WriteString("import \"github.com/KernelPay/sqlbunny/migration\"\n")
+	buf.WriteString("import \"github.com/kernelpayments/sqlbunny/migration\"\n")
 	buf.WriteString(fmt.Sprintf("func init() {\nMigrations.Register(%d, ", migrationNumber))
 	ops.Dump(&buf)
 	buf.WriteString(")\n}")
