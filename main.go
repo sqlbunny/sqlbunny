@@ -1,5 +1,4 @@
-// Package main defines a command line interface for the sqlbunny package
-package main
+package sqlbunny
 
 import (
 	"fmt"
@@ -17,7 +16,7 @@ const sqlbunnyVersion = "2.6.0"
 var cmdConfig gen.Config
 var schemaFile string
 
-func main() {
+func Run() {
 	var cmdGen = &cobra.Command{
 		Use:  "gen [flags]",
 		RunE: runGen,
@@ -100,13 +99,19 @@ func runGen(cmd *cobra.Command, args []string) error {
 	return cmdState.Run(true)
 }
 
+var mstore *migration.MigrationStore
+
+func SetMigrations(s *migration.MigrationStore) {
+	mstore = s
+}
+
 func runMigrationGen(cmd *cobra.Command, args []string) error {
 	schema, err := loadSchema(schemaFile)
 	if err != nil {
 		return err
 	}
 
-	return migration.Run(schema)
+	return migration.Run(schema, mstore)
 }
 
 func runMigrationRun(cmd *cobra.Command, args []string) error {
