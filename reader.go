@@ -2,30 +2,29 @@ package geo
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
+	"io"
 	"math"
 )
 
 type ewkbReader struct {
-	data      []byte
-	index     int
+	r         io.Reader
 	byteOrder binary.ByteOrder
+	flags     uint32
 }
 
-func newEWKBReader(value interface{}) (ewkbReader, error) {
-	b, ok := value.([]byte)
-	if !ok {
-		return ewkbReader{}, errors.New("EWKB scan: value is not byte slice")
-	}
-
-	data, err := hex.DecodeString(string(b))
+func readByte(r io.Reader) byte {
+	var buf [1]byte
+	_, err := io.ReadFull(r, buf[:])
 	if err != nil {
-		return ewkbReader{}, err
+		panic(err)
 	}
+	return buf[0]
+}
 
+func newEWKBReader(r io.Reader) (ewkbReader, error) {
 	var byteOrder binary.ByteOrder
-	switch data[0] {
+	switch readByte(r) {
 	case 0:
 		byteOrder = binary.BigEndian
 	case 1:
@@ -35,34 +34,45 @@ func newEWKBReader(value interface{}) (ewkbReader, error) {
 	}
 
 	return ewkbReader{
-		data:      data,
-		index:     1,
+		r:         r,
 		byteOrder: byteOrder,
 	}, nil
 }
 
 func (r *ewkbReader) ReadUint8() uint8 {
-	res := r.data[r.index]
-	r.index += 1
-	return res
+	var buf [1]byte
+	_, err := io.ReadFull(r.r, buf[:])
+	if err != nil {
+		panic(err)
+	}
+	return buf[0]
 }
 
 func (r *ewkbReader) ReadUint16() uint16 {
-	res := r.byteOrder.Uint16(r.data[r.index:])
-	r.index += 2
-	return res
+	var buf [2]byte
+	_, err := io.ReadFull(r.r, buf[:])
+	if err != nil {
+		panic(err)
+	}
+	return r.byteOrder.Uint16(buf[:])
 }
 
 func (r *ewkbReader) ReadUint32() uint32 {
-	res := r.byteOrder.Uint32(r.data[r.index:])
-	r.index += 4
-	return res
+	var buf [4]byte
+	_, err := io.ReadFull(r.r, buf[:])
+	if err != nil {
+		panic(err)
+	}
+	return r.byteOrder.Uint32(buf[:])
 }
 
 func (r *ewkbReader) ReadUint64() uint64 {
-	res := r.byteOrder.Uint64(r.data[r.index:])
-	r.index += 8
-	return res
+	var buf [8]byte
+	_, err := io.ReadFull(r.r, buf[:])
+	if err != nil {
+		panic(err)
+	}
+	return r.byteOrder.Uint64(buf[:])
 }
 
 func (r *ewkbReader) ReadInt8() int8 {

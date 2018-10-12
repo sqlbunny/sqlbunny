@@ -2,59 +2,156 @@ package geo
 
 import (
 	"database/sql/driver"
-	"encoding/json"
 )
 
-type MultiPolygon struct {
-	Polygons []Polygon `json:"polygons"`
-}
-
-// MarshalJSON implements json.Marshaler.
-func (p *MultiPolygon) MarshalJSON() ([]byte, error) {
-	return json.Marshal(p.Polygons)
-}
-
-// UnmarshalJSON MultiPoint json.Unmarshaler.
-func (p *MultiPolygon) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &p.Polygons)
-}
+type MultiPolygon []Polygon
 
 type MultiPolygonS struct {
 	MultiPolygon
-	sridVal
+	srid `json:"srid"`
 }
 
-func (p *MultiPolygon) ewkbRead(r *ewkbReader) {
+func (g *MultiPolygon) ewkbRead(r *ewkbReader) {
 	n := r.ReadUint32()
-	p.Polygons = make([]Polygon, n)
-	for i := range p.Polygons {
-		r.ReadUint8()
-		r.ReadUint32()
-		p.Polygons[i].ewkbRead(r)
+	*g = make([]Polygon, n)
+	for i := range *g {
+		UnmarshalReader(r.r, &(*g)[i])
 	}
 }
 
-func (p *MultiPolygon) ewkbWrite(w *ewkbWriter) {
-	w.WriteUint32(uint32(len(p.Polygons)))
-	for i := range p.Polygons {
-		w.WriteUint8(0x01)
-		w.WriteUint32(p.Polygons[i].ewkbType())
-		p.Polygons[i].ewkbWrite(w)
+func (g *MultiPolygon) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(*g)))
+	for _, p := range *g {
+		MarshalWriter(w.w, &p)
 	}
 }
 
-func (p *MultiPolygon) Scan(value interface{}) error {
-	return scan(value, p)
+func (g *MultiPolygon) Scan(value interface{}) error {
+	return scan(value, g)
 }
 
-func (p *MultiPolygonS) Scan(value interface{}) error {
-	return scan(value, p)
+func (g *MultiPolygonS) Scan(value interface{}) error {
+	return scan(value, g)
 }
 
-func (p MultiPolygon) Value() (driver.Value, error) {
-	return value(&p)
+func (g MultiPolygon) Value() (driver.Value, error) {
+	return value(&g)
 }
 
-func (p MultiPolygon) ewkbType() uint32 {
+func (g MultiPolygon) ewkbType() uint32 {
 	return ewkbMultiPolygonType
+}
+
+type MultiPolygonZ []PolygonZ
+
+type MultiPolygonZS struct {
+	MultiPolygonZ
+	srid `json:"srid"`
+}
+
+func (g *MultiPolygonZ) ewkbRead(r *ewkbReader) {
+	n := r.ReadUint32()
+	*g = make([]PolygonZ, n)
+	for i := range *g {
+		UnmarshalReader(r.r, &(*g)[i])
+	}
+}
+
+func (g *MultiPolygonZ) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(*g)))
+	for _, p := range *g {
+		MarshalWriter(w.w, &p)
+	}
+}
+
+func (g *MultiPolygonZ) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g *MultiPolygonZS) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g MultiPolygonZ) Value() (driver.Value, error) {
+	return value(&g)
+}
+
+func (g MultiPolygonZ) ewkbType() uint32 {
+	return ewkbMultiPolygonType | ewkbZFlag
+}
+
+type MultiPolygonM []PolygonM
+
+type MultiPolygonMS struct {
+	MultiPolygonM
+	srid `json:"srid"`
+}
+
+func (g *MultiPolygonM) ewkbRead(r *ewkbReader) {
+	n := r.ReadUint32()
+	*g = make([]PolygonM, n)
+	for i := range *g {
+		UnmarshalReader(r.r, &(*g)[i])
+	}
+}
+
+func (g *MultiPolygonM) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(*g)))
+	for _, p := range *g {
+		MarshalWriter(w.w, &p)
+	}
+}
+
+func (g *MultiPolygonM) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g *MultiPolygonMS) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g MultiPolygonM) Value() (driver.Value, error) {
+	return value(&g)
+}
+
+func (g MultiPolygonM) ewkbType() uint32 {
+	return ewkbMultiPolygonType | ewkbMFlag
+}
+
+type MultiPolygonZM []PolygonZM
+
+type MultiPolygonZMS struct {
+	MultiPolygonZM
+	srid `json:"srid"`
+}
+
+func (g *MultiPolygonZM) ewkbRead(r *ewkbReader) {
+	n := r.ReadUint32()
+	*g = make([]PolygonZM, n)
+	for i := range *g {
+		UnmarshalReader(r.r, &(*g)[i])
+	}
+}
+
+func (g *MultiPolygonZM) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(*g)))
+	for _, p := range *g {
+		MarshalWriter(w.w, &p)
+	}
+}
+
+func (g *MultiPolygonZM) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g *MultiPolygonZMS) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g MultiPolygonZM) Value() (driver.Value, error) {
+	return value(&g)
+}
+
+func (g MultiPolygonZM) ewkbType() uint32 {
+	return ewkbMultiPolygonType | ewkbZFlag | ewkbMFlag
 }

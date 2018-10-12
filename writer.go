@@ -1,71 +1,84 @@
 package geo
 
 import (
-	"database/sql/driver"
 	"encoding/binary"
-	"encoding/hex"
+	"io"
 	"math"
 )
 
 type ewkbWriter struct {
-	data      []byte
+	w         io.Writer
 	byteOrder binary.ByteOrder
 }
 
-func newEWKBWriter() ewkbWriter {
-	r := ewkbWriter{
-		data:      []byte{0x01},
+func newEWKBWriter(w io.Writer) ewkbWriter {
+	var buf = [1]byte{0x01}
+	_, err := w.Write(buf[:])
+	if err != nil {
+		panic(err)
+	}
+
+	return ewkbWriter{
+		w:         w,
 		byteOrder: binary.LittleEndian,
 	}
-	return r
 }
 
-func (r *ewkbWriter) Value() driver.Value {
-	return hex.EncodeToString(r.data)
+func (w *ewkbWriter) WriteUint8(v uint8) {
+	var buf = [1]byte{v}
+	_, err := w.w.Write(buf[:])
+	if err != nil {
+		panic(err)
+	}
 }
 
-func (r *ewkbWriter) WriteUint8(v uint8) {
-	r.data = append(r.data, v)
-}
-
-func (r *ewkbWriter) WriteUint16(v uint16) {
+func (w *ewkbWriter) WriteUint16(v uint16) {
 	var data [2]byte
-	r.byteOrder.PutUint16(data[:], v)
-	r.data = append(r.data, data[:]...)
+	w.byteOrder.PutUint16(data[:], v)
+	_, err := w.w.Write(data[:])
+	if err != nil {
+		panic(err)
+	}
 }
 
-func (r *ewkbWriter) WriteUint32(v uint32) {
+func (w *ewkbWriter) WriteUint32(v uint32) {
 	var data [4]byte
-	r.byteOrder.PutUint32(data[:], v)
-	r.data = append(r.data, data[:]...)
+	w.byteOrder.PutUint32(data[:], v)
+	_, err := w.w.Write(data[:])
+	if err != nil {
+		panic(err)
+	}
 }
 
-func (r *ewkbWriter) WriteUint64(v uint64) {
+func (w *ewkbWriter) WriteUint64(v uint64) {
 	var data [8]byte
-	r.byteOrder.PutUint64(data[:], v)
-	r.data = append(r.data, data[:]...)
+	w.byteOrder.PutUint64(data[:], v)
+	_, err := w.w.Write(data[:])
+	if err != nil {
+		panic(err)
+	}
 }
 
-func (r *ewkbWriter) WriteInt8(v int8) {
-	r.WriteUint8(uint8(v))
+func (w *ewkbWriter) WriteInt8(v int8) {
+	w.WriteUint8(uint8(v))
 }
 
-func (r *ewkbWriter) WriteInt16(v int16) {
-	r.WriteUint16(uint16(v))
+func (w *ewkbWriter) WriteInt16(v int16) {
+	w.WriteUint16(uint16(v))
 }
 
-func (r *ewkbWriter) WriteInt32(v int32) {
-	r.WriteUint32(uint32(v))
+func (w *ewkbWriter) WriteInt32(v int32) {
+	w.WriteUint32(uint32(v))
 }
 
-func (r *ewkbWriter) WriteInt64(v int64) {
-	r.WriteUint64(uint64(v))
+func (w *ewkbWriter) WriteInt64(v int64) {
+	w.WriteUint64(uint64(v))
 }
 
-func (r *ewkbWriter) WriteFloat32(v float32) {
-	r.WriteUint32(math.Float32bits(v))
+func (w *ewkbWriter) WriteFloat32(v float32) {
+	w.WriteUint32(math.Float32bits(v))
 }
 
-func (r *ewkbWriter) WriteFloat64(v float64) {
-	r.WriteUint64(math.Float64bits(v))
+func (w *ewkbWriter) WriteFloat64(v float64) {
+	w.WriteUint64(math.Float64bits(v))
 }

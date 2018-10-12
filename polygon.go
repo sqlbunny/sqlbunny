@@ -11,38 +11,151 @@ type Polygon struct {
 
 type PolygonS struct {
 	Polygon
-	sridVal
+	srid `json:"srid"`
 }
 
-func (p *Polygon) ewkbRead(r *ewkbReader) {
+func (g *Polygon) ewkbRead(r *ewkbReader) {
 	n := r.ReadUint32()
-	if n == 1 {
-		p.Holes = nil
-	} else {
-		p.Holes = make([]LineString, n-1)
-	}
-	p.Coordinates.ewkbRead(r)
-	for i := range p.Holes {
-		p.Holes[i].ewkbRead(r)
+	g.Holes = make([]LineString, n-1)
+	g.Coordinates.ewkbRead(r)
+	for i := range g.Holes {
+		g.Holes[i].ewkbRead(r)
 	}
 }
 
-func (p *Polygon) ewkbWrite(w *ewkbWriter) {
-	w.WriteUint32(uint32(len(p.Holes) + 1))
-	p.Coordinates.ewkbWrite(w)
-	for i := range p.Holes {
-		p.Holes[i].ewkbWrite(w)
+func (g *Polygon) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(g.Holes) + 1))
+	g.Coordinates.ewkbWrite(w)
+	for i := range g.Holes {
+		g.Holes[i].ewkbWrite(w)
 	}
 }
 
-func (p *Polygon) Scan(value interface{}) error {
-	return scan(value, p)
+func (g *Polygon) Scan(value interface{}) error {
+	return scan(value, g)
 }
 
-func (p Polygon) Value() (driver.Value, error) {
-	return value(&p)
+func (g Polygon) Value() (driver.Value, error) {
+	return value(&g)
 }
 
-func (p Polygon) ewkbType() uint32 {
+func (g Polygon) ewkbType() uint32 {
 	return ewkbPolygonType
+}
+
+type PolygonZ struct {
+	Coordinates LineStringZ   `json:"coordinates"`
+	Holes       []LineStringZ `json:"holes,omitempty"`
+}
+
+type PolygonZS struct {
+	PolygonZ
+	srid `json:"srid"`
+}
+
+func (g *PolygonZ) ewkbRead(r *ewkbReader) {
+	n := r.ReadUint32()
+	g.Holes = make([]LineStringZ, n-1)
+	g.Coordinates.ewkbRead(r)
+	for i := range g.Holes {
+		g.Holes[i].ewkbRead(r)
+	}
+}
+
+func (g *PolygonZ) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(g.Holes) + 1))
+	g.Coordinates.ewkbWrite(w)
+	for i := range g.Holes {
+		g.Holes[i].ewkbWrite(w)
+	}
+}
+
+func (g *PolygonZ) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g PolygonZ) Value() (driver.Value, error) {
+	return value(&g)
+}
+
+func (g PolygonZ) ewkbType() uint32 {
+	return ewkbPolygonType | ewkbZFlag
+}
+
+type PolygonM struct {
+	Coordinates LineStringM   `json:"coordinates"`
+	Holes       []LineStringM `json:"holes,omitempty"`
+}
+
+type PolygonMS struct {
+	PolygonM
+	srid `json:"srid"`
+}
+
+func (g *PolygonM) ewkbRead(r *ewkbReader) {
+	n := r.ReadUint32()
+	g.Holes = make([]LineStringM, n-1)
+	g.Coordinates.ewkbRead(r)
+	for i := range g.Holes {
+		g.Holes[i].ewkbRead(r)
+	}
+}
+
+func (g *PolygonM) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(g.Holes) + 1))
+	g.Coordinates.ewkbWrite(w)
+	for i := range g.Holes {
+		g.Holes[i].ewkbWrite(w)
+	}
+}
+
+func (g *PolygonM) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g PolygonM) Value() (driver.Value, error) {
+	return value(&g)
+}
+
+func (g PolygonM) ewkbType() uint32 {
+	return ewkbPolygonType | ewkbMFlag
+}
+
+type PolygonZM struct {
+	Coordinates LineStringZM   `json:"coordinates"`
+	Holes       []LineStringZM `json:"holes,omitempty"`
+}
+
+type PolygonZMS struct {
+	PolygonZM
+	srid `json:"srid"`
+}
+
+func (g *PolygonZM) ewkbRead(r *ewkbReader) {
+	n := r.ReadUint32()
+	g.Holes = make([]LineStringZM, n-1)
+	g.Coordinates.ewkbRead(r)
+	for i := range g.Holes {
+		g.Holes[i].ewkbRead(r)
+	}
+}
+
+func (g *PolygonZM) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(g.Holes) + 1))
+	g.Coordinates.ewkbWrite(w)
+	for i := range g.Holes {
+		g.Holes[i].ewkbWrite(w)
+	}
+}
+
+func (g *PolygonZM) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g PolygonZM) Value() (driver.Value, error) {
+	return value(&g)
+}
+
+func (g PolygonZM) ewkbType() uint32 {
+	return ewkbPolygonType | ewkbZFlag | ewkbMFlag
 }

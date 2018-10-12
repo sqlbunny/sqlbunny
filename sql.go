@@ -2,55 +2,25 @@ package geo
 
 import (
 	"database/sql/driver"
+	"encoding/hex"
 	"errors"
 )
 
-type geom interface {
-	ewkbType() uint32
-	ewkbRead(r *ewkbReader)
-	ewkbWrite(r *ewkbWriter)
-}
-
-type geomS interface {
-	geom
-	getSRID() uint32
-	setSRID(srid uint32)
-}
-
 func scan(value interface{}, g geom) error {
-	r, err := newEWKBReader(value)
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("EWKB scan: value is not byte slice")
+	}
+
+	data, err := hex.DecodeString(string(b))
 	if err != nil {
 		return err
 	}
 
-	ewkbType := r.ReadUint32()
-	haveSRID := (ewkbType & ewkbSRIDFlag) != 0
-	ewkbType &= ^ewkbSRIDFlag
-	if ewkbType != g.ewkbType() {
-		return errors.New("Incorrect EWKB type")
-	}
-	var srid uint32
-	if haveSRID {
-		srid = r.ReadUint32()
-	}
-	if s, ok := g.(geomS); ok {
-		s.setSRID(srid)
-	}
-
-	g.ewkbRead(&r)
-	return nil
+	return Unmarshal(data, g)
 }
 
 func value(g geom) (driver.Value, error) {
-	w := newEWKBWriter()
-
-	if s, ok := g.(geomS); ok {
-		w.WriteUint32(g.ewkbType() | ewkbSRIDFlag)
-		w.WriteUint32(s.getSRID())
-	} else {
-		w.WriteUint32(g.ewkbType())
-	}
-	g.ewkbWrite(&w)
-
-	return w.Value(), nil
+	data := Marshal(g)
+	return hex.EncodeToString(data), nil
 }

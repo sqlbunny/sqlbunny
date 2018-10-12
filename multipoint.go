@@ -2,55 +2,140 @@ package geo
 
 import (
 	"database/sql/driver"
-	"encoding/json"
 )
 
-type MultiPoint struct {
-	Points []Point `json:"points"`
-}
-
-// MarshalJSON implements json.Marshaler.
-func (p *MultiPoint) MarshalJSON() ([]byte, error) {
-	return json.Marshal(p.Points)
-}
-
-// UnmarshalJSON MultiPoint json.Unmarshaler.
-func (p *MultiPoint) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &p.Points)
-}
+type MultiPoint []Point
 
 type MultiPointS struct {
 	MultiPoint
-	sridVal
+	srid `json:"srid"`
 }
 
-func (p *MultiPoint) ewkbRead(r *ewkbReader) {
+func (g *MultiPoint) ewkbRead(r *ewkbReader) {
 	n := r.ReadUint32()
-	p.Points = make([]Point, n)
-	for i := range p.Points {
-		r.ReadUint8()
-		r.ReadUint32()
-		p.Points[i].ewkbRead(r)
+	*g = make([]Point, n)
+	for i := range *g {
+		UnmarshalReader(r.r, &(*g)[i])
 	}
 }
 
-func (p *MultiPoint) ewkbWrite(w *ewkbWriter) {
-	w.WriteUint32(uint32(len(p.Points)))
-	for i := range p.Points {
-		w.WriteUint8(0x01)
-		w.WriteUint32(p.Points[i].ewkbType())
-		p.Points[i].ewkbWrite(w)
+func (g *MultiPoint) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(*g)))
+	for _, p := range *g {
+		MarshalWriter(w.w, &p)
 	}
 }
 
-func (p *MultiPoint) Scan(value interface{}) error {
-	return scan(value, p)
+func (g *MultiPoint) Scan(value interface{}) error {
+	return scan(value, g)
 }
 
-func (p MultiPoint) Value() (driver.Value, error) {
-	return value(&p)
+func (g MultiPoint) Value() (driver.Value, error) {
+	return value(&g)
 }
 
-func (p MultiPoint) ewkbType() uint32 {
+func (g MultiPoint) ewkbType() uint32 {
 	return ewkbMultiPointType
+}
+
+type MultiPointZ []PointZ
+
+type MultiPointZS struct {
+	MultiPointZ
+	srid `json:"srid"`
+}
+
+func (g *MultiPointZ) ewkbRead(r *ewkbReader) {
+	n := r.ReadUint32()
+	*g = make([]PointZ, n)
+	for i := range *g {
+		UnmarshalReader(r.r, &(*g)[i])
+	}
+}
+
+func (g *MultiPointZ) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(*g)))
+	for _, p := range *g {
+		MarshalWriter(w.w, &p)
+	}
+}
+
+func (g *MultiPointZ) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g MultiPointZ) Value() (driver.Value, error) {
+	return value(&g)
+}
+
+func (g MultiPointZ) ewkbType() uint32 {
+	return ewkbMultiPointType | ewkbZFlag
+}
+
+type MultiPointM []PointM
+
+type MultiPointMS struct {
+	MultiPointM
+	srid `json:"srid"`
+}
+
+func (g *MultiPointM) ewkbRead(r *ewkbReader) {
+	n := r.ReadUint32()
+	*g = make([]PointM, n)
+	for i := range *g {
+		UnmarshalReader(r.r, &(*g)[i])
+	}
+}
+
+func (g *MultiPointM) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(*g)))
+	for _, p := range *g {
+		MarshalWriter(w.w, &p)
+	}
+}
+
+func (g *MultiPointM) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g MultiPointM) Value() (driver.Value, error) {
+	return value(&g)
+}
+
+func (g MultiPointM) ewkbType() uint32 {
+	return ewkbMultiPointType | ewkbMFlag
+}
+
+type MultiPointZM []PointZM
+
+type MultiPointZMS struct {
+	MultiPointZM
+	srid `json:"srid"`
+}
+
+func (g *MultiPointZM) ewkbRead(r *ewkbReader) {
+	n := r.ReadUint32()
+	*g = make([]PointZM, n)
+	for i := range *g {
+		UnmarshalReader(r.r, &(*g)[i])
+	}
+}
+
+func (g *MultiPointZM) ewkbWrite(w *ewkbWriter) {
+	w.WriteUint32(uint32(len(*g)))
+	for _, p := range *g {
+		MarshalWriter(w.w, &p)
+	}
+}
+
+func (g *MultiPointZM) Scan(value interface{}) error {
+	return scan(value, g)
+}
+
+func (g MultiPointZM) Value() (driver.Value, error) {
+	return value(&g)
+}
+
+func (g MultiPointZM) ewkbType() uint32 {
+	return ewkbMultiPointType | ewkbZFlag | ewkbMFlag
 }
