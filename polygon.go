@@ -16,6 +16,12 @@ type PolygonS struct {
 
 func (g *Polygon) ewkbRead(r *ewkbReader) {
 	n := r.ReadUint32()
+	if n == 0 {
+		g.Coordinates = nil
+		g.Holes = nil
+		return
+	}
+
 	g.Holes = make([]LineString, n-1)
 	g.Coordinates.ewkbRead(r)
 	for i := range g.Holes {
