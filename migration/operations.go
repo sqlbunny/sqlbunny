@@ -12,7 +12,7 @@ import (
 
 func getDefaultForType(dbType string) string {
 	switch dbType {
-	case "integer", "bigint":
+	case "smallint", "integer", "bigint", "decimal", "numeric", "real", "double precision", "int2", "int4", "int8":
 		return "0"
 	case "boolean":
 		return "false"
