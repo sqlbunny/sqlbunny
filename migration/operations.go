@@ -478,6 +478,66 @@ func (o CreateIndexOperation) Dump(buf *bytes.Buffer) {
 	buf.WriteString("}")
 }
 
+type RenameColumnOperation struct {
+	Name          string
+	OldColumnName string
+	NewColumnName string
+}
+
+func (o RenameColumnOperation) Run(ctx context.Context) error {
+	q := fmt.Sprintf("ALTER TABLE \"%s\" RENAME COLUMN \"%s\" TO \"%s\"", o.Name, o.OldColumnName, o.NewColumnName)
+	_, err := bunny.Exec(ctx, q)
+	return err
+}
+
+func (o RenameColumnOperation) Apply(d *schema.Schema) {
+	m, ok := d.ModelsByName[o.Name]
+	if !ok {
+		panic("RenameColumnOperation on non-existing table: " + o.Name)
+	}
+
+	c := m.FindColumn(o.OldColumnName)
+	if c == nil {
+		panic(fmt.Sprintf("RenameColumnOperation non-existing: table %s, column %s", m.Name, o.OldColumnName))
+	}
+
+	c.Name = o.NewColumnName
+
+	if m.PrimaryKey != nil {
+		for i := range m.PrimaryKey.Columns {
+			if m.PrimaryKey.Columns[i] == o.OldColumnName {
+				m.PrimaryKey.Columns[i] = o.NewColumnName
+			}
+		}
+	}
+	for _, idx := range m.Indexes {
+		for i := range idx.Columns {
+			if idx.Columns[i] == o.OldColumnName {
+				idx.Columns[i] = o.NewColumnName
+			}
+		}
+	}
+	for _, idx := range m.Uniques {
+		for i := range idx.Columns {
+			if idx.Columns[i] == o.OldColumnName {
+				idx.Columns[i] = o.NewColumnName
+			}
+		}
+	}
+
+	for _, m2 := range d.Models {
+		for _, fk := range m2.ForeignKeys {
+			if fk.ForeignModel == m.Name && fk.ForeignColumn == o.OldColumnName {
+				fk.ForeignColumn = o.NewColumnName
+			}
+		}
+	}
+}
+
+func (o RenameColumnOperation) Dump(buf *bytes.Buffer) {
+	buf.WriteString("&migration.RenameColumnOperation {Name: \"" + o.Name + "\", OldColumnName: \"" + o.OldColumnName + "\", NewColumnName: \"" + o.NewColumnName + "\"}")
+}
+
 type DropIndexOperation struct {
 	Name      string
 	IndexName string
