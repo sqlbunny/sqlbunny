@@ -23,6 +23,12 @@ func getDefaultForType(dbType string) string {
 	case "jsonb":
 		return "'{}'"
 	}
+
+	// For arrays, the default is an empty array.
+	if strings.HasSuffix(dbType, "[]") {
+		return "'{}'"
+	}
+
 	return ""
 }
 
