@@ -38,6 +38,12 @@ func (s *Schema) ResolveTypes() error {
 			return fmt.Errorf("Duplicated type %s", t.Name)
 		}
 		s.TypesByName[t.Name] = t
+
+		t2 := &IDArrayType{t}
+		if _, ok := s.TypesByName[t2.GetName()]; ok {
+			return fmt.Errorf("Duplicated type %s", t2.GetName())
+		}
+		s.TypesByName[t2.GetName()] = t2
 	}
 
 	for _, o := range s.BaseTypes {
