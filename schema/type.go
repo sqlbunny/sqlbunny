@@ -1,5 +1,7 @@
 package schema
 
+import "strings"
+
 type Type interface {
 	GetName() string
 	TypeGo() TypeGo
@@ -42,11 +44,10 @@ func (t *BaseTypeNotNullable) TypeDB() string {
 }
 
 type BaseTypeNullable struct {
-	Name        string
-	Go          TypeGo
-	GoNull      TypeGo
-	GoNullField string
-	Postgres    string
+	Name     string
+	Go       TypeGo
+	GoNull   TypeGo
+	Postgres string
 }
 
 func (t *BaseTypeNullable) GetName() string {
@@ -59,7 +60,10 @@ func (t *BaseTypeNullable) TypeGoNull() TypeGo {
 	return t.GoNull
 }
 func (t *BaseTypeNullable) TypeGoNullField() string {
-	return t.GoNullField
+	if strings.HasPrefix(t.GoNull.Name, "Null") {
+		return t.GoNull.Name[4:]
+	}
+	return t.GoNull.Name
 }
 func (t *BaseTypeNullable) TypeDB() string {
 	return t.Postgres
