@@ -24,6 +24,9 @@ func (f *Field) GenerateTags() string {
 		if f.IsStruct() {
 			f.Tags["bunny"] += ",structbind"
 		}
+		if f.Nullable {
+			f.Tags["bunny"] += ",null"
+		}
 	}
 	if _, ok := f.Tags["json"]; !ok {
 		f.Tags["json"] = f.Name

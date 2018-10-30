@@ -39,6 +39,12 @@ func ConvertAssign(dest, src interface{}) error {
 			}
 			*d = []byte(s)
 			return nil
+		case *sql.RawBytes:
+			if d == nil {
+				return errNilPtr
+			}
+			*d = append((*d)[:0], s...)
+			return nil
 		}
 	case []byte:
 		switch d := dest.(type) {
@@ -69,6 +75,9 @@ func ConvertAssign(dest, src interface{}) error {
 		}
 	case time.Time:
 		switch d := dest.(type) {
+		case *time.Time:
+			*d = s
+			return nil
 		case *string:
 			*d = s.Format(time.RFC3339Nano)
 			return nil
@@ -77,6 +86,12 @@ func ConvertAssign(dest, src interface{}) error {
 				return errNilPtr
 			}
 			*d = []byte(s.Format(time.RFC3339Nano))
+			return nil
+		case *sql.RawBytes:
+			if d == nil {
+				return errNilPtr
+			}
+			*d = s.AppendFormat((*d)[:0], time.RFC3339Nano)
 			return nil
 		}
 	case nil:
@@ -156,7 +171,12 @@ func ConvertAssign(dest, src interface{}) error {
 
 	dv := reflect.Indirect(dpv)
 	if sv.IsValid() && sv.Type().AssignableTo(dv.Type()) {
-		dv.Set(sv)
+		switch b := src.(type) {
+		case []byte:
+			dv.Set(reflect.ValueOf(cloneBytes(b)))
+		default:
+			dv.Set(sv)
+		}
 		return nil
 	}
 
@@ -165,15 +185,19 @@ func ConvertAssign(dest, src interface{}) error {
 		return nil
 	}
 
+	// The following conversions use a string value as an intermediate representation
+	// to convert between various numeric types.
+	//
+	// This also allows scanning into user defined types such as "type Int int64".
+	// For symmetry, also check for string destination types.
 	switch dv.Kind() {
 	case reflect.Ptr:
 		if src == nil {
 			dv.Set(reflect.Zero(dv.Type()))
 			return nil
-		} else {
-			dv.Set(reflect.New(dv.Type().Elem()))
-			return ConvertAssign(dv.Interface(), src)
 		}
+		dv.Set(reflect.New(dv.Type().Elem()))
+		return ConvertAssign(dv.Interface(), src)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		s := asString(src)
 		i64, err := strconv.ParseInt(s, 10, dv.Type().Bits())
@@ -201,9 +225,38 @@ func ConvertAssign(dest, src interface{}) error {
 		}
 		dv.SetFloat(f64)
 		return nil
+	case reflect.String:
+		switch v := src.(type) {
+		case string:
+			dv.SetString(v)
+			return nil
+		case []byte:
+			dv.SetString(string(v))
+			return nil
+		}
 	}
 
 	return fmt.Errorf("unsupported Scan, storing driver.Value type %T into type %T", src, dest)
+}
+
+// ConvertAssignNil tries to assign the nil or zero value to dest.
+// dest should be a pointer type.
+func ConvertAssignNil(dest interface{}) error {
+	if scanner, ok := dest.(sql.Scanner); ok {
+		return scanner.Scan(nil)
+	}
+
+	dpv := reflect.ValueOf(dest)
+	if dpv.Kind() != reflect.Ptr {
+		return errors.New("destination not a pointer")
+	}
+	if dpv.IsNil() {
+		return errNilPtr
+	}
+
+	dv := reflect.Indirect(dpv)
+	dv.Set(reflect.Zero(dv.Type()))
+	return nil
 }
 
 func strconvErr(err error) error {

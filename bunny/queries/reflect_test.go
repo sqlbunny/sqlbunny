@@ -3,9 +3,8 @@ package queries
 import (
 	"context"
 	"database/sql/driver"
+	"fmt"
 	"reflect"
-	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/kernelpayments/sqlbunny/bunny"
@@ -15,22 +14,26 @@ import (
 func execToContext(exec bunny.Executor) context.Context {
 	return bunny.WithExecutor(context.Background(), exec)
 }
-func bin64(i uint64) string {
-	str := strconv.FormatUint(i, 2)
-	pad := 64 - len(str)
-	if pad > 0 {
-		str = strings.Repeat("0", pad) + str
-	}
 
-	var newStr string
-	for i := 0; i < len(str); i += 8 {
-		if i != 0 {
-			newStr += " "
+func stringifyField(x MappedField) string {
+	if x.ParentValid != nil {
+		return stringifyPath(x.Path) + " " + stringifyField(*x.ParentValid)
+	}
+	return stringifyPath(x.Path)
+}
+
+func stringifyPath(x uint64) string {
+	res := "("
+	for i := uint64(0); i < 64; i += 8 {
+		val := (x >> i) & 0xFF
+		if val == 0 {
+			break
 		}
-		newStr += str[i : i+8]
+
+		res += fmt.Sprintf("%d ", val-1)
 	}
 
-	return newStr
+	return res + ")"
 }
 
 type mockRowMaker struct {
@@ -180,13 +183,25 @@ func TestBindPtrSlice(t *testing.T) {
 	}
 }
 
-func testMakeMapping(byt ...byte) uint64 {
+func testMakeMapping(byt ...byte) MappedField {
 	var x uint64
 	for i, b := range byt {
-		x |= uint64(b) << (uint(i) * 8)
+		x |= uint64(b+1) << (uint(i) * 8)
 	}
-	x |= uint64(255) << uint(len(byt)*8)
-	return x
+	return MappedField{
+		Path: x,
+	}
+}
+
+func testMakeNullMapping(m MappedField, byt ...byte) MappedField {
+	var x uint64
+	for i, b := range byt {
+		x |= uint64(b+1) << (uint(i) * 8)
+	}
+	return MappedField{
+		Path:        x,
+		ParentValid: &m,
+	}
 }
 
 func TestMakeStructMapping(t *testing.T) {
@@ -211,19 +226,39 @@ func TestMakeStructMapping(t *testing.T) {
 				Nose string `bunny:"nose"`
 			} `bunny:"nested3,structbind"`
 		} `bunny:"nested,bind"`
+
+		NullStruct struct {
+			Struct struct {
+				Nose string `bunny:"nose"`
+				Leg  string `bunny:"leg"`
+
+				NullStruct2 struct {
+					Struct struct {
+						Ear string `bunny:"ear"`
+					}
+					Valid bool
+				} `bunny:"null_struct_2,structbind,null"`
+			}
+			Valid bool
+		} `bunny:"null_struct,structbind,null"`
 	}{}
 
 	got := MakeStructMapping(reflect.TypeOf(testStruct))
 
-	expectMap := map[string]uint64{
-		"different":            testMakeMapping(0),
-		"awesome_name":         testMakeMapping(1),
-		"nose":                 testMakeMapping(3),
-		"nested.different":     testMakeMapping(4, 0),
-		"nested.awesome_name":  testMakeMapping(4, 1),
-		"nested.nose":          testMakeMapping(4, 3),
-		"nested.nested2.nose":  testMakeMapping(4, 4, 0),
-		"nested.nested3__nose": testMakeMapping(4, 5, 0),
+	expectMap := map[string]MappedField{
+		"different":                       testMakeMapping(0),
+		"awesome_name":                    testMakeMapping(1),
+		"nose":                            testMakeMapping(3),
+		"nested.different":                testMakeMapping(4, 0),
+		"nested.awesome_name":             testMakeMapping(4, 1),
+		"nested.nose":                     testMakeMapping(4, 3),
+		"nested.nested2.nose":             testMakeMapping(4, 4, 0),
+		"nested.nested3__nose":            testMakeMapping(4, 5, 0),
+		"null_struct":                     testMakeMapping(5, 1),
+		"null_struct__nose":               testMakeNullMapping(testMakeMapping(5, 1), 5, 0, 0),
+		"null_struct__leg":                testMakeNullMapping(testMakeMapping(5, 1), 5, 0, 1),
+		"null_struct__null_struct_2":      testMakeNullMapping(testMakeMapping(5, 1), 5, 0, 2, 1),
+		"null_struct__null_struct_2__ear": testMakeNullMapping(testMakeNullMapping(testMakeMapping(5, 1), 5, 0, 2, 1), 5, 0, 2, 0, 0),
 	}
 
 	for expName, expVal := range expectMap {
@@ -233,8 +268,8 @@ func TestMakeStructMapping(t *testing.T) {
 			continue
 		}
 
-		if gotVal != expVal {
-			t.Errorf("%s) wrong value,\nwant: %x (%s)\ngot:  %x (%s)", expName, expVal, bin64(expVal), gotVal, bin64(gotVal))
+		if !reflect.DeepEqual(expVal, gotVal) {
+			t.Errorf("%s) wrong value,\nwant: %s\ngot:  %s", expName, stringifyField(expVal), stringifyField(gotVal))
 		}
 	}
 }
@@ -258,19 +293,19 @@ func TestPtrFromMapping(t *testing.T) {
 	}
 
 	v := ptrFromMapping(reflect.Indirect(reflect.ValueOf(val)), testMakeMapping(0), true)
-	if got := *v.Interface().(*int); got != 5 {
+	if got := *v.(*int); got != 5 {
 		t.Error("flat int was wrong:", got)
 	}
 	v = ptrFromMapping(reflect.Indirect(reflect.ValueOf(val)), testMakeMapping(1), true)
-	if got := *v.Interface().(*int); got != 0 {
+	if got := *v.(*int); got != 0 {
 		t.Error("flat pointer was wrong:", got)
 	}
 	v = ptrFromMapping(reflect.Indirect(reflect.ValueOf(val)), testMakeMapping(2, 0), true)
-	if got := *v.Interface().(*int); got != 6 {
+	if got := *v.(*int); got != 6 {
 		t.Error("nested int was wrong:", got)
 	}
 	v = ptrFromMapping(reflect.Indirect(reflect.ValueOf(val)), testMakeMapping(2, 1), true)
-	if got := *v.Interface().(*int); got != 0 {
+	if got := *v.(*int); got != 0 {
 		t.Error("nested pointer was wrong:", got)
 	}
 }
@@ -292,7 +327,13 @@ func TestValuesFromMapping(t *testing.T) {
 			IntP: new(int),
 		},
 	}
-	mapping := []uint64{testMakeMapping(0), testMakeMapping(1), testMakeMapping(2, 0), testMakeMapping(2, 1), 0}
+	mapping := []MappedField{
+		testMakeMapping(0),
+		testMakeMapping(1),
+		testMakeMapping(2, 0),
+		testMakeMapping(2, 1),
+		MappedField{},
+	}
 	v := ValuesFromMapping(reflect.Indirect(reflect.ValueOf(val)), mapping)
 
 	if got := v[0].(int); got != 5 {
@@ -330,7 +371,12 @@ func TestPtrsFromMapping(t *testing.T) {
 		},
 	}
 
-	mapping := []uint64{testMakeMapping(0), testMakeMapping(1), testMakeMapping(2, 0), testMakeMapping(2, 1)}
+	mapping := []MappedField{
+		testMakeMapping(0),
+		testMakeMapping(1),
+		testMakeMapping(2, 0),
+		testMakeMapping(2, 1),
+	}
 	v := PtrsFromMapping(reflect.Indirect(reflect.ValueOf(val)), mapping)
 
 	if got := *v[0].(*int); got != 5 {

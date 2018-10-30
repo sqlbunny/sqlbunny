@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/kernelpayments/sqlbunny/bunny/strmangle"
+	"github.com/kernelpayments/sqlbunny/types/null/convert"
 	"github.com/pkg/errors"
 )
 
@@ -15,9 +16,14 @@ var (
 	bindAccepts = []reflect.Kind{reflect.Ptr, reflect.Slice, reflect.Ptr, reflect.Struct}
 
 	mut         sync.RWMutex
-	bindingMaps = make(map[string][]uint64)
-	structMaps  = make(map[string]map[string]uint64)
+	bindingMaps = make(map[string][]MappedField)
+	structMaps  = make(map[string]map[string]MappedField)
 )
+
+type MappedField struct {
+	Path        uint64
+	ParentValid *MappedField
+}
 
 // Identifies what kind of object we're binding to
 type bindKind int
@@ -32,7 +38,6 @@ const (
 	loadMethodPrefix       = "Load"
 	relationshipStructName = "R"
 	loaderStructName       = "L"
-	sentinel               = uint64(255)
 )
 
 // Bind executes the query and inserts the
@@ -174,9 +179,9 @@ func bind(rows *sql.Rows, obj interface{}, structType, sliceType reflect.Type, b
 		ptrSlice = reflect.Indirect(reflect.ValueOf(obj))
 	}
 
-	var strMapping map[string]uint64
+	var strMapping map[string]MappedField
 	var sok bool
-	var mapping []uint64
+	var mapping []MappedField
 	var ok bool
 
 	typStr := structType.String()
@@ -250,8 +255,8 @@ func bind(rows *sql.Rows, obj interface{}, structType, sliceType reflect.Type, b
 
 // BindMapping creates a mapping that helps look up the pointer for the
 // field given.
-func BindMapping(typ reflect.Type, mapping map[string]uint64, cols []string) ([]uint64, error) {
-	ptrs := make([]uint64, len(cols))
+func BindMapping(typ reflect.Type, mapping map[string]MappedField, cols []string) ([]MappedField, error) {
+	ptrs := make([]MappedField, len(cols))
 
 ColLoop:
 	for i, name := range cols {
@@ -277,46 +282,82 @@ ColLoop:
 
 // PtrsFromMapping expects to be passed an addressable struct and a mapping
 // of where to find things. It pulls the pointers out referred to by the mapping.
-func PtrsFromMapping(val reflect.Value, mapping []uint64) []interface{} {
+func PtrsFromMapping(val reflect.Value, mapping []MappedField) []interface{} {
 	ptrs := make([]interface{}, len(mapping))
 	for i, m := range mapping {
-		ptrs[i] = ptrFromMapping(val, m, true).Interface()
+		ptrs[i] = ptrFromMapping(val, m, true)
 	}
 	return ptrs
 }
 
 // ValuesFromMapping expects to be passed an addressable struct and a mapping
 // of where to find things. It pulls the pointers out referred to by the mapping.
-func ValuesFromMapping(val reflect.Value, mapping []uint64) []interface{} {
+func ValuesFromMapping(val reflect.Value, mapping []MappedField) []interface{} {
 	ptrs := make([]interface{}, len(mapping))
 	for i, m := range mapping {
-		ptrs[i] = ptrFromMapping(val, m, false).Interface()
+		ptrs[i] = ptrFromMapping(val, m, false)
 	}
 	return ptrs
 }
 
+type ignoreNullScan struct {
+	dest interface{}
+}
+
+// Scan implements the Scanner interface.
+func (v *ignoreNullScan) Scan(value interface{}) error {
+	if value == nil {
+		return convert.ConvertAssignNil(v.dest)
+	}
+	return convert.ConvertAssign(v.dest, value)
+}
+
 // ptrFromMapping expects to be passed an addressable struct that it's looking
 // for things on.
-func ptrFromMapping(val reflect.Value, mapping uint64, addressOf bool) reflect.Value {
-	if mapping == 0 {
+func ptrFromMapping(val reflect.Value, mapping MappedField, addressOf bool) interface{} {
+	if mapping.Path == 0 {
 		var ignored interface{}
-		return reflect.ValueOf(&ignored)
+		return &ignored
 	}
-	for i := 0; i < 8; i++ {
-		v := (mapping >> uint(i*8)) & sentinel
 
-		if v == sentinel {
+	if !addressOf && mapping.ParentValid != nil {
+		valid := ptrFromMapping(val, *mapping.ParentValid, false)
+		if valid != true {
+			var nothing interface{}
+			return &nothing
+		}
+	}
+
+	for i := 0; i < 8; i++ {
+		v := (mapping.Path >> uint(i*8)) & 0xFF
+
+		if v == 0 {
 			if addressOf && val.Kind() != reflect.Ptr {
-				return val.Addr()
-			} else if !addressOf && val.Kind() == reflect.Ptr {
-				return reflect.Indirect(val)
+				val = val.Addr()
 			}
-			return val
+			if !addressOf && val.Kind() == reflect.Ptr {
+				val = reflect.Indirect(val)
+			}
+
+			if addressOf && mapping.ParentValid != nil {
+				// When scanning into a field that's child of a nullable struct,
+				// we use a special scan variant that converts DB nulls to
+				// Go zero values instead of erroring (unless the field
+				// implements sql.Scanner, in which case it's used as usual)
+				return &ignoreNullScan{
+					dest: val.Interface(),
+				}
+			}
+			return val.Interface()
 		}
 
-		val = val.Field(int(v))
+		val = val.Field(int(v - 1))
 		if val.Kind() == reflect.Ptr {
 			val = reflect.Indirect(val)
+			if !val.IsValid() {
+				var nothing interface{}
+				return reflect.ValueOf(&nothing)
+			}
 		}
 	}
 
@@ -325,13 +366,14 @@ func ptrFromMapping(val reflect.Value, mapping uint64, addressOf bool) reflect.V
 
 // MakeStructMapping creates a map of the struct to be able to quickly look
 // up its pointers and values by name.
-func MakeStructMapping(typ reflect.Type) map[string]uint64 {
-	fieldMaps := make(map[string]uint64)
-	makeStructMappingHelper(typ, "", 0, 0, fieldMaps)
+func MakeStructMapping(typ reflect.Type) map[string]MappedField {
+	fieldMaps := make(map[string]MappedField)
+	makeStructMappingHelper(typ, "", MappedField{}, 0, fieldMaps)
+
 	return fieldMaps
 }
 
-func makeStructMappingHelper(typ reflect.Type, prefix string, current uint64, depth uint, fieldMaps map[string]uint64) {
+func makeStructMappingHelper(typ reflect.Type, prefix string, current MappedField, depth uint, fieldMaps map[string]MappedField) {
 	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
@@ -354,15 +396,45 @@ func makeStructMappingHelper(typ reflect.Type, prefix string, current uint64, de
 		}
 
 		if tag.bind {
-			makeStructMappingHelper(f.Type, name+".", current|uint64(i)<<depth, depth+8, fieldMaps)
-			continue
-		}
-		if tag.structbind {
-			makeStructMappingHelper(f.Type, name+"__", current|uint64(i)<<depth, depth+8, fieldMaps)
+			next := MappedField{
+				Path:        current.Path | uint64(i+1)<<depth,
+				ParentValid: current.ParentValid,
+			}
+			makeStructMappingHelper(f.Type, name+".", next, depth+8, fieldMaps)
 			continue
 		}
 
-		fieldMaps[name] = current | (sentinel << (depth + 8)) | (uint64(i) << depth)
+		if tag.structbind {
+			if tag.null {
+				// TODO autodiscover this
+				structFieldIdx := 0
+				validFieldIdx := 1
+
+				valid := MappedField{
+					Path:        current.Path | uint64(i+1)<<depth | (uint64(validFieldIdx+1) << (depth + 8)),
+					ParentValid: current.ParentValid,
+				}
+
+				fieldMaps[name] = valid
+				next := MappedField{
+					Path:        current.Path | uint64(i+1)<<depth | (uint64(structFieldIdx+1) << (depth + 8)),
+					ParentValid: &valid,
+				}
+				makeStructMappingHelper(f.Type.Field(structFieldIdx).Type, name+"__", next, depth+16, fieldMaps)
+			} else {
+				next := MappedField{
+					Path:        current.Path | uint64(i+1)<<depth,
+					ParentValid: current.ParentValid,
+				}
+				makeStructMappingHelper(f.Type, name+"__", next, depth+8, fieldMaps)
+			}
+			continue
+		}
+
+		fieldMaps[name] = MappedField{
+			Path:        current.Path | uint64(i+1)<<depth,
+			ParentValid: current.ParentValid,
+		}
 	}
 }
 
@@ -371,6 +443,7 @@ type bunnyTag struct {
 	name       string
 	bind       bool
 	structbind bool
+	null       bool
 }
 
 func getBunnyTag(field reflect.StructField) (bunnyTag, error) {
@@ -394,6 +467,8 @@ func getBunnyTag(field reflect.StructField) (bunnyTag, error) {
 			res.bind = true
 		case "structbind":
 			res.structbind = true
+		case "null":
+			res.null = true
 		default:
 			return bunnyTag{}, fmt.Errorf("Invalid flag in bunny tag in field '%s': '%s'", field.Name, flag)
 		}

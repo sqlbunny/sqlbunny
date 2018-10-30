@@ -1,5 +1,6 @@
 import (
-	"github.com/kernelpayments/sqlbunny/bunny/strmangle"
+    "github.com/kernelpayments/sqlbunny/bunny/strmangle"
+	"github.com/kernelpayments/sqlbunny/bunny/queries"
 	"github.com/pkg/errors"
 )
 
@@ -14,13 +15,13 @@ var ErrSyncFail = errors.New("{{.PkgName}}: failed to synchronize data after ins
 type insertCache struct {
 	query        string
 	retQuery     string
-	valueMapping []uint64
-	retMapping   []uint64
+	valueMapping []queries.MappedField
+	retMapping   []queries.MappedField
 }
 
 type updateCache struct {
 	query        string
-	valueMapping []uint64
+	valueMapping []queries.MappedField
 }
 
 func makeCacheKey(wl, nzDefaults []string) string {

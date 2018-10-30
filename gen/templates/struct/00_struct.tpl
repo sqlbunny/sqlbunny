@@ -1,3 +1,13 @@
+
+import (
+    "bytes"
+    "database/sql/driver"
+    "encoding/json"
+
+    "github.com/kernelpayments/sqlbunny/bunny"
+    "github.com/kernelpayments/sqlbunny/types/null/convert"
+)
+
 {{- $dot := . -}}
 {{- $modelName := .Struct.Name | titleCase -}}
 {{- $modelNameCamel := .Struct.Name | camelCase -}}
