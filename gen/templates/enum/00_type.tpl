@@ -13,7 +13,7 @@ import (
 )
 
 // {{$enumName}} is an enum type.
-type {{$enumName}} {{typeGo .Enum.BaseTypeGo}}
+type {{$enumName}} int32
 
 const (
     {{- range $index, $choice := .Enum.Choices }}

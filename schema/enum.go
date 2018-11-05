@@ -3,10 +3,8 @@ package schema
 import "github.com/kernelpayments/sqlbunny/bunny/strmangle"
 
 type Enum struct {
-	Name     string
-	typeName string
-	Type     BaseType
-	Choices  []string
+	Name    string
+	Choices []string
 }
 
 func (e *Enum) GetName() string {
@@ -29,10 +27,6 @@ func (e *Enum) TypeGoNullField() string {
 	return strmangle.TitleCase(e.Name)
 }
 
-func (e *Enum) BaseTypeGo() TypeGo {
-	return e.Type.TypeGo()
-}
-
 func (e *Enum) TypeDB() string {
-	return e.Type.TypeDB()
+	return "integer"
 }

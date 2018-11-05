@@ -3,19 +3,11 @@ package schema
 // Field holds information about a database field.
 // Types are Go types, converted by TranslateFieldType.
 type Field struct {
-	Name string
-
-	Type Type
-	Tags Tags
-
+	Name     string
+	Type     Type
 	Nullable bool
 
-	// Temp vars for use while parsing
-	typeName   string
-	index      bool
-	unique     bool
-	primaryKey bool
-	foreignKey string
+	Tags Tags
 }
 
 func (f *Field) GenerateTags() string {

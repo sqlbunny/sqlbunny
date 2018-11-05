@@ -4,7 +4,6 @@ package gen
 type Config struct {
 	PkgName   string
 	OutFolder string
-	BaseDir   string
 	Tags      []string
 	NoTests   bool
 	NoHooks   bool

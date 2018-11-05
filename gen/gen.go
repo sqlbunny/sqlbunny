@@ -82,9 +82,19 @@ func New(schema *schema.Schema, config *Config) (*State, error) {
 // Run executes the sqlbunny templates and outputs them to files based on the
 // state given.
 func (s *State) Run(includeTests bool) error {
+	var idTypes []*schema.IDType
+	for _, t := range s.Schema.Types {
+		if t, ok := t.(*schema.IDType); ok {
+			idTypes = append(idTypes, t)
+		}
+	}
+	var models []*schema.Model
+	for _, m := range s.Schema.Models {
+		models = append(models, m)
+	}
 	singletonData := &templateData{
-		Models:          s.Schema.Models,
-		IDTypes:         s.Schema.IDTypes,
+		Models:          models,
+		IDTypes:         idTypes,
 		UseLastInsertID: true,
 		PkgName:         s.Config.PkgName,
 		NoHooks:         s.Config.NoHooks,
@@ -109,63 +119,56 @@ func (s *State) Run(includeTests bool) error {
 		}
 	}
 
-	for _, e := range s.Schema.IDTypes {
-		data := &templateData{
-			Models:          s.Schema.Models,
-			IDType:          e,
-			UseLastInsertID: true,
-			PkgName:         s.Config.PkgName,
-			NoHooks:         s.Config.NoHooks,
-			Dialect:         s.Dialect,
-			LQ:              strmangle.QuoteCharacter(s.Dialect.LQ),
-			RQ:              strmangle.QuoteCharacter(s.Dialect.RQ),
+	for _, t := range s.Schema.Types {
+		switch t := t.(type) {
+		case *schema.IDType:
+			data := &templateData{
+				IDType:          t,
+				UseLastInsertID: true,
+				PkgName:         s.Config.PkgName,
+				NoHooks:         s.Config.NoHooks,
+				Dialect:         s.Dialect,
+				LQ:              strmangle.QuoteCharacter(s.Dialect.LQ),
+				RQ:              strmangle.QuoteCharacter(s.Dialect.RQ),
 
-			StringFuncs: templateStringMappers,
-		}
+				StringFuncs: templateStringMappers,
+			}
 
-		// Generate the regular templates
-		if err := s.executeTemplates(data, s.IDTemplates, e.Name+".go"); err != nil {
-			return errors.Wrap(err, "unable to generate output")
-		}
-	}
+			if err := s.executeTemplates(data, s.IDTemplates, t.Name+".go"); err != nil {
+				return errors.Wrap(err, "unable to generate output")
+			}
+		case *schema.Enum:
+			data := &templateData{
+				Enum:            t,
+				UseLastInsertID: true,
+				PkgName:         s.Config.PkgName,
+				NoHooks:         s.Config.NoHooks,
+				Dialect:         s.Dialect,
+				LQ:              strmangle.QuoteCharacter(s.Dialect.LQ),
+				RQ:              strmangle.QuoteCharacter(s.Dialect.RQ),
 
-	for _, e := range s.Schema.Enums {
-		data := &templateData{
-			Models:          s.Schema.Models,
-			Enum:            e,
-			UseLastInsertID: true,
-			PkgName:         s.Config.PkgName,
-			NoHooks:         s.Config.NoHooks,
-			Dialect:         s.Dialect,
-			LQ:              strmangle.QuoteCharacter(s.Dialect.LQ),
-			RQ:              strmangle.QuoteCharacter(s.Dialect.RQ),
+				StringFuncs: templateStringMappers,
+			}
 
-			StringFuncs: templateStringMappers,
-		}
+			if err := s.executeTemplates(data, s.EnumTemplates, t.Name+".go"); err != nil {
+				return errors.Wrap(err, "unable to generate output")
+			}
+		case *schema.Struct:
+			data := &templateData{
+				Struct:          t,
+				UseLastInsertID: true,
+				PkgName:         s.Config.PkgName,
+				NoHooks:         s.Config.NoHooks,
+				Dialect:         s.Dialect,
+				LQ:              strmangle.QuoteCharacter(s.Dialect.LQ),
+				RQ:              strmangle.QuoteCharacter(s.Dialect.RQ),
 
-		// Generate the regular templates
-		if err := s.executeTemplates(data, s.EnumTemplates, e.Name+".go"); err != nil {
-			return errors.Wrap(err, "unable to generate output")
-		}
-	}
+				StringFuncs: templateStringMappers,
+			}
 
-	for _, st := range s.Schema.Structs {
-		data := &templateData{
-			Models:          s.Schema.Models,
-			Struct:          st,
-			UseLastInsertID: true,
-			PkgName:         s.Config.PkgName,
-			NoHooks:         s.Config.NoHooks,
-			Dialect:         s.Dialect,
-			LQ:              strmangle.QuoteCharacter(s.Dialect.LQ),
-			RQ:              strmangle.QuoteCharacter(s.Dialect.RQ),
-
-			StringFuncs: templateStringMappers,
-		}
-
-		// Generate the regular templates
-		if err := s.executeTemplates(data, s.StructTemplates, st.Name+".go"); err != nil {
-			return errors.Wrap(err, "unable to generate output")
+			if err := s.executeTemplates(data, s.StructTemplates, t.Name+".go"); err != nil {
+				return errors.Wrap(err, "unable to generate output")
+			}
 		}
 	}
 
@@ -175,7 +178,7 @@ func (s *State) Run(includeTests bool) error {
 		}
 
 		data := &templateData{
-			Models:          s.Schema.Models,
+			Models:          models,
 			Model:           model,
 			UseLastInsertID: true,
 			PkgName:         s.Config.PkgName,
@@ -207,7 +210,7 @@ func (s *State) Run(includeTests bool) error {
 func (s *State) initTemplates() error {
 	var err error
 
-	basePath, err := getBasePath(s.Config.BaseDir)
+	basePath, err := getBasePath()
 	if err != nil {
 		return err
 	}
@@ -256,11 +259,7 @@ func (s *State) initTemplates() error {
 
 var basePackage = "github.com/kernelpayments/sqlbunny/gen"
 
-func getBasePath(baseDirConfig string) (string, error) {
-	if len(baseDirConfig) > 0 {
-		return baseDirConfig, nil
-	}
-
+func getBasePath() (string, error) {
 	pkgs, err := packages.Load(nil, basePackage)
 	if err != nil {
 		return "", fmt.Errorf("Error finding package %s to load templates: %v", err)

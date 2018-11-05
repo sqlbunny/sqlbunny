@@ -83,7 +83,7 @@ func (o CreateTableOperation) Run(ctx context.Context) error {
 }
 
 func (o CreateTableOperation) Apply(d *schema.Schema) {
-	if _, ok := d.ModelsByName[o.Name]; ok {
+	if _, ok := d.Models[o.Name]; ok {
 		panic("CreateTableOperation on already-existing table: " + o.Name)
 	}
 	cols := make([]*schema.Column, len(o.Columns))
@@ -94,7 +94,7 @@ func (o CreateTableOperation) Apply(d *schema.Schema) {
 			DBType:   c.Type,
 		}
 	}
-	d.ModelsByName[o.Name] = &schema.Model{
+	d.Models[o.Name] = &schema.Model{
 		Name:    o.Name,
 		Columns: cols,
 	}
@@ -122,10 +122,10 @@ func (o DropTableOperation) Run(ctx context.Context) error {
 	return err
 }
 func (o DropTableOperation) Apply(d *schema.Schema) {
-	if _, ok := d.ModelsByName[o.Name]; !ok {
+	if _, ok := d.Models[o.Name]; !ok {
 		panic("DropTableOperation on non-existing table: " + o.Name)
 	}
-	delete(d.ModelsByName, o.Name)
+	delete(d.Models, o.Name)
 }
 
 func (o DropTableOperation) Dump(buf *bytes.Buffer) {
@@ -430,7 +430,7 @@ func (o AlterTableOperation) Run(ctx context.Context) error {
 	return err
 }
 func (o AlterTableOperation) Apply(d *schema.Schema) {
-	t, ok := d.ModelsByName[o.Name]
+	t, ok := d.Models[o.Name]
 	if !ok {
 		panic("AlterTableOperation on non-existing table: " + o.Name)
 	}
@@ -463,7 +463,7 @@ func (o CreateIndexOperation) Run(ctx context.Context) error {
 	return err
 }
 func (o CreateIndexOperation) Apply(d *schema.Schema) {
-	t, ok := d.ModelsByName[o.Name]
+	t, ok := d.Models[o.Name]
 	if !ok {
 		panic("CreateIndexOperation on non-existing table: " + o.Name)
 	}
@@ -497,7 +497,7 @@ func (o RenameColumnOperation) Run(ctx context.Context) error {
 }
 
 func (o RenameColumnOperation) Apply(d *schema.Schema) {
-	m, ok := d.ModelsByName[o.Name]
+	m, ok := d.Models[o.Name]
 	if !ok {
 		panic("RenameColumnOperation on non-existing table: " + o.Name)
 	}
@@ -555,7 +555,7 @@ func (o DropIndexOperation) Run(ctx context.Context) error {
 	return err
 }
 func (o DropIndexOperation) Apply(d *schema.Schema) {
-	t, ok := d.ModelsByName[o.Name]
+	t, ok := d.Models[o.Name]
 	if !ok {
 		panic("DropIndexOperation on non-existing table: " + o.Name)
 	}

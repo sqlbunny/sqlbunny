@@ -42,50 +42,7 @@ type ToManyRelationship struct {
 	JoinForeignColumnUnique   bool
 }
 
-// ToOneRelationships relationship lookups
-// Input should be the sql name of a model like: videos
-func ToOneRelationships(model string, models []*Model) []*ToOneRelationship {
-	localModel := GetModel(models, model)
-	return toOneRelationships(localModel, models)
-}
-
-// ToManyRelationships relationship lookups
-// Input should be the sql name of a model like: videos
-func ToManyRelationships(model string, models []*Model) []*ToManyRelationship {
-	localModel := GetModel(models, model)
-	return toManyRelationships(localModel, models)
-}
-
-func toOneRelationships(model *Model, models []*Model) []*ToOneRelationship {
-	var relationships []*ToOneRelationship
-
-	for _, t := range models {
-		for _, f := range t.ForeignKeys {
-			if f.ForeignModel == model.Name && !t.IsJoinModel && f.Unique {
-				relationships = append(relationships, buildToOneRelationship(model, f, t, models))
-			}
-
-		}
-	}
-
-	return relationships
-}
-
-func toManyRelationships(model *Model, models []*Model) []*ToManyRelationship {
-	var relationships []*ToManyRelationship
-
-	for _, t := range models {
-		for _, f := range t.ForeignKeys {
-			if f.ForeignModel == model.Name && (t.IsJoinModel || !f.Unique) {
-				relationships = append(relationships, buildToManyRelationship(model, f, t, models))
-			}
-		}
-	}
-
-	return relationships
-}
-
-func buildToOneRelationship(localModel *Model, foreignKey *ForeignKey, foreignModel *Model, models []*Model) *ToOneRelationship {
+func buildToOneRelationship(localModel *Model, foreignKey *ForeignKey, foreignModel *Model) *ToOneRelationship {
 	return &ToOneRelationship{
 		Model:    localModel.Name,
 		Column:   foreignKey.ForeignColumn,
@@ -99,7 +56,7 @@ func buildToOneRelationship(localModel *Model, foreignKey *ForeignKey, foreignMo
 	}
 }
 
-func buildToManyRelationship(localModel *Model, foreignKey *ForeignKey, foreignModel *Model, models []*Model) *ToManyRelationship {
+func buildToManyRelationship(localModel *Model, foreignKey *ForeignKey, foreignModel *Model) *ToManyRelationship {
 	if !foreignModel.IsJoinModel {
 		return &ToManyRelationship{
 			Model:                 localModel.Name,

@@ -49,11 +49,11 @@ func hasForeignKey(m *schema.Model, indexName string) bool {
 }
 
 func DiffDropForeignKeys(ops OperationList, s1, s2 *schema.Schema) OperationList {
-	for name, m1 := range s1.ModelsByName {
+	for name, m1 := range s1.Models {
 		var subops []AlterTableSuboperation
 
 		for _, i1 := range m1.ForeignKeys {
-			if !hasForeignKey(s2.ModelsByName[name], i1.Name) {
+			if !hasForeignKey(s2.Models[name], i1.Name) {
 				subops = append(subops, &AlterTableDropForeignKey{Name: i1.Name})
 			}
 		}
@@ -69,15 +69,15 @@ func DiffDropForeignKeys(ops OperationList, s1, s2 *schema.Schema) OperationList
 }
 
 func DiffDropConstraints(ops OperationList, s1, s2 *schema.Schema) OperationList {
-	for name, m1 := range s1.ModelsByName {
+	for name, m1 := range s1.Models {
 		var subops []AlterTableSuboperation
 
-		if m1.PrimaryKey != nil && !hasPrimaryKey(s2.ModelsByName[name], m1.PrimaryKey.Columns) {
+		if m1.PrimaryKey != nil && !hasPrimaryKey(s2.Models[name], m1.PrimaryKey.Columns) {
 			subops = append(subops, &AlterTableDropPrimaryKey{})
 		}
 
 		for _, i1 := range m1.Uniques {
-			if !hasUnique(s2.ModelsByName[name], i1.Name) {
+			if !hasUnique(s2.Models[name], i1.Name) {
 				subops = append(subops, &AlterTableDropUnique{Name: i1.Name})
 			}
 		}
@@ -93,9 +93,9 @@ func DiffDropConstraints(ops OperationList, s1, s2 *schema.Schema) OperationList
 }
 
 func DiffDropIndexes(ops OperationList, s1, s2 *schema.Schema) OperationList {
-	for name, m1 := range s1.ModelsByName {
+	for name, m1 := range s1.Models {
 		for _, i1 := range m1.Indexes {
-			if !hasIndex(s2.ModelsByName[name], i1.Name) {
+			if !hasIndex(s2.Models[name], i1.Name) {
 				ops = append(ops, DropIndexOperation{
 					Name:      name,
 					IndexName: i1.Name,
@@ -107,8 +107,8 @@ func DiffDropIndexes(ops OperationList, s1, s2 *schema.Schema) OperationList {
 }
 
 func DiffDropModels(ops OperationList, s1, s2 *schema.Schema) OperationList {
-	for name := range s1.ModelsByName {
-		if _, ok := s2.ModelsByName[name]; !ok {
+	for name := range s1.Models {
+		if _, ok := s2.Models[name]; !ok {
 			ops = append(ops, DropTableOperation{
 				Name: name,
 			})
@@ -118,8 +118,8 @@ func DiffDropModels(ops OperationList, s1, s2 *schema.Schema) OperationList {
 }
 
 func DiffAlterModels(ops OperationList, s1, s2 *schema.Schema) OperationList {
-	for name, m1 := range s1.ModelsByName {
-		if m2, ok := s2.ModelsByName[name]; ok {
+	for name, m1 := range s1.Models {
+		if m2, ok := s2.Models[name]; ok {
 			var subops []AlterTableSuboperation
 			for _, c1 := range m1.Columns {
 				c2 := m2.FindColumn(c1.Name)
@@ -153,8 +153,8 @@ func DiffAlterModels(ops OperationList, s1, s2 *schema.Schema) OperationList {
 }
 
 func DiffCreateModels(ops OperationList, s1, s2 *schema.Schema) OperationList {
-	for name, m2 := range s2.ModelsByName {
-		if _, ok := s1.ModelsByName[name]; !ok {
+	for name, m2 := range s2.Models {
+		if _, ok := s1.Models[name]; !ok {
 			ops = append(ops, CreateTableOperation{
 				Name:    name,
 				Columns: makeColumns(m2.Columns),
@@ -165,9 +165,9 @@ func DiffCreateModels(ops OperationList, s1, s2 *schema.Schema) OperationList {
 }
 
 func DiffCreateIndexes(ops OperationList, s1, s2 *schema.Schema) OperationList {
-	for name, m2 := range s2.ModelsByName {
+	for name, m2 := range s2.Models {
 		for _, i2 := range m2.Indexes {
-			if !hasIndex(s1.ModelsByName[name], i2.Name) {
+			if !hasIndex(s1.Models[name], i2.Name) {
 				ops = append(ops, CreateIndexOperation{
 					Name:      name,
 					IndexName: i2.Name,
@@ -180,15 +180,15 @@ func DiffCreateIndexes(ops OperationList, s1, s2 *schema.Schema) OperationList {
 }
 
 func DiffCreateConstraints(ops OperationList, s1, s2 *schema.Schema) OperationList {
-	for name, m2 := range s2.ModelsByName {
+	for name, m2 := range s2.Models {
 		var subops []AlterTableSuboperation
 
-		if m2.PrimaryKey != nil && !hasPrimaryKey(s1.ModelsByName[name], m2.PrimaryKey.Columns) {
+		if m2.PrimaryKey != nil && !hasPrimaryKey(s1.Models[name], m2.PrimaryKey.Columns) {
 			subops = append(subops, &AlterTableCreatePrimaryKey{Columns: m2.PrimaryKey.Columns})
 		}
 
 		for _, i2 := range m2.Uniques {
-			if !hasUnique(s1.ModelsByName[name], i2.Name) {
+			if !hasUnique(s1.Models[name], i2.Name) {
 				subops = append(subops, &AlterTableCreateUnique{
 					Name:    i2.Name,
 					Columns: i2.Columns,
@@ -207,11 +207,11 @@ func DiffCreateConstraints(ops OperationList, s1, s2 *schema.Schema) OperationLi
 }
 
 func DiffCreateForeignKeys(ops OperationList, s1, s2 *schema.Schema) OperationList {
-	for name, m2 := range s2.ModelsByName {
+	for name, m2 := range s2.Models {
 		var subops []AlterTableSuboperation
 
 		for _, i2 := range m2.ForeignKeys {
-			if !hasForeignKey(s1.ModelsByName[name], i2.Name) {
+			if !hasForeignKey(s1.Models[name], i2.Name) {
 				subops = append(subops, &AlterTableCreateForeignKey{
 					Name:           i2.Name,
 					Columns:        []string{i2.Column},
