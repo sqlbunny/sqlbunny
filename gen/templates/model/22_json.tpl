@@ -14,10 +14,12 @@ type {{$modelName}}JSON struct {
 	{{- end }}
 
 	{{range .Model.ForeignKeys -}}
-    {{- $field := $dot.Model.GetField .Column -}}
+    {{- $field := $dot.Model.FindField .Column -}}
+    {{- if $field }}
     {{- if not ( $field.HasTag "private" ) }}
 	{{- $txt := txtsFromFKey $dot.Models $dot.Model . -}}
 	{{$txt.Function.NameGo}} *{{.ForeignModel | titleCase}} `json:"{{$txt.Function.Name}},omitempty"`
+    {{- end }}
     {{- end }}
 	{{end }}
 
@@ -40,10 +42,12 @@ func (o *{{$modelName}}) JSON() *{{$modelName}}JSON {
 
     if o.R != nil {
         {{range .Model.ForeignKeys -}}
-        {{- $field := $dot.Model.GetField .Column -}}
+        {{- $field := $dot.Model.FindField .Column -}}
+        {{- if $field }}
         {{- if not ( $field.HasTag "private" ) }}
         {{- $txt := txtsFromFKey $dot.Models $dot.Model . -}}
         res.{{$txt.Function.NameGo}} = o.R.{{$txt.Function.NameGo}}
+        {{end -}}
         {{end -}}
         {{end -}}
     }
@@ -75,6 +79,7 @@ func (o *{{$modelName}}) CreatedAt() time.Time {
 func (o *{{$modelName}}) GetID() bunny.ID {
     return o.ID
 }
+
 func (o *{{$modelName}}JSON) GetID() bunny.ID {
     return o.ID
 }

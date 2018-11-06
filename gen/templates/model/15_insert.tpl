@@ -94,7 +94,7 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 	}
 
 	{{$colName := index .Model.PrimaryKey.Columns 0 -}}
-	{{- $col := .Model.GetField $colName -}}
+	{{- $col := .Model.GetColumn $colName -}}
 	{{- $colTitled := $colName | titleCase}}
 	o.{{$colTitled}} = {{$col.Type}}(lastID)
 	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == {{$varNameSingular}}Mapping["{{$colTitled}}"] {

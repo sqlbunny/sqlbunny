@@ -239,7 +239,7 @@ func txtNameToOne(fk *schema.ForeignKey) (localFn, foreignFn string) {
 // fk != model = industry.MappedIndustryIndustry
 func txtNameToMany(toMany *schema.ToManyRelationship) (localFn, foreignFn string) {
 	if toMany.ToJoinModel {
-		localFkey := strmangle.Singular(trimSuffixes(toMany.JoinLocalField))
+		localFkey := strmangle.Singular(trimSuffixes(toMany.JoinLocalColumn))
 		foreignFkey := strmangle.Singular(trimSuffixes(toMany.JoinForeignColumn))
 
 		if localFkey != strmangle.Singular(toMany.Model) {

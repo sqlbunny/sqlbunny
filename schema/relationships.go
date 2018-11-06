@@ -33,9 +33,9 @@ type ToManyRelationship struct {
 	ToJoinModel bool
 	JoinModel   string
 
-	JoinLocalField         string
-	JoinLocalFieldNullable bool
-	JoinLocalFieldUnique   bool
+	JoinLocalColumn         string
+	JoinLocalColumnNullable bool
+	JoinLocalColumnUnique   bool
 
 	JoinForeignColumn         string
 	JoinForeignColumnNullable bool
@@ -80,9 +80,9 @@ func buildToManyRelationship(localModel *Model, foreignKey *ForeignKey, foreignM
 		ToJoinModel: true,
 		JoinModel:   foreignModel.Name,
 
-		JoinLocalField:         foreignKey.Column,
-		JoinLocalFieldNullable: foreignKey.Nullable,
-		JoinLocalFieldUnique:   foreignKey.Unique,
+		JoinLocalColumn:         foreignKey.Column,
+		JoinLocalColumnNullable: foreignKey.Nullable,
+		JoinLocalColumnUnique:   foreignKey.Unique,
 	}
 
 	for _, fk := range foreignModel.ForeignKeys {

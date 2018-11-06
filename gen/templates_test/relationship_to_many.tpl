@@ -44,11 +44,11 @@ func test{{$txt.LocalModel.NameGo}}ToMany{{$txt.Function.NameGo}}(t *testing.T) 
 	}
 
 	{{if .ToJoinModel -}}
-	_, err = tx.Exec("insert into {{.JoinModel | $dot.SchemaModel}} ({{.JoinLocalField | $dot.Quotes}}, {{.JoinForeignColumn | $dot.Quotes}}) values {{if $dot.Dialect.IndexPlaceholders}}($1, $2){{else}}(?, ?){{end}}", a.{{$txt.LocalModel.ColumnNameGo}}, b.{{$txt.ForeignModel.ColumnNameGo}})
+	_, err = tx.Exec("insert into {{.JoinModel | $dot.SchemaModel}} ({{.JoinLocalColumn | $dot.Quotes}}, {{.JoinForeignColumn | $dot.Quotes}}) values {{if $dot.Dialect.IndexPlaceholders}}($1, $2){{else}}(?, ?){{end}}", a.{{$txt.LocalModel.ColumnNameGo}}, b.{{$txt.ForeignModel.ColumnNameGo}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = tx.Exec("insert into {{.JoinModel | $dot.SchemaModel}} ({{.JoinLocalField | $dot.Quotes}}, {{.JoinForeignColumn | $dot.Quotes}}) values {{if $dot.Dialect.IndexPlaceholders}}($1, $2){{else}}(?, ?){{end}}", a.{{$txt.LocalModel.ColumnNameGo}}, c.{{$txt.ForeignModel.ColumnNameGo}})
+	_, err = tx.Exec("insert into {{.JoinModel | $dot.SchemaModel}} ({{.JoinLocalColumn | $dot.Quotes}}, {{.JoinForeignColumn | $dot.Quotes}}) values {{if $dot.Dialect.IndexPlaceholders}}($1, $2){{else}}(?, ?){{end}}", a.{{$txt.LocalModel.ColumnNameGo}}, c.{{$txt.ForeignModel.ColumnNameGo}})
 	if err != nil {
 		t.Fatal(err)
 	}

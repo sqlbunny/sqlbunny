@@ -230,7 +230,7 @@ func TestTxtNameToMany(t *testing.T) {
 		ForeignColumn string
 
 		ToJoinModel      bool
-		JoinLocalField   string
+		JoinLocalColumn   string
 		JoinForeignColumn string
 
 		LocalFn   string
@@ -257,7 +257,7 @@ func TestTxtNameToMany(t *testing.T) {
 			Model: test.Model, Field: test.Field,
 			ForeignModel: test.ForeignModel, ForeignColumn: test.ForeignColumn,
 			ToJoinModel:    test.ToJoinModel,
-			JoinLocalField: test.JoinLocalField, JoinForeignColumn: test.JoinForeignColumn,
+			JoinLocalColumn: test.JoinLocalColumn, JoinForeignColumn: test.JoinForeignColumn,
 		}
 
 		local, foreign := txtNameToMany(fk)

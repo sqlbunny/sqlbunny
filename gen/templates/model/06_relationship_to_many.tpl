@@ -19,7 +19,7 @@ func (o *{{$txt.LocalModel.NameGo}}) {{$txt.Function.NameGo}}(ctx context.Contex
 	queryMods = append(queryMods,
 		{{$schemaJoinModel := .JoinModel | $.SchemaModel -}}
 		qm.InnerJoin("{{$schemaJoinModel}} on {{$schemaForeignModel}}.{{.ForeignColumn | $dot.Quotes}} = {{$schemaJoinModel}}.{{.JoinForeignColumn | $dot.Quotes}}"),
-		qm.Where("{{$schemaJoinModel}}.{{.JoinLocalField | $dot.Quotes}}=?", o.{{$txt.LocalModel.ColumnNameGo}}),
+		qm.Where("{{$schemaJoinModel}}.{{.JoinLocalColumn | $dot.Quotes}}=?", o.{{$txt.LocalModel.ColumnNameGo}}),
 	)
 		{{else -}}
 	queryMods = append(queryMods,

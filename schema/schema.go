@@ -61,36 +61,16 @@ func (s *Schema) setForeignKeyConstraints(t *Model) {
 	}
 }
 
-func (s *Schema) setRelationships(t *Model) {
-	t.ToOneRelationships = s.toOneRelationships(t)
-	t.ToManyRelationships = s.toManyRelationships(t)
-}
-
-func (s *Schema) toOneRelationships(model *Model) []*ToOneRelationship {
-	var relationships []*ToOneRelationship
-
+func (s *Schema) setRelationships(model *Model) {
 	for _, t := range s.Models {
 		for _, f := range t.ForeignKeys {
-			if f.ForeignModel == model.Name && !t.IsJoinModel && f.Unique {
-				relationships = append(relationships, buildToOneRelationship(model, f, t))
-			}
-
-		}
-	}
-
-	return relationships
-}
-
-func (s *Schema) toManyRelationships(model *Model) []*ToManyRelationship {
-	var relationships []*ToManyRelationship
-
-	for _, t := range s.Models {
-		for _, f := range t.ForeignKeys {
-			if f.ForeignModel == model.Name && (t.IsJoinModel || !f.Unique) {
-				relationships = append(relationships, buildToManyRelationship(model, f, t))
+			if f.ForeignModel == model.Name {
+				if !t.IsJoinModel && f.Unique {
+					model.ToOneRelationships = append(model.ToOneRelationships, buildToOneRelationship(model, f, t))
+				} else {
+					model.ToManyRelationships = append(model.ToManyRelationships, buildToManyRelationship(model, f, t))
+				}
 			}
 		}
 	}
-
-	return relationships
 }

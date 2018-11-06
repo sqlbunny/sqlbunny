@@ -45,6 +45,16 @@ func (t *Model) GetField(name string) (col *Field) {
 	panic(fmt.Sprintf("could not find field name: %s", name))
 }
 
+// FindField by name. Returns nil if not found (for use in templates mostly).
+func (t *Model) FindField(name string) (col *Field) {
+	for _, c := range t.Fields {
+		if c.Name == name {
+			return c
+		}
+	}
+	return nil
+}
+
 // GetColumn by name. Returns nil if not found.
 func (t *Model) GetColumn(name string) *Column {
 	for _, c := range t.Columns {

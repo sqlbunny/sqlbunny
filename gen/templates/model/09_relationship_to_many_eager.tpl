@@ -38,7 +38,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 		{{if .ToJoinModel -}}
 			{{- $schemaJoinModel := .JoinModel | $dot.SchemaModel -}}
 	query := fmt.Sprintf(
-		"select {{id 0 | $dot.Quotes}}.*, {{id 1 | $dot.Quotes}}.{{.JoinLocalField | $dot.Quotes}} from {{$schemaForeignModel}} as {{id 0 | $dot.Quotes}} inner join {{$schemaJoinModel}} as {{id 1 | $dot.Quotes}} on {{id 0 | $dot.Quotes}}.{{.ForeignColumn | $dot.Quotes}} = {{id 1 | $dot.Quotes}}.{{.JoinForeignColumn | $dot.Quotes}} where {{id 1 | $dot.Quotes}}.{{.JoinLocalField | $dot.Quotes}} in (%s)",
+		"select {{id 0 | $dot.Quotes}}.*, {{id 1 | $dot.Quotes}}.{{.JoinLocalColumn | $dot.Quotes}} from {{$schemaForeignModel}} as {{id 0 | $dot.Quotes}} inner join {{$schemaJoinModel}} as {{id 1 | $dot.Quotes}} on {{id 0 | $dot.Quotes}}.{{.ForeignColumn | $dot.Quotes}} = {{id 1 | $dot.Quotes}}.{{.JoinForeignColumn | $dot.Quotes}} where {{id 1 | $dot.Quotes}}.{{.JoinLocalColumn | $dot.Quotes}} in (%s)",
 		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
 	)
 		{{else -}}
@@ -58,7 +58,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 	{{if .ToJoinModel -}}
 	{{- $foreignModel := getModel $dot.Models .ForeignModel -}}
 	{{- $joinModel := getModel $dot.Models .JoinModel -}}
-	{{- $localCol := $joinModel.GetField .JoinLocalField}}
+	{{- $localCol := $joinModel.GetColumn .JoinLocalColumn}}
 	var localJoinCols []{{typeGo $localCol.TypeGo}}
 	for results.Next() {
 		one := new({{$txt.ForeignModel.NameGo}})
