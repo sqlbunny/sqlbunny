@@ -74,8 +74,6 @@ func Schema() (*schema.Schema, error) {
 	// TODO check PK, uniques and FK columns exist
 	// TODO check FK columns match type (Go type? or just Postgres type?)
 
-	s.CalculateRelationships()
-
 	if len(validationErrors) != 0 {
 		var b strings.Builder
 		fmt.Fprintf(&b, "%d errors found:\n", len(validationErrors))
@@ -85,6 +83,9 @@ func Schema() (*schema.Schema, error) {
 		}
 		return nil, errors.New(b.String())
 	}
+
+	s.CalculateRelationships()
+
 	return s, nil
 }
 
