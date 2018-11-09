@@ -57,21 +57,15 @@ func Schema() (*schema.Schema, error) {
 		makeModel(s, model, m.items, "", false)
 	}
 
-	for _, o := range s.Models {
-		if o.PrimaryKey == nil {
-			addError("Model '%s' is missing a primary key", o.Name)
-		}
+	for _, m := range s.Models {
+		checkDuplicateFields(s, m)
+		checkPrimaryKey(s, m)
+		checkIndexes(s, m)
+		checkUniques(s, m)
+		checkForeignKeys(s, m)
 	}
 
-	for _, o := range s.Models {
-		checkForeignKeys(s, o)
-	}
-
-	fillKeyNames(s)
 	// TODO disallow double underscore.
-	// TODO check duplicate indexes
-	// TODO check primary key columns are not nullable
-	// TODO check PK, uniques and FK columns exist
 	// TODO check FK columns match type (Go type? or just Postgres type?)
 
 	if len(validationErrors) != 0 {
@@ -167,7 +161,7 @@ func makeModel(s *schema.Schema, m *schema.Model, items []ModelItem, prefix stri
 								Name: "bool",
 							},
 							GoNull: schema.TypeGo{
-								Pkg:  "github.com/KernelPay/sqlboiler/types/null",
+								Pkg:  "github.com/kernelpayments/sqlbunny/types/null",
 								Name: "Bool",
 							},
 							Postgres: "boolean",
@@ -219,22 +213,84 @@ func makeName(model string, columns []string, suffix string) string {
 	return fmt.Sprintf("%s___%s___%s", model, strings.Join(columns, "___"), suffix)
 }
 
-func fillKeyNames(s *schema.Schema) {
-	for _, m := range s.Models {
-		for _, k := range m.Indexes {
-			k.Name = makeName(m.Name, k.Columns, "idx")
+func checkDuplicateFields(s *schema.Schema, m *schema.Model) {
+	seen := make(map[string]struct{})
+	for _, f := range m.Fields {
+		if _, ok := seen[f.Name]; ok {
+			addError("Model '%s' field '%s' is defined multiple times.", m.Name, f.Name)
 		}
-		for _, k := range m.Uniques {
-			k.Name = makeName(m.Name, k.Columns, "key")
+		seen[f.Name] = struct{}{}
+	}
+}
+
+func describeIndex(columns []string) string {
+	return strings.Join(columns, ", ")
+}
+
+func checkPrimaryKey(s *schema.Schema, m *schema.Model) {
+	pk := m.PrimaryKey
+
+	if pk == nil {
+		addError("Model '%s' is missing a primary key", m.Name)
+	} else {
+		for _, name := range pk.Columns {
+			c := m.FindColumn(name)
+			if c == nil {
+				addError("Model '%s' primary key references unknown column '%s'", m.Name, name)
+			} else if c.Nullable {
+				addError("Model '%s' primary key references nullable column '%s'", m.Name, name)
+			}
 		}
-		for _, k := range m.ForeignKeys {
-			k.Name = makeName(m.Name, []string{k.Column}, "fkey")
+	}
+}
+
+func checkIndexes(s *schema.Schema, m *schema.Model) {
+	seen := make(map[string]struct{})
+	for _, f := range m.Indexes {
+		f.Name = makeName(m.Name, f.Columns, "idx")
+
+		if _, ok := seen[f.Name]; ok {
+			addError("Model '%s' index '%s' is defined multiple times.", m.Name, describeIndex(f.Columns))
+		}
+		seen[f.Name] = struct{}{}
+
+		for _, name := range f.Columns {
+			c := m.FindColumn(name)
+			if c == nil {
+				addError("Model '%s' index '%s' references unknown column '%s'", m.Name, describeIndex(f.Columns), name)
+			}
+		}
+	}
+}
+
+func checkUniques(s *schema.Schema, m *schema.Model) {
+	seen := make(map[string]struct{})
+	for _, f := range m.Uniques {
+		f.Name = makeName(m.Name, f.Columns, "key")
+
+		if _, ok := seen[f.Name]; ok {
+			addError("Model '%s' unique '%s' is defined multiple times.", m.Name, describeIndex(f.Columns))
+		}
+		seen[f.Name] = struct{}{}
+
+		for _, name := range f.Columns {
+			c := m.FindColumn(name)
+			if c == nil {
+				addError("Model '%s' unique '%s' references unknown column '%s'", m.Name, describeIndex(f.Columns), name)
+			}
 		}
 	}
 }
 
 func checkForeignKeys(s *schema.Schema, m *schema.Model) {
 	for _, f := range m.ForeignKeys {
+		f.Name = makeName(m.Name, []string{f.Column}, "fkey")
+
+		c := m.FindColumn(f.Column)
+		if c == nil {
+			addError("Model '%s' has a foreign key on non-existing field '%s'", m.Name, f.Column)
+		}
+
 		m2, ok := s.Models[f.ForeignModel]
 		if !ok {
 			addError("Model '%s' field '%s' has foreign key to non-existing model '%s'", m.Name, f.Column, f.ForeignModel)
