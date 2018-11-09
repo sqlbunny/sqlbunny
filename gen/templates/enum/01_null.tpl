@@ -113,7 +113,7 @@ func (u Null{{$enumName}}) Value() (driver.Value, error) {
 	if !u.Valid {
 		return nil, nil
 	}
-	return u.{{$enumName}}, nil
+	return int64(u.{{$enumName}}), nil
 }
 
 func (u Null{{$enumName}}) String() string {
