@@ -5,7 +5,7 @@ type Schema struct {
 	Models map[string]*Model
 }
 
-func NewSchema() *Schema {
+func New() *Schema {
 	return &Schema{
 		Types:  make(map[string]Type),
 		Models: make(map[string]*Model),

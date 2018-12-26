@@ -69,7 +69,7 @@ type model struct {
 	items []ModelItem
 }
 
-var models []model
+func (model) IsConfigItem() {}
 
 func expandItems(items []ModelItem) []ModelItem {
 	res := items
@@ -95,9 +95,9 @@ func expandItems(items []ModelItem) []ModelItem {
 	return res
 }
 
-func Model(name string, items ...ModelItem) {
-	models = append(models, model{
+func Model(name string, items ...ModelItem) model {
+	return model{
 		name:  name,
 		items: expandItems(items),
-	})
+	}
 }

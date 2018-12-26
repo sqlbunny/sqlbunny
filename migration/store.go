@@ -9,7 +9,7 @@ import (
 	"github.com/kernelpayments/sqlbunny/schema"
 )
 
-type MigrationStore struct {
+type Store struct {
 	migrations map[int64]OperationList
 }
 
@@ -20,7 +20,7 @@ const (
 	maxMigrationSQL          = "SELECT coalesce(max(id), 0) from migrations"
 )
 
-func (m *MigrationStore) Run(ctx context.Context) error {
+func (m *Store) Run(ctx context.Context) error {
 	var count int64
 	if err := bunny.QueryRow(ctx, checkMigrationsTableSQL).Scan(&count); err != nil {
 		return err
@@ -61,7 +61,7 @@ func (m *MigrationStore) Run(ctx context.Context) error {
 	return nil
 }
 
-func (m *MigrationStore) Register(index int64, ops OperationList) {
+func (m *Store) Register(index int64, ops OperationList) {
 	if m.migrations == nil {
 		m.migrations = make(map[int64]OperationList)
 	}
@@ -71,7 +71,7 @@ func (m *MigrationStore) Register(index int64, ops OperationList) {
 	m.migrations[index] = ops
 }
 
-func (m *MigrationStore) applyAll(db *schema.Schema) {
+func (m *Store) applyAll(db *schema.Schema) {
 	var i int64 = 1
 	for {
 		ops, ok := m.migrations[i]
@@ -87,7 +87,7 @@ func (m *MigrationStore) applyAll(db *schema.Schema) {
 	}
 }
 
-func (m *MigrationStore) nextFree() int64 {
+func (m *Store) nextFree() int64 {
 	var i int64 = 1
 	for {
 		_, ok := m.migrations[i]

@@ -13,18 +13,18 @@ type typeEntry struct {
 	info typeInfo
 }
 
+func (typeEntry) IsConfigItem() {}
+
 type typeInfo interface {
 	getType(name string) schema.Type
-	resolveTypes(t schema.Type, resolve func(name string, context string) schema.Type)
+	resolveTypes(v *validationContext, t schema.Type, resolve func(name string, context string) schema.Type)
 }
 
-var types []typeEntry
-
-func Type(name string, t typeInfo) {
-	types = append(types, typeEntry{
+func Type(name string, t typeInfo) typeEntry {
+	return typeEntry{
 		name: name,
 		info: t,
-	})
+	}
 }
 
 type BaseType struct {
@@ -62,7 +62,7 @@ func (t BaseType) getType(name string) schema.Type {
 	}
 }
 
-func (t BaseType) resolveTypes(st schema.Type, resolve func(name string, context string) schema.Type) {
+func (t BaseType) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
 }
 
 type enum struct {
@@ -76,7 +76,7 @@ func (t enum) getType(name string) schema.Type {
 	}
 }
 
-func (t enum) resolveTypes(st schema.Type, resolve func(name string, context string) schema.Type) {
+func (t enum) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
 }
 
 func Enum(choices ...string) enum {
@@ -97,7 +97,7 @@ func (t array) getType(name string) schema.Type {
 	}
 }
 
-func (t array) resolveTypes(st schema.Type, resolve func(name string, context string) schema.Type) {
+func (t array) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
 }
 
 func Array(element string) array {
@@ -115,7 +115,7 @@ func (t ID) getType(name string) schema.Type {
 	}
 }
 
-func (t ID) resolveTypes(st schema.Type, resolve func(name string, context string) schema.Type) {
+func (t ID) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
 }
 
 type structType struct {
@@ -128,7 +128,7 @@ func (t structType) getType(name string) schema.Type {
 	}
 }
 
-func (t structType) resolveTypes(st schema.Type, resolve func(name string, context string) schema.Type) {
+func (t structType) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
 	struc := st.(*schema.Struct)
 	for _, i := range t.items {
 		switch i := i.(type) {
@@ -137,7 +137,7 @@ func (t structType) resolveTypes(st schema.Type, resolve func(name string, conte
 				Name:     i.name,
 				Type:     resolve(i.typeName, "field "+i.name),
 				Nullable: isNullable(i.flags),
-				Tags:     makeTags(i.flags, fmt.Sprintf("Struct '%s' field '%s'", struc.Name, i.name)),
+				Tags:     makeTags(v, i.flags, fmt.Sprintf("Struct '%s' field '%s'", struc.Name, i.name)),
 			})
 		}
 	}

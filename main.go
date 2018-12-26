@@ -1,84 +1,58 @@
 package sqlbunny
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/kernelpayments/sqlbunny/def"
 	"github.com/kernelpayments/sqlbunny/gen"
-	"github.com/kernelpayments/sqlbunny/migration"
 	"github.com/spf13/cobra"
 )
 
-const sqlbunnyVersion = "2.6.0"
+type commandPlugin interface {
+	AddCommands(config *def.Config, rootCmd *cobra.Command)
+}
 
-var cmdConfig gen.Config
-
-func Run() {
-	var cmdGen = &cobra.Command{
-		Use:  "gen [flags]",
-		RunE: runGen,
-	}
-	cmdGen.Flags().StringVarP(&cmdConfig.OutFolder, "output", "o", "models", "The name of the folder to output to")
-	cmdGen.Flags().StringVarP(&cmdConfig.PkgName, "pkgname", "p", "models", "The name you wish to assign to your generated package")
-	cmdGen.Flags().StringSliceVarP(&cmdConfig.Tags, "tags", "t", nil, "Struct tags to be included on your models in addition to json, yaml, toml")
-	cmdGen.Flags().BoolVarP(&cmdConfig.NoTests, "no-tests", "", false, "Disable generated go test files")
-	cmdGen.Flags().BoolVarP(&cmdConfig.NoHooks, "no-hooks", "", false, "Disable hooks feature for your models")
-	cmdGen.Flags().BoolVarP(&cmdConfig.Wipe, "wipe", "", false, "Delete the output folder (rm -rf) before generation to ensure sanity")
-
-	var cmdGenMigrations = &cobra.Command{
-		Use:  "genmigrations",
-		RunE: runGenMigrations,
-	}
-	var cmdVersion = &cobra.Command{
-		Use: "version",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("sqlbunny v" + sqlbunnyVersion)
-		},
+func Run(items ...def.ConfigItem) {
+	config, err := def.Validate(items)
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
 	}
 
 	var rootCmd = &cobra.Command{Use: "sqlbunny"}
-	rootCmd.AddCommand(cmdGen, cmdGenMigrations, cmdVersion)
 
-	// hide flags not recommended for use
-	rootCmd.PersistentFlags().MarkHidden("replace")
+	addGenCommand(config, rootCmd)
+
+	for _, i := range items {
+		if p, ok := i.(commandPlugin); ok {
+			p.AddCommands(config, rootCmd)
+		}
+	}
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-type commandFailure string
+func addGenCommand(config *def.Config, rootCmd *cobra.Command) {
+	var cmdConfig gen.Config
+	var cmd = &cobra.Command{
+		Use: "gen [flags]",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdState, err := gen.New(config.Schema, &cmdConfig)
+			if err != nil {
+				return err
+			}
 
-func (c commandFailure) Error() string {
-	return string(c)
-}
-
-func runGen(cmd *cobra.Command, args []string) error {
-	schema, err := def.Schema()
-	if err != nil {
-		return err
+			return cmdState.Run(true)
+		},
 	}
-
-	cmdState, err := gen.New(schema, &cmdConfig)
-	if err != nil {
-		return err
-	}
-
-	return cmdState.Run(true)
-}
-
-var mstore *migration.MigrationStore
-
-func SetMigrations(s *migration.MigrationStore) {
-	mstore = s
-}
-
-func runGenMigrations(cmd *cobra.Command, args []string) error {
-	schema, err := def.Schema()
-	if err != nil {
-		return err
-	}
-
-	return migration.Run(schema, mstore)
+	cmd.Flags().StringVarP(&cmdConfig.OutFolder, "output", "o", "models", "The name of the folder to output to")
+	cmd.Flags().StringVarP(&cmdConfig.PkgName, "pkgname", "p", "models", "The name you wish to assign to your generated package")
+	cmd.Flags().StringSliceVarP(&cmdConfig.Tags, "tags", "t", nil, "Struct tags to be included on your models in addition to json, yaml, toml")
+	cmd.Flags().BoolVarP(&cmdConfig.NoTests, "no-tests", "", false, "Disable generated go test files")
+	cmd.Flags().BoolVarP(&cmdConfig.NoHooks, "no-hooks", "", false, "Disable hooks feature for your models")
+	cmd.Flags().BoolVarP(&cmdConfig.Wipe, "wipe", "", false, "Delete the output folder (rm -rf) before generation to ensure sanity")
+	rootCmd.AddCommand(cmd)
 }
