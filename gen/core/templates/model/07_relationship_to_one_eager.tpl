@@ -35,7 +35,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 	}
 
 	query := fmt.Sprintf(
-		"select * from {{.ForeignModel | $dot.SchemaModel}} where {{.ForeignColumn | $dot.Quotes}} in (%s)",
+		"select * from {{.ForeignModel | schemaModel}} where {{.ForeignColumn | quotes}} in (%s)",
 		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
 	)
 

@@ -14,7 +14,7 @@ func (o *{{$txt.LocalModel.NameGo}}) {{$txt.Function.NameGo}}(ctx context.Contex
 	queryMods = append(queryMods, mods...)
 
 	query := {{$txt.ForeignModel.NamePluralGo}}(ctx, queryMods...)
-	queries.SetFrom(query.Query, "{{.ForeignModel | $dot.SchemaModel}}")
+	queries.SetFrom(query.Query, "{{.ForeignModel | schemaModel}}")
 
 	return query
 }

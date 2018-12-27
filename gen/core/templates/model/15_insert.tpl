@@ -1,6 +1,6 @@
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
-{{- $schemaModel := .Model.Name | .SchemaModel}}
+{{- $schemaModel := .Model.Name | schemaModel}}
 // Insert a single record using an executor.
 // Whitelist behavior: If a whitelist is provided, only those fields supplied are inserted
 // No whitelist behavior: Without a whitelist, fields are inferred by the following rules:

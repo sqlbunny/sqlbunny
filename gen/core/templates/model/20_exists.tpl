@@ -3,7 +3,7 @@
 {{- $pkNames := $colDefs.Names | stringMap .StringFuncs.camelCase | stringMap .StringFuncs.replaceReserved -}}
 {{- $pkTypes := typesGo $colDefs.Types }}
 {{- $pkArgs := joinSlices " " $pkNames $pkTypes | join ", "}}
-{{- $schemaModel := .Model.Name | .SchemaModel}}
+{{- $schemaModel := .Model.Name | schemaModel}}
 // {{$modelNameSingular}}Exists checks if the {{$modelNameSingular}} row exists.
 func {{$modelNameSingular}}Exists(ctx context.Context, {{$pkArgs}}) (bool, error) {
 	var exists bool

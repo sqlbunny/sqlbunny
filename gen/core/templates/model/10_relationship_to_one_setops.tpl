@@ -5,7 +5,7 @@
 		{{- $txt := txtsFromFKey $dot.Models $dot.Model . -}}
 		{{- $foreignNameSingular := .ForeignModel | singular | camelCase -}}
 		{{- $varNameSingular := .Model | singular | camelCase}}
-		{{- $schemaModel := .Model | $dot.SchemaModel}}
+		{{- $schemaModel := .Model | schemaModel}}
 
 // Set{{$txt.Function.NameGo}} of the {{.Model | singular}} to the related item.
 // Sets o.R.{{$txt.Function.NameGo}} to related.

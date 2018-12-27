@@ -1,7 +1,7 @@
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
 {{- $varNamePlural := .Model.Name | plural | camelCase -}}
-{{- $schemaModel := .Model.Name | .SchemaModel}}
+{{- $schemaModel := .Model.Name | schemaModel}}
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *{{$modelNameSingular}}) Reload(ctx context.Context) error {

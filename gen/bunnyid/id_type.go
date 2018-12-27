@@ -1,6 +1,7 @@
-package schema
+package bunnyid
 
 import "github.com/kernelpayments/sqlbunny/runtime/strmangle"
+import "github.com/kernelpayments/sqlbunny/schema"
 
 type IDType struct {
 	Name   string
@@ -10,13 +11,13 @@ type IDType struct {
 func (t *IDType) GetName() string {
 	return t.Name
 }
-func (t *IDType) TypeGo() TypeGo {
-	return TypeGo{
+func (t *IDType) TypeGo() schema.TypeGo {
+	return schema.TypeGo{
 		Name: strmangle.TitleCase(t.Name),
 	}
 }
-func (t *IDType) TypeGoNull() TypeGo {
-	return TypeGo{
+func (t *IDType) TypeGoNull() schema.TypeGo {
+	return schema.TypeGo{
 		Name: "Null" + strmangle.TitleCase(t.Name),
 	}
 }

@@ -3,7 +3,6 @@ package bunnyid
 import (
 	"github.com/kernelpayments/sqlbunny/config"
 	"github.com/kernelpayments/sqlbunny/gen"
-	"github.com/kernelpayments/sqlbunny/schema"
 )
 
 const (
@@ -26,18 +25,13 @@ func (p *Plugin) InitPlugin() {
 }
 
 func (p *Plugin) RunPlugin() {
-	var idTypes []*schema.IDType
+	var idTypes []*IDType
 
 	for _, t := range config.Config.Schema.Types {
 		switch t := t.(type) {
-		case *schema.IDType:
-			data := &struct {
-				*gen.TemplateData
-				IDType *schema.IDType
-			}{
-				TemplateData: gen.BaseTemplateData(),
-				IDType:       t,
-			}
+		case *IDType:
+			data := gen.BaseTemplateData()
+			data["IDType"] = t
 
 			p.IDTemplates.Execute(data, t.Name+".go")
 
@@ -45,13 +39,8 @@ func (p *Plugin) RunPlugin() {
 		}
 	}
 
-	singletonData := &struct {
-		*gen.TemplateData
-		IDTypes []*schema.IDType
-	}{
-		TemplateData: gen.BaseTemplateData(),
-		IDTypes:      idTypes,
-	}
+	data := gen.BaseTemplateData()
+	data["IDTypes"] = idTypes
 
-	p.SingletonTemplates.ExecuteSingleton(singletonData)
+	p.SingletonTemplates.ExecuteSingleton(data)
 }

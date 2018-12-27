@@ -14,7 +14,7 @@ func Find{{$modelNameSingular}}(ctx context.Context, {{$pkArgs}}, selectCols ...
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"SELECT %s FROM {{.Model.Name | .SchemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Columns}}{{end}}", sel,
+		"SELECT %s FROM {{.Model.Name | schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Columns}}{{end}}", sel,
 	)
 
 	q := queries.Raw(ctx, query, {{$pkNames | join ", "}})

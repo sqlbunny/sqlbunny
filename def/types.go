@@ -10,17 +10,17 @@ import (
 
 type typeEntry struct {
 	name string
-	info typeInfo
+	info TypeDef
 }
 
 func (typeEntry) IsConfigItem() {}
 
-type typeInfo interface {
-	getType(name string) schema.Type
-	resolveTypes(v *validationContext, t schema.Type, resolve func(name string, context string) schema.Type)
+type TypeDef interface {
+	GetType(name string) schema.Type
+	ResolveTypes(v *Validation, t schema.Type, resolve func(name string, context string) schema.Type)
 }
 
-func Type(name string, t typeInfo) typeEntry {
+func Type(name string, t TypeDef) typeEntry {
 	return typeEntry{
 		name: name,
 		info: t,
@@ -46,7 +46,7 @@ func parseGoType(s string) schema.TypeGo {
 	}
 }
 
-func (t BaseType) getType(name string) schema.Type {
+func (t BaseType) GetType(name string) schema.Type {
 	if t.GoNull == "" {
 		return &schema.BaseTypeNotNullable{
 			Name:     name,
@@ -62,21 +62,21 @@ func (t BaseType) getType(name string) schema.Type {
 	}
 }
 
-func (t BaseType) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
+func (t BaseType) ResolveTypes(v *Validation, st schema.Type, resolve func(name string, context string) schema.Type) {
 }
 
 type enum struct {
 	choices []string
 }
 
-func (t enum) getType(name string) schema.Type {
+func (t enum) GetType(name string) schema.Type {
 	return &schema.Enum{
 		Name:    name,
 		Choices: t.choices,
 	}
 }
 
-func (t enum) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
+func (t enum) ResolveTypes(v *Validation, st schema.Type, resolve func(name string, context string) schema.Type) {
 }
 
 func Enum(choices ...string) enum {
@@ -87,7 +87,7 @@ type array struct {
 	element string
 }
 
-func (t array) getType(name string) schema.Type {
+func (t array) GetType(name string) schema.Type {
 	return &schema.BaseTypeNotNullable{
 		Name:     name,
 		Postgres: "bytea[]",
@@ -97,38 +97,24 @@ func (t array) getType(name string) schema.Type {
 	}
 }
 
-func (t array) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
+func (t array) ResolveTypes(v *Validation, st schema.Type, resolve func(name string, context string) schema.Type) {
 }
 
 func Array(element string) array {
 	return array{element}
 }
 
-type ID struct {
-	Prefix string
-}
-
-func (t ID) getType(name string) schema.Type {
-	return &schema.IDType{
-		Name:   name,
-		Prefix: t.Prefix,
-	}
-}
-
-func (t ID) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
-}
-
 type structType struct {
 	items []ModelItem
 }
 
-func (t structType) getType(name string) schema.Type {
+func (t structType) GetType(name string) schema.Type {
 	return &schema.Struct{
 		Name: name,
 	}
 }
 
-func (t structType) resolveTypes(v *validationContext, st schema.Type, resolve func(name string, context string) schema.Type) {
+func (t structType) ResolveTypes(v *Validation, st schema.Type, resolve func(name string, context string) schema.Type) {
 	struc := st.(*schema.Struct)
 	for _, i := range t.items {
 		switch i := i.(type) {

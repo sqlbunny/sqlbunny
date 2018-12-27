@@ -1,6 +1,6 @@
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
-{{- $schemaModel := .Model.Name | .SchemaModel}}
+{{- $schemaModel := .Model.Name | schemaModel}}
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
 func (o *{{$modelNameSingular}}) Upsert(ctx context.Context, updateOnConflict bool, conflictFields []string, updateFields []string, whitelist ...string) error {
 	if o == nil {

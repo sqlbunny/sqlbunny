@@ -1,6 +1,6 @@
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
-{{- $schemaModel := .Model.Name | .SchemaModel}}
+{{- $schemaModel := .Model.Name | schemaModel}}
 // Delete deletes a single {{$modelNameSingular}} record with an executor.
 // Delete will match against the primary key field to find the record to delete.
 func (o *{{$modelNameSingular}}) Delete(ctx context.Context) error {

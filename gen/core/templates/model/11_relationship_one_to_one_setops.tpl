@@ -6,7 +6,7 @@
 		{{- $varNameSingular := .Model | singular | camelCase -}}
 		{{- $foreignVarNameSingular := .ForeignModel | singular | camelCase -}}
 		{{- $foreignPrimaryKeyCols := (getModel $dot.Models .ForeignModel).PrimaryKey.Columns -}}
-		{{- $foreignSchemaModel := .ForeignModel | $dot.SchemaModel}}
+		{{- $foreignSchemaModel := .ForeignModel | schemaModel}}
 // Set{{$txt.Function.NameGo}} of the {{.Model | singular}} to the related item.
 // Sets o.R.{{$txt.Function.NameGo}} to related.
 // Adds o to related.R.{{$txt.Function.ForeignNameGo}}.

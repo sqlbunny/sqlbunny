@@ -7,7 +7,7 @@
 		{{- $varNameSingular := .Model | singular | camelCase -}}
 		{{- $foreignVarNameSingular := .ForeignModel | singular | camelCase}}
 		{{- $foreignPrimaryKeyCols := (getModel $dot.Models .ForeignModel).PrimaryKey.Columns -}}
-		{{- $foreignSchemaModel := .ForeignModel | $dot.SchemaModel}}
+		{{- $foreignSchemaModel := .ForeignModel | schemaModel}}
 // Add{{$txt.Function.NameGo}} adds the given related objects to the existing relationships
 // of the {{$model.Name | singular}}, optionally inserting them as new records.
 // Appends related to o.R.{{$txt.Function.NameGo}}.
@@ -47,7 +47,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Add{{$txt.Function.NameGo}}(ctx context.Con
 
 	{{if .ToJoinModel -}}
 	for _, rel := range related {
-		query := "insert into {{.JoinModel | $dot.SchemaModel}} ({{.JoinLocalColumn | $dot.Quotes}}, {{.JoinForeignColumn | $dot.Quotes}}) values {{if $dot.Dialect.IndexPlaceholders}}($1, $2){{else}}(?, ?){{end}}"
+		query := "insert into {{.JoinModel | schemaModel}} ({{.JoinLocalColumn | quotes}}, {{.JoinForeignColumn | quotes}}) values {{if $dot.Dialect.IndexPlaceholders}}($1, $2){{else}}(?, ?){{end}}"
 		values := []interface{}{{"{"}}o.{{$txt.LocalModel.ColumnNameGo}}, rel.{{$txt.ForeignModel.ColumnNameGo}}}
 
 		_, err = bunny.Exec(ctx, query, values...)
@@ -99,10 +99,10 @@ func (o *{{$txt.LocalModel.NameGo}}) Add{{$txt.Function.NameGo}}(ctx context.Con
 // Sets related.R.{{$txt.Function.ForeignNameGo}}'s {{$txt.Function.NameGo}} accordingly.
 func (o *{{$txt.LocalModel.NameGo}}) Set{{$txt.Function.NameGo}}(ctx context.Context, insert bool, related ...*{{$txt.ForeignModel.NameGo}}) error {
 	{{if .ToJoinModel -}}
-	query := "delete from {{.JoinModel | $dot.SchemaModel}} where {{.JoinLocalColumn | $dot.Quotes}} = {{if $dot.Dialect.IndexPlaceholders}}$1{{else}}?{{end}}"
+	query := "delete from {{.JoinModel | schemaModel}} where {{.JoinLocalColumn | quotes}} = {{if $dot.Dialect.IndexPlaceholders}}$1{{else}}?{{end}}"
 	values := []interface{}{{"{"}}o.{{$txt.LocalModel.ColumnNameGo}}}
 	{{else -}}
-	query := "update {{.ForeignModel | $dot.SchemaModel}} set {{.ForeignColumn | $dot.Quotes}} = null where {{.ForeignColumn | $dot.Quotes}} = {{if $dot.Dialect.IndexPlaceholders}}$1{{else}}?{{end}}"
+	query := "update {{.ForeignModel | schemaModel}} set {{.ForeignColumn | quotes}} = null where {{.ForeignColumn | quotes}} = {{if $dot.Dialect.IndexPlaceholders}}$1{{else}}?{{end}}"
 	values := []interface{}{{"{"}}o.{{$txt.LocalModel.ColumnNameGo}}}
 	{{end -}}
 	_, err := bunny.Exec(ctx, query, values...)
@@ -140,7 +140,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Remove{{$txt.Function.NameGo}}(ctx context.
 	var err error
 	{{if .ToJoinModel -}}
 	query := fmt.Sprintf(
-		"delete from {{.JoinModel | $dot.SchemaModel}} where {{.JoinLocalColumn | $dot.Quotes}} = {{if $dot.Dialect.IndexPlaceholders}}$1{{else}}?{{end}} and {{.JoinForeignColumn | $dot.Quotes}} in (%s)",
+		"delete from {{.JoinModel | schemaModel}} where {{.JoinLocalColumn | quotes}} = {{if $dot.Dialect.IndexPlaceholders}}$1{{else}}?{{end}} and {{.JoinForeignColumn | quotes}} in (%s)",
 		strmangle.Placeholders(dialect.IndexPlaceholders, len(related), 2, 1),
 	)
 	values := []interface{}{{"{"}}o.{{$txt.LocalModel.ColumnNameGo}}}

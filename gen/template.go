@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/kernelpayments/sqlbunny/config"
 	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
 	"github.com/kernelpayments/sqlbunny/schema"
 	"golang.org/x/tools/go/packages"
@@ -154,4 +155,18 @@ var TemplateFunctions = template.FuncMap{
 	"sqlColDefinitions":      schema.SQLColDefinitions,
 	"columnNames":            schema.ColumnNames,
 	"getModel":               schema.GetModel,
+
+	"quotes": func(s string) string {
+		d := config.Config.Dialect
+		lq := strmangle.QuoteCharacter(d.LQ)
+		rq := strmangle.QuoteCharacter(d.RQ)
+
+		return fmt.Sprintf("%s%s%s", lq, s, rq)
+	},
+	"schemaModel": func(model string) string {
+		d := config.Config.Dialect
+		lq := strmangle.QuoteCharacter(d.LQ)
+		rq := strmangle.QuoteCharacter(d.RQ)
+		return strmangle.SchemaModel(lq, rq, model)
+	},
 }

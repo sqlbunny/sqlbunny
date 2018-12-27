@@ -64,37 +64,19 @@ func (p *Plugin) RunPlugin() {
 		models = append(models, m)
 	}
 
-	singletonData := &struct {
-		*gen.TemplateData
-		Models []*schema.Model
-	}{
-		TemplateData: gen.BaseTemplateData(),
-		Models:       models,
-	}
-
-	p.SingletonTemplates.ExecuteSingleton(singletonData)
+	data := gen.BaseTemplateData()
+	data["Models"] = models
+	p.SingletonTemplates.ExecuteSingleton(data)
 
 	for _, t := range config.Config.Schema.Types {
 		switch t := t.(type) {
 		case *schema.Enum:
-			data := &struct {
-				*gen.TemplateData
-				Enum *schema.Enum
-			}{
-				TemplateData: gen.BaseTemplateData(),
-				Enum:         t,
-			}
-
+			data := gen.BaseTemplateData()
+			data["Enum"] = t
 			p.EnumTemplates.Execute(data, t.Name+".go")
 		case *schema.Struct:
-			data := &struct {
-				*gen.TemplateData
-				Struct *schema.Struct
-			}{
-				TemplateData: gen.BaseTemplateData(),
-				Struct:       t,
-			}
-
+			data := gen.BaseTemplateData()
+			data["Struct"] = t
 			p.StructTemplates.Execute(data, t.Name+".go")
 		}
 	}
@@ -104,16 +86,9 @@ func (p *Plugin) RunPlugin() {
 			continue
 		}
 
-		data := &struct {
-			*gen.TemplateData
-			Model  *schema.Model
-			Models []*schema.Model
-		}{
-			TemplateData: gen.BaseTemplateData(),
-			Model:        model,
-			Models:       models,
-		}
-
+		data := gen.BaseTemplateData()
+		data["Model"] = model
+		data["Models"] = models
 		p.ModelTemplates.Execute(data, model.Name+".go")
 	}
 }

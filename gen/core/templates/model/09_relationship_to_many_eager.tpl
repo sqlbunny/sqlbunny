@@ -5,7 +5,7 @@
 		{{- $varNameSingular := $dot.Model.Name | singular | camelCase -}}
 		{{- $txt := txtsFromToMany $dot.Models $dot.Model . -}}
 		{{- $arg := printf "maybe%s" $txt.LocalModel.NameGo -}}
-		{{- $schemaForeignModel := .ForeignModel | $dot.SchemaModel}}
+		{{- $schemaForeignModel := .ForeignModel | schemaModel}}
 // Load{{$txt.Function.NameGo}} allows an eager lookup of values, cached into the
 // loaded structs of the objects.
 func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, singular bool, {{$arg}} interface{}) error {
@@ -36,14 +36,14 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 	}
 
 		{{if .ToJoinModel -}}
-			{{- $schemaJoinModel := .JoinModel | $dot.SchemaModel -}}
+			{{- $schemaJoinModel := .JoinModel | schemaModel -}}
 	query := fmt.Sprintf(
-		"select {{id 0 | $dot.Quotes}}.*, {{id 1 | $dot.Quotes}}.{{.JoinLocalColumn | $dot.Quotes}} from {{$schemaForeignModel}} as {{id 0 | $dot.Quotes}} inner join {{$schemaJoinModel}} as {{id 1 | $dot.Quotes}} on {{id 0 | $dot.Quotes}}.{{.ForeignColumn | $dot.Quotes}} = {{id 1 | $dot.Quotes}}.{{.JoinForeignColumn | $dot.Quotes}} where {{id 1 | $dot.Quotes}}.{{.JoinLocalColumn | $dot.Quotes}} in (%s)",
+		"select {{id 0 | quotes}}.*, {{id 1 | quotes}}.{{.JoinLocalColumn | quotes}} from {{$schemaForeignModel}} as {{id 0 | quotes}} inner join {{$schemaJoinModel}} as {{id 1 | quotes}} on {{id 0 | quotes}}.{{.ForeignColumn | quotes}} = {{id 1 | quotes}}.{{.JoinForeignColumn | quotes}} where {{id 1 | quotes}}.{{.JoinLocalColumn | quotes}} in (%s)",
 		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
 	)
 		{{else -}}
 	query := fmt.Sprintf(
-		"select * from {{$schemaForeignModel}} where {{.ForeignColumn | $dot.Quotes}} in (%s)",
+		"select * from {{$schemaForeignModel}} where {{.ForeignColumn | quotes}} in (%s)",
 		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
 	)
 		{{end -}}

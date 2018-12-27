@@ -1,6 +1,6 @@
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
-{{- $schemaModel := .Model.Name | .SchemaModel}}
+{{- $schemaModel := .Model.Name | schemaModel}}
 // Update uses an executor to update the {{$modelNameSingular}}.
 // Whitelist behavior: If a whitelist is provided, only the fields given are updated.
 // No whitelist behavior: Without a whitelist, fields are inferred by the following rules:
