@@ -21,7 +21,7 @@ func (v *validationContext) addError(message string, args ...interface{}) {
 	v.errors = append(v.errors, fmt.Errorf(message, args...))
 }
 
-func Validate(items []ConfigItem) (*Config, error) {
+func BuildSchema(items []ConfigItem) (*schema.Schema, error) {
 	s := schema.New()
 
 	v := &validationContext{
@@ -94,10 +94,7 @@ func Validate(items []ConfigItem) (*Config, error) {
 
 	s.CalculateRelationships()
 
-	return &Config{
-		Schema: s,
-		Items:  items,
-	}, nil
+	return s, nil
 }
 
 func makeTags(v *validationContext, flags []FieldFlag, context string) schema.Tags {

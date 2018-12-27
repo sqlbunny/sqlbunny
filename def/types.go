@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kernelpayments/sqlbunny/bunny/strmangle"
+	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
 	"github.com/kernelpayments/sqlbunny/schema"
 )
 

@@ -2,6 +2,9 @@ github.com/andyleap/parser v0.0.0-20160126201130-db5a13a7cd46 h1:t5xfxrFvtVIPcpt
 github.com/andyleap/parser v0.0.0-20160126201130-db5a13a7cd46/go.mod h1:optl5aMZUO+oj3KCDaQ0WYQMP6QhUQXXDAHQnCA3wI8=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/derekparker/delve v1.1.0 h1:icd65nMp7s2HiLz6y/6RCVXBdoED3xxYLwX09EMaRCc=
+github.com/derekparker/delve v1.1.0/go.mod h1:pMSZMfp0Nhbm8qdZJkuE/yPGOkLpGXLS1I4poXQpuJU=
+github.com/kernelpay/sqlbunny v0.0.0-20181113121004-8db40d5cbfc0 h1:zRqrbWmIpNByXqTXpEtCILNnXZj/fpydcvC8RoWjxOU=
 github.com/lib/pq v1.0.0 h1:X5PMW56eZitiTeO7tKzZxFCSpbFZJtkMMooicw2us9A=
 github.com/lib/pq v1.0.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/pkg/errors v0.8.0 h1:WdK/asTD0HN+q6hsWO3/vpuAkAr+tw6aNJNDFFf0+qw=
@@ -18,3 +21,6 @@ golang.org/x/tools v0.0.0-20181102223251-96e9e165b75e h1:mWs/o39kL0UjStxJimqI7o6
 golang.org/x/tools v0.0.0-20181102223251-96e9e165b75e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 h1:FVCohIoYO7IJoDDVpV2pdq7SgrMH6wHnuTyrdrxJNoY=
 gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0/go.mod h1:OdE7CF6DbADk7lN8LIKRzRJTTZXIjtWgA5THM5lhBAw=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v2 v2.2.2 h1:ZCJp+EgiOT7lHqUV2J862kp8Qj64Jo6az82+3Td9dZw=
+gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=

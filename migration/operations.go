@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kernelpayments/sqlbunny/bunny"
+	"github.com/kernelpayments/sqlbunny/runtime/bunny"
 	"github.com/kernelpayments/sqlbunny/schema"
 )
 

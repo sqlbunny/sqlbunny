@@ -1,3 +1,0 @@
-var (
-	_ = bytes.MinRead
-)

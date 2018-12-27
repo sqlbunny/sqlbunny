@@ -1,6 +1,6 @@
 package schema
 
-import "github.com/kernelpayments/sqlbunny/bunny/strmangle"
+import "github.com/kernelpayments/sqlbunny/runtime/strmangle"
 
 type IDArrayType struct {
 	idType *IDType
