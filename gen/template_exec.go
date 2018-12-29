@@ -15,7 +15,13 @@ var (
 	templateByteBufferInner = &bytes.Buffer{}
 )
 
-func (t *TemplateList) Execute(data interface{}, filename string) {
+func (t *TemplateList) ExecuteBuf(data map[string]interface{}, buf *bytes.Buffer) {
+	for _, tplName := range t.Templates() {
+		executeTemplate(buf, t.Template, tplName, data)
+	}
+}
+
+func (t *TemplateList) Execute(data map[string]interface{}, filename string) {
 	resetImports()
 	innerOut := templateByteBufferInner
 	innerOut.Reset()
@@ -32,10 +38,10 @@ func (t *TemplateList) Execute(data interface{}, filename string) {
 	WriteImports(out, imports)
 	out.Write(innerOut.Bytes())
 
-	WriteFile(Config.OutputPath, filename, out)
+	WriteFile(Config.OutputPath, filename, out.Bytes())
 }
 
-func (t *TemplateList) ExecuteSingleton(data interface{}) {
+func (t *TemplateList) ExecuteSingleton(data map[string]interface{}) {
 	out := templateByteBuffer
 	for _, tplName := range t.Templates() {
 		out.Reset()
@@ -48,7 +54,7 @@ func (t *TemplateList) ExecuteSingleton(data interface{}) {
 		WritePackageName(out, Config.PkgName)
 
 		executeTemplate(out, t.Template, tplName, data)
-		WriteFile(Config.OutputPath, fName+".go", out)
+		WriteFile(Config.OutputPath, fName+".go", out.Bytes())
 	}
 }
 

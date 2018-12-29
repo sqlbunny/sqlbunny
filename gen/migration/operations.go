@@ -40,6 +40,7 @@ func ApplyOperation(o migration.Operation, d *schema.Schema) {
 		for _, op := range o.Ops {
 			ApplyAlterTableOperation(op, d, t)
 		}
+
 	case migration.CreateIndexOperation:
 		t, ok := d.Models[o.Name]
 		if !ok {
@@ -52,6 +53,7 @@ func ApplyOperation(o migration.Operation, d *schema.Schema) {
 			Name:    o.IndexName,
 			Columns: o.Columns,
 		})
+
 	case migration.DropIndexOperation:
 		t, ok := d.Models[o.Name]
 		if !ok {
@@ -104,8 +106,10 @@ func ApplyOperation(o migration.Operation, d *schema.Schema) {
 				}
 			}
 		}
+
 	case migration.SQLOperation:
 		// do nothing.
+
 	default:
 		panic(fmt.Sprintf("Unknown operation type: %t", o))
 	}
@@ -122,11 +126,13 @@ func ApplyAlterTableOperation(o migration.AlterTableSuboperation, d *schema.Sche
 			DBType:   o.Type,
 			Nullable: o.Nullable,
 		})
+
 	case migration.AlterTableDropColumn:
 		if c := m.FindColumn(o.Name); c == nil {
 			panic(fmt.Sprintf("AlterTableDropColumn non-existing: table %s, column %s", m.Name, o.Name))
 		}
 		m.DeleteColumn(o.Name)
+
 	case migration.AlterTableCreatePrimaryKey:
 		if m.PrimaryKey != nil {
 			panic(fmt.Sprintf("AlterTableCreatePrimaryKey on a model already with primary key: %s", m.Name))
@@ -140,6 +146,7 @@ func ApplyAlterTableOperation(o migration.AlterTableSuboperation, d *schema.Sche
 			panic(fmt.Sprintf("AlterTableDropPrimaryKey on a model already without primary key: %s", m.Name))
 		}
 		m.PrimaryKey = nil
+
 	case migration.AlterTableCreateUnique:
 		idx := m.FindUnique(o.Name)
 		if idx != nil {
@@ -149,6 +156,7 @@ func ApplyAlterTableOperation(o migration.AlterTableSuboperation, d *schema.Sche
 			Name:    o.Name,
 			Columns: o.Columns,
 		})
+
 	case migration.AlterTableDropUnique:
 		idx := m.FindUnique(o.Name)
 		if idx == nil {
@@ -195,12 +203,12 @@ func ApplyAlterTableOperation(o migration.AlterTableSuboperation, d *schema.Sche
 			panic(fmt.Sprintf("AlterTableSetNull column doesn't exist: table %s, column %s ", m.Name, o.Name))
 		}
 		c.Nullable = true
+
 	case migration.AlterTableSetType:
 		c := m.FindColumn(o.Name)
 		if c == nil {
 			panic(fmt.Sprintf("AlterTableSetType column doesn't exist: table %s, column %s ", m.Name, o.Name))
 		}
 		c.DBType = o.Type
-
 	}
 }

@@ -2,8 +2,6 @@ package schema
 
 import (
 	"fmt"
-
-	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
 )
 
 // Model metadata from the database schema.
@@ -169,15 +167,6 @@ func (t *Model) CanLastInsertID() bool {
 func (t *Model) IsUniqueColumn(name string) bool {
 	for _, c := range t.Uniques {
 		if len(c.Columns) == 1 && c.Columns[0] == name {
-			return true
-		}
-	}
-	return false
-}
-
-func (t *Model) IsStandardModel() bool {
-	for _, c := range t.Fields {
-		if c.Name == "id" && c.Type.TypeGo().Name == strmangle.TitleCase(t.Name)+"ID" {
 			return true
 		}
 	}

@@ -168,8 +168,5 @@ var TemplateFunctions = template.FuncMap{
 		rq := strmangle.QuoteCharacter(d.RQ)
 		return strmangle.SchemaModel(lq, rq, model)
 	},
-	"hook": func(data map[string]interface{}, name string) string {
-		fmt.Println(name, data)
-		return ""
-	},
+	"hook": hook,
 }

@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var rootCmd *cobra.Command
+
 func Run(items ...def.ConfigItem) {
 	schema, err := def.BuildSchema(items)
 	if err != nil {
@@ -16,12 +18,11 @@ func Run(items ...def.ConfigItem) {
 		os.Exit(1)
 	}
 
-	var rootCmd = &cobra.Command{Use: "sqlbunny"}
+	rootCmd = &cobra.Command{Use: "sqlbunny"}
 
 	Config = &ConfigStruct{
-		Schema:  schema,
-		Items:   items,
-		RootCmd: rootCmd,
+		Schema: schema,
+		Items:  items,
 
 		Dialect: queries.Dialect{
 			LQ:                '"',
@@ -34,13 +35,24 @@ func Run(items ...def.ConfigItem) {
 		PkgName:    "models",
 	}
 
+	rootCmd.AddCommand(&cobra.Command{
+		Use: "gen",
+		Run: gen,
+	})
+
 	for _, i := range items {
 		if p, ok := i.(Plugin); ok {
-			p.InitPlugin()
+			p.BunnyPlugin()
 		}
 	}
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
+	}
+}
+
+func gen(cmd *cobra.Command, args []string) {
+	for _, f := range genFuncs {
+		f()
 	}
 }

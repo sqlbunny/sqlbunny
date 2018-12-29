@@ -3,7 +3,7 @@
 {{- $modelName := $modelNameSingular | titleCase -}}
 {{- $modelNameCamel := $modelNameSingular | camelCase -}}
 
-{{ if .Model.IsStandardModel }}
+{{ if bunnyid_IsStandardModel .Model }}
 
 {{ import "bunnyid" "github.com/kernelpayments/sqlbunny/runtime/bunnyid" }}
 

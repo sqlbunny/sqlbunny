@@ -15,10 +15,12 @@ type Plugin struct {
 	Store *migration.Store
 }
 
+var _ gen.Plugin = &Plugin{}
+
 func (*Plugin) IsConfigItem() {}
 
-func (p *Plugin) InitPlugin() {
-	gen.Config.RootCmd.AddCommand(&cobra.Command{
+func (p *Plugin) BunnyPlugin() {
+	gen.AddCommand(&cobra.Command{
 		Use: "genmigrations",
 		Run: p.cmdGenMigrations,
 	})
@@ -49,7 +51,7 @@ func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
 	ops.Dump(&buf)
 	buf.WriteString(")\n}")
 
-	gen.WriteFile("migrations", migrationFile, &buf)
+	gen.WriteFile("migrations", migrationFile, buf.Bytes())
 }
 
 func (p *Plugin) applyAll(db *schema.Schema) {

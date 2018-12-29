@@ -4,8 +4,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	"github.com/kernelpayments/sqlbunny/gen"
 	"github.com/kernelpayments/sqlbunny/schema"
 )
@@ -26,34 +24,20 @@ type Plugin struct {
 	SingletonTemplates *gen.TemplateList
 }
 
+var _ gen.Plugin = &Plugin{}
+
 func (*Plugin) IsConfigItem() {}
 
-func (p *Plugin) InitPlugin() {
-	gen.Config.RootCmd.AddCommand(&cobra.Command{
-		Use: "gen",
-		Run: p.cmdGen,
-	})
-
+func (p *Plugin) BunnyPlugin() {
 	p.ModelTemplates = gen.MustLoadTemplates(templatesPackage, templatesModelDirectory)
 	p.StructTemplates = gen.MustLoadTemplates(templatesPackage, templatesStructDirectory)
 	p.EnumTemplates = gen.MustLoadTemplates(templatesPackage, templatesEnumDirectory)
 	p.SingletonTemplates = gen.MustLoadTemplates(templatesPackage, templatesSingletonDirectory)
+
+	gen.OnGen(p.gen)
 }
 
-type plugin interface {
-	InitPlugin()
-	RunPlugin()
-}
-
-func (p *Plugin) cmdGen(cmd *cobra.Command, args []string) {
-	for _, i := range gen.Config.Items {
-		if p, ok := i.(plugin); ok {
-			p.RunPlugin()
-		}
-	}
-}
-
-func (p *Plugin) RunPlugin() {
+func (p *Plugin) gen() {
 	if err := os.MkdirAll(gen.Config.OutputPath, os.ModePerm); err != nil {
 		log.Fatalf("Error creating output directory %s: %v", gen.Config.OutputPath, err)
 	}
