@@ -5,8 +5,6 @@ import (
 	"log"
 	"path/filepath"
 	"text/template"
-
-	"github.com/kernelpayments/sqlbunny/config"
 )
 
 var (
@@ -30,11 +28,11 @@ func (t *TemplateList) Execute(data interface{}, filename string) {
 	out.Reset()
 
 	WriteFileDisclaimer(out)
-	WritePackageName(out, config.Config.PkgName)
+	WritePackageName(out, Config.PkgName)
 	WriteImports(out, imports)
 	out.Write(innerOut.Bytes())
 
-	WriteFile(config.Config.OutputPath, filename, out)
+	WriteFile(Config.OutputPath, filename, out)
 }
 
 func (t *TemplateList) ExecuteSingleton(data interface{}) {
@@ -47,10 +45,10 @@ func (t *TemplateList) ExecuteSingleton(data interface{}) {
 		fName = fName[:len(fName)-len(ext)]
 
 		WriteFileDisclaimer(out)
-		WritePackageName(out, config.Config.PkgName)
+		WritePackageName(out, Config.PkgName)
 
 		executeTemplate(out, t.Template, tplName, data)
-		WriteFile(config.Config.OutputPath, fName+".go", out)
+		WriteFile(Config.OutputPath, fName+".go", out)
 	}
 }
 

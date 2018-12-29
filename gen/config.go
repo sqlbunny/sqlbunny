@@ -1,4 +1,4 @@
-package config
+package gen
 
 import (
 	"github.com/kernelpayments/sqlbunny/def"

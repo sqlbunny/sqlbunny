@@ -1,7 +1,6 @@
 package bunnyid
 
 import (
-	"github.com/kernelpayments/sqlbunny/config"
 	"github.com/kernelpayments/sqlbunny/gen"
 )
 
@@ -27,7 +26,7 @@ func (p *Plugin) InitPlugin() {
 func (p *Plugin) RunPlugin() {
 	var idTypes []*IDType
 
-	for _, t := range config.Config.Schema.Types {
+	for _, t := range gen.Config.Schema.Types {
 		switch t := t.(type) {
 		case *IDType:
 			data := gen.BaseTemplateData()

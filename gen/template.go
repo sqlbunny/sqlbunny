@@ -8,7 +8,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/kernelpayments/sqlbunny/config"
 	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
 	"github.com/kernelpayments/sqlbunny/schema"
 	"golang.org/x/tools/go/packages"
@@ -47,7 +46,7 @@ func getPackagePath(pkg string) (string, error) {
 	return filepath.Dir(pkgs[0].GoFiles[0]), nil
 }
 
-// loadTemplates loads all of the template files in the specified directory.
+// LoadTemplates loads all of the template files in the specified directory.
 func LoadTemplates(pkg string, path string) (*TemplateList, error) {
 	pkgPath, err := getPackagePath(pkg)
 	if err != nil {
@@ -110,7 +109,7 @@ var templateStringMappers = map[string]func(string) string{
 	"camelCase":           strmangle.CamelCase,
 }
 
-// templateFunctions is a map of all the functions that get passed into the
+// TemplateFunctions is a map of all the functions that get passed into the
 // templates. If you wish to pass a new function into your own template,
 // add a function pointer here.
 var TemplateFunctions = template.FuncMap{
@@ -157,16 +156,20 @@ var TemplateFunctions = template.FuncMap{
 	"getModel":               schema.GetModel,
 
 	"quotes": func(s string) string {
-		d := config.Config.Dialect
+		d := Config.Dialect
 		lq := strmangle.QuoteCharacter(d.LQ)
 		rq := strmangle.QuoteCharacter(d.RQ)
 
 		return fmt.Sprintf("%s%s%s", lq, s, rq)
 	},
 	"schemaModel": func(model string) string {
-		d := config.Config.Dialect
+		d := Config.Dialect
 		lq := strmangle.QuoteCharacter(d.LQ)
 		rq := strmangle.QuoteCharacter(d.RQ)
 		return strmangle.SchemaModel(lq, rq, model)
+	},
+	"hook": func(data map[string]interface{}, name string) string {
+		fmt.Println(name, data)
+		return ""
 	},
 }

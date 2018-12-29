@@ -1,19 +1,13 @@
-package sqlbunny
+package gen
 
 import (
 	"log"
 	"os"
 
-	"github.com/kernelpayments/sqlbunny/config"
 	"github.com/kernelpayments/sqlbunny/def"
 	"github.com/kernelpayments/sqlbunny/runtime/queries"
 	"github.com/spf13/cobra"
 )
-
-type Plugin interface {
-	InitPlugin()
-	RunPlugin()
-}
 
 func Run(items ...def.ConfigItem) {
 	schema, err := def.BuildSchema(items)
@@ -24,7 +18,7 @@ func Run(items ...def.ConfigItem) {
 
 	var rootCmd = &cobra.Command{Use: "sqlbunny"}
 
-	config.Config = &config.ConfigStruct{
+	Config = &ConfigStruct{
 		Schema:  schema,
 		Items:   items,
 		RootCmd: rootCmd,

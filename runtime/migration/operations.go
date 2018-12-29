@@ -146,7 +146,7 @@ type AlterTableAddColumn struct {
 	Nullable bool
 }
 
-func (o *AlterTableAddColumn) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableAddColumn) AlterTableSQL(ato *AlterTableOperation) string {
 	var n string
 	if !o.Nullable {
 		n = "NOT NULL"
@@ -157,7 +157,7 @@ func (o *AlterTableAddColumn) AlterTableSQL(ato *AlterTableOperation) string {
 	}
 	return fmt.Sprintf("ADD COLUMN \"%s\" %s %s", o.Name, o.Type, n)
 }
-func (o *AlterTableAddColumn) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableAddColumn) Apply(d *schema.Schema, m *schema.Model) {
 	if c := m.FindColumn(o.Name); c != nil {
 		panic(fmt.Sprintf("AlterTableAddColumn already-existing: table %s, column %s", m.Name, o.Name))
 	}
@@ -167,7 +167,7 @@ func (o *AlterTableAddColumn) Apply(d *schema.Schema, m *schema.Model) {
 		Nullable: o.Nullable,
 	})
 }
-func (o *AlterTableAddColumn) Dump(buf *bytes.Buffer) {
+func (o AlterTableAddColumn) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableAddColumn {\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("Type: \"" + o.Type + "\",\n")
@@ -186,16 +186,16 @@ type AlterTableDropColumn struct {
 	Name string
 }
 
-func (o *AlterTableDropColumn) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableDropColumn) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("DROP COLUMN \"%s\"", o.Name)
 }
-func (o *AlterTableDropColumn) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableDropColumn) Apply(d *schema.Schema, m *schema.Model) {
 	if c := m.FindColumn(o.Name); c == nil {
 		panic(fmt.Sprintf("AlterTableDropColumn non-existing: table %s, column %s", m.Name, o.Name))
 	}
 	m.DeleteColumn(o.Name)
 }
-func (o *AlterTableDropColumn) Dump(buf *bytes.Buffer) {
+func (o AlterTableDropColumn) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableDropColumn {Name: \"" + o.Name + "\"}")
 }
 
@@ -216,10 +216,10 @@ type AlterTableCreatePrimaryKey struct {
 	Columns []string
 }
 
-func (o *AlterTableCreatePrimaryKey) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableCreatePrimaryKey) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("ADD CONSTRAINT \"%s_pkey\" PRIMARY KEY (%s)", ato.Name, columnList(o.Columns))
 }
-func (o *AlterTableCreatePrimaryKey) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableCreatePrimaryKey) Apply(d *schema.Schema, m *schema.Model) {
 	if m.PrimaryKey != nil {
 		panic(fmt.Sprintf("AlterTableCreatePrimaryKey on a model already with primary key: %s", m.Name))
 	}
@@ -227,7 +227,7 @@ func (o *AlterTableCreatePrimaryKey) Apply(d *schema.Schema, m *schema.Model) {
 		Columns: o.Columns,
 	}
 }
-func (o *AlterTableCreatePrimaryKey) Dump(buf *bytes.Buffer) {
+func (o AlterTableCreatePrimaryKey) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableCreatePrimaryKey{\n")
 	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
 	buf.WriteString("}")
@@ -236,16 +236,16 @@ func (o *AlterTableCreatePrimaryKey) Dump(buf *bytes.Buffer) {
 type AlterTableDropPrimaryKey struct {
 }
 
-func (o *AlterTableDropPrimaryKey) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableDropPrimaryKey) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("DROP CONSTRAINT \"%s_pkey\"", ato.Name)
 }
-func (o *AlterTableDropPrimaryKey) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableDropPrimaryKey) Apply(d *schema.Schema, m *schema.Model) {
 	if m.PrimaryKey == nil {
 		panic(fmt.Sprintf("AlterTableDropPrimaryKey on a model already without primary key: %s", m.Name))
 	}
 	m.PrimaryKey = nil
 }
-func (o *AlterTableDropPrimaryKey) Dump(buf *bytes.Buffer) {
+func (o AlterTableDropPrimaryKey) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableDropPrimaryKey{}")
 }
 
@@ -254,10 +254,10 @@ type AlterTableCreateUnique struct {
 	Columns []string
 }
 
-func (o *AlterTableCreateUnique) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableCreateUnique) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("ADD CONSTRAINT \"%s\" UNIQUE (%s)", o.Name, columnList(o.Columns))
 }
-func (o *AlterTableCreateUnique) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableCreateUnique) Apply(d *schema.Schema, m *schema.Model) {
 	idx := m.FindUnique(o.Name)
 	if idx != nil {
 		panic(fmt.Sprintf("AlterTableCreateUnique unique already exists: table %s, unique %s ", m.Name, o.Name))
@@ -267,7 +267,7 @@ func (o *AlterTableCreateUnique) Apply(d *schema.Schema, m *schema.Model) {
 		Columns: o.Columns,
 	})
 }
-func (o *AlterTableCreateUnique) Dump(buf *bytes.Buffer) {
+func (o AlterTableCreateUnique) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableCreateUnique{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
@@ -278,17 +278,17 @@ type AlterTableDropUnique struct {
 	Name string
 }
 
-func (o *AlterTableDropUnique) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableDropUnique) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("DROP CONSTRAINT \"%s\"", o.Name)
 }
-func (o *AlterTableDropUnique) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableDropUnique) Apply(d *schema.Schema, m *schema.Model) {
 	idx := m.FindUnique(o.Name)
 	if idx == nil {
 		panic(fmt.Sprintf("AlterTableDropUnique unique doesn't exist: table %s, unique %s ", m.Name, o.Name))
 	}
 	m.DeleteUnique(o.Name)
 }
-func (o *AlterTableDropUnique) Dump(buf *bytes.Buffer) {
+func (o AlterTableDropUnique) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableDropUnique{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("}")
@@ -301,10 +301,10 @@ type AlterTableCreateForeignKey struct {
 	ForeignColumns []string
 }
 
-func (o *AlterTableCreateForeignKey) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableCreateForeignKey) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("ADD CONSTRAINT \"%s\" FOREIGN KEY (%s) REFERENCES \"%s\" (%s)", o.Name, columnList(o.Columns), o.ForeignTable, columnList(o.ForeignColumns))
 }
-func (o *AlterTableCreateForeignKey) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableCreateForeignKey) Apply(d *schema.Schema, m *schema.Model) {
 	idx := m.FindForeignKey(o.Name)
 	if idx != nil {
 		panic(fmt.Sprintf("AlterTableCreateForeignKey ForeignKey already exists: table %s, ForeignKey %s ", m.Name, o.Name))
@@ -323,7 +323,7 @@ func (o *AlterTableCreateForeignKey) Apply(d *schema.Schema, m *schema.Model) {
 		ForeignColumn: o.ForeignColumns[0],
 	})
 }
-func (o *AlterTableCreateForeignKey) Dump(buf *bytes.Buffer) {
+func (o AlterTableCreateForeignKey) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableCreateForeignKey{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
@@ -336,17 +336,17 @@ type AlterTableDropForeignKey struct {
 	Name string
 }
 
-func (o *AlterTableDropForeignKey) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableDropForeignKey) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("DROP CONSTRAINT \"%s\"", o.Name)
 }
-func (o *AlterTableDropForeignKey) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableDropForeignKey) Apply(d *schema.Schema, m *schema.Model) {
 	idx := m.FindForeignKey(o.Name)
 	if idx == nil {
 		panic(fmt.Sprintf("AlterTableDropForeignKey ForeignKey doesn't exist: table %s, ForeignKey %s ", m.Name, o.Name))
 	}
 	m.DeleteForeignKey(o.Name)
 }
-func (o *AlterTableDropForeignKey) Dump(buf *bytes.Buffer) {
+func (o AlterTableDropForeignKey) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableDropForeignKey{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("}")
@@ -356,17 +356,17 @@ type AlterTableSetNotNull struct {
 	Name string
 }
 
-func (o *AlterTableSetNotNull) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableSetNotNull) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("ALTER COLUMN \"%s\" SET NOT NULL", o.Name)
 }
-func (o *AlterTableSetNotNull) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableSetNotNull) Apply(d *schema.Schema, m *schema.Model) {
 	c := m.FindColumn(o.Name)
 	if c == nil {
 		panic(fmt.Sprintf("AlterTableSetNotNull column doesn't exist: table %s, column %s ", m.Name, o.Name))
 	}
 	c.Nullable = false
 }
-func (o *AlterTableSetNotNull) Dump(buf *bytes.Buffer) {
+func (o AlterTableSetNotNull) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableSetNotNull{Name: \"" + o.Name + "\"}")
 }
 
@@ -374,17 +374,17 @@ type AlterTableSetNull struct {
 	Name string
 }
 
-func (o *AlterTableSetNull) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableSetNull) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("ALTER COLUMN \"%s\" DROP NOT NULL", o.Name)
 }
-func (o *AlterTableSetNull) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableSetNull) Apply(d *schema.Schema, m *schema.Model) {
 	c := m.FindColumn(o.Name)
 	if c == nil {
 		panic(fmt.Sprintf("AlterTableSetNull column doesn't exist: table %s, column %s ", m.Name, o.Name))
 	}
 	c.Nullable = true
 }
-func (o *AlterTableSetNull) Dump(buf *bytes.Buffer) {
+func (o AlterTableSetNull) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableSetNull{Name: \"" + o.Name + "\"}")
 }
 
@@ -393,17 +393,17 @@ type AlterTableSetType struct {
 	Type string
 }
 
-func (o *AlterTableSetType) AlterTableSQL(ato *AlterTableOperation) string {
+func (o AlterTableSetType) AlterTableSQL(ato *AlterTableOperation) string {
 	return fmt.Sprintf("ALTER COLUMN \"%s\" TYPE %s", o.Name, o.Type)
 }
-func (o *AlterTableSetType) Apply(d *schema.Schema, m *schema.Model) {
+func (o AlterTableSetType) Apply(d *schema.Schema, m *schema.Model) {
 	c := m.FindColumn(o.Name)
 	if c == nil {
 		panic(fmt.Sprintf("AlterTableSetType column doesn't exist: table %s, column %s ", m.Name, o.Name))
 	}
 	c.DBType = o.Type
 }
-func (o *AlterTableSetType) Dump(buf *bytes.Buffer) {
+func (o AlterTableSetType) Dump(buf *bytes.Buffer) {
 	buf.WriteString("&migration.AlterTableSetType{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("Type: \"" + o.Type + "\",\n")

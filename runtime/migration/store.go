@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/kernelpayments/sqlbunny/runtime/bunny"
-	"github.com/kernelpayments/sqlbunny/schema"
 )
 
 type Store struct {
-	migrations map[int64]OperationList
+	Migrations map[int64]OperationList
 }
 
 const (
@@ -38,7 +37,7 @@ func (m *Store) Run(ctx context.Context) error {
 
 	var i int64 = 1
 	for {
-		ops, ok := m.migrations[i]
+		ops, ok := m.Migrations[i]
 		if !ok {
 			break
 		}
@@ -62,40 +61,11 @@ func (m *Store) Run(ctx context.Context) error {
 }
 
 func (m *Store) Register(index int64, ops OperationList) {
-	if m.migrations == nil {
-		m.migrations = make(map[int64]OperationList)
+	if m.Migrations == nil {
+		m.Migrations = make(map[int64]OperationList)
 	}
-	if _, ok := m.migrations[index]; ok {
+	if _, ok := m.Migrations[index]; ok {
 		panic(fmt.Sprintf("Migration index %d registered multiple times", index))
 	}
-	m.migrations[index] = ops
-}
-
-func (m *Store) applyAll(db *schema.Schema) {
-	var i int64 = 1
-	for {
-		ops, ok := m.migrations[i]
-		if !ok {
-			break
-		}
-
-		for _, op := range ops {
-			op.Apply(db)
-		}
-
-		i++
-	}
-}
-
-func (m *Store) nextFree() int64 {
-	var i int64 = 1
-	for {
-		_, ok := m.migrations[i]
-		if !ok {
-			break
-		}
-
-		i++
-	}
-	return i
+	m.Migrations[index] = ops
 }

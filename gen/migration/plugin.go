@@ -5,44 +5,41 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kernelpayments/sqlbunny/config"
 	"github.com/kernelpayments/sqlbunny/gen"
+	"github.com/kernelpayments/sqlbunny/runtime/migration"
 	"github.com/kernelpayments/sqlbunny/schema"
 	"github.com/spf13/cobra"
 )
 
 type Plugin struct {
-	Store *Store
+	Store *migration.Store
 }
 
-func (Plugin) IsConfigItem() {}
+func (*Plugin) IsConfigItem() {}
 
-func (p Plugin) InitPlugin() {
-	config.Config.RootCmd.AddCommand(&cobra.Command{
+func (p *Plugin) InitPlugin() {
+	gen.Config.RootCmd.AddCommand(&cobra.Command{
 		Use: "genmigrations",
 		Run: p.cmdGenMigrations,
 	})
 }
 
-func (p Plugin) RunPlugin() {
-}
-
-func (p Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
+func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
 	if p.Store == nil {
 		log.Fatal("migrate.Plugin.Store is not set.")
 	}
 
-	s2 := config.Config.Schema
+	s2 := gen.Config.Schema
 
 	s1 := schema.New()
-	p.Store.applyAll(s1)
+	p.applyAll(s1)
 
-	ops := Diff(nil, s1, s2)
+	ops := diff(nil, s1, s2)
 
 	if len(ops) == 0 {
 		log.Fatal("No model changes found, doing nothing.")
 	}
-	migrationNumber := p.Store.nextFree()
+	migrationNumber := p.nextFree()
 	migrationFile := fmt.Sprintf("migration_%05d.go", migrationNumber)
 
 	var buf bytes.Buffer
@@ -53,4 +50,33 @@ func (p Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
 	buf.WriteString(")\n}")
 
 	gen.WriteFile("migrations", migrationFile, &buf)
+}
+
+func (p *Plugin) applyAll(db *schema.Schema) {
+	var i int64 = 1
+	for {
+		ops, ok := p.Store.Migrations[i]
+		if !ok {
+			break
+		}
+
+		for _, op := range ops {
+			op.Apply(db)
+		}
+
+		i++
+	}
+}
+
+func (p *Plugin) nextFree() int64 {
+	var i int64 = 1
+	for {
+		_, ok := p.Store.Migrations[i]
+		if !ok {
+			break
+		}
+
+		i++
+	}
+	return i
 }

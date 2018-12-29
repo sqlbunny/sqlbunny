@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/kernelpayments/sqlbunny/config"
 	"github.com/kernelpayments/sqlbunny/gen"
 	"github.com/kernelpayments/sqlbunny/schema"
 )
@@ -30,7 +29,7 @@ type Plugin struct {
 func (*Plugin) IsConfigItem() {}
 
 func (p *Plugin) InitPlugin() {
-	config.Config.RootCmd.AddCommand(&cobra.Command{
+	gen.Config.RootCmd.AddCommand(&cobra.Command{
 		Use: "gen",
 		Run: p.cmdGen,
 	})
@@ -47,7 +46,7 @@ type plugin interface {
 }
 
 func (p *Plugin) cmdGen(cmd *cobra.Command, args []string) {
-	for _, i := range config.Config.Items {
+	for _, i := range gen.Config.Items {
 		if p, ok := i.(plugin); ok {
 			p.RunPlugin()
 		}
@@ -55,12 +54,12 @@ func (p *Plugin) cmdGen(cmd *cobra.Command, args []string) {
 }
 
 func (p *Plugin) RunPlugin() {
-	if err := os.MkdirAll(config.Config.OutputPath, os.ModePerm); err != nil {
-		log.Fatalf("Error creating output directory %s: %v", config.Config.OutputPath, err)
+	if err := os.MkdirAll(gen.Config.OutputPath, os.ModePerm); err != nil {
+		log.Fatalf("Error creating output directory %s: %v", gen.Config.OutputPath, err)
 	}
 
 	var models []*schema.Model
-	for _, m := range config.Config.Schema.Models {
+	for _, m := range gen.Config.Schema.Models {
 		models = append(models, m)
 	}
 
@@ -68,7 +67,7 @@ func (p *Plugin) RunPlugin() {
 	data["Models"] = models
 	p.SingletonTemplates.ExecuteSingleton(data)
 
-	for _, t := range config.Config.Schema.Types {
+	for _, t := range gen.Config.Schema.Types {
 		switch t := t.(type) {
 		case *schema.Enum:
 			data := gen.BaseTemplateData()
@@ -81,7 +80,7 @@ func (p *Plugin) RunPlugin() {
 		}
 	}
 
-	for _, model := range config.Config.Schema.Models {
+	for _, model := range gen.Config.Schema.Models {
 		if model.IsJoinModel {
 			continue
 		}
