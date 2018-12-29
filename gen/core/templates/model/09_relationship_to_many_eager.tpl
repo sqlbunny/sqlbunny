@@ -82,16 +82,9 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 	}
 	{{end}}
 
-	{{if not $dot.NoHooks -}}
-	if len({{.ForeignModel | singular | camelCase}}AfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx); err != nil {
-				return err
-			}
-		}
-	}
+	{{ $foreignModel := getModel $dot.Models .ForeignModel }}
+	{{ hook $dot "after_select_slice_noreturn" "resultSlice" $foreignModel }}
 
-	{{- end}}
 	if singular {
 		object.R.{{$txt.Function.NameGo}} = resultSlice
 		return nil

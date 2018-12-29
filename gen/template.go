@@ -64,7 +64,7 @@ func LoadTemplates(pkg string, path string) (*TemplateList, error) {
 }
 
 // LoadTemplate loads a single template file
-func LoadTemplate(pkg string, path string) (*template.Template, error) {
+func LoadTemplate(pkg string, path string) (*TemplateList, error) {
 	pkgPath, err := getPackagePath(pkg)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func LoadTemplate(pkg string, path string) (*template.Template, error) {
 		return nil, err
 	}
 
-	return tpl.Lookup(filepath.Base(path)), err
+	return &TemplateList{Template: tpl}, err
 }
 
 func MustLoadTemplates(pkg string, path string) *TemplateList {
@@ -88,7 +88,7 @@ func MustLoadTemplates(pkg string, path string) *TemplateList {
 	return res
 }
 
-func MustLoadTemplate(pkg string, path string) *template.Template {
+func MustLoadTemplate(pkg string, path string) *TemplateList {
 	res, err := LoadTemplate(pkg, path)
 	if err != nil {
 		log.Fatalf("Error loading template, pkg=%s path=%s: %v", pkg, path, err)

@@ -50,15 +50,8 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 		return errors.Wrap(err, "failed to bind eager loaded slice {{$txt.ForeignModel.NameGo}}")
 	}
 
-	{{if not $dot.NoHooks -}}
-	if len({{$varNameSingular}}AfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx); err != nil {
-				return err
-			}
-		}
-	}
-	{{- end}}
+	{{ $foreignModel := getModel $dot.Models .ForeignModel }}
+	{{ hook $dot "after_select_slice_noreturn" "resultSlice" $foreignModel }}
 
 	if len(resultSlice) == 0 {
 		return nil

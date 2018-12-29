@@ -13,10 +13,6 @@ type (
 	// {{$modelNameSingular}}Slice is an alias for a slice of pointers to {{$modelNameSingular}}.
 	// This should generally be used opposed to []{{$modelNameSingular}}.
 	{{$modelNameSingular}}Slice []*{{$modelNameSingular}}
-	{{if not .NoHooks -}}
-	// {{$modelNameSingular}}Hook is the signature for custom {{$modelNameSingular}} hook methods
-	{{$modelNameSingular}}Hook func(context.Context, *{{$modelNameSingular}}) error
-	{{- end}}
 
 	{{$varNameSingular}}Query struct {
 		*queries.Query

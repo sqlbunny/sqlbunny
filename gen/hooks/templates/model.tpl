@@ -1,6 +1,9 @@
-{{- if not .NoHooks -}}
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
+
+// {{$modelNameSingular}}Hook is the signature for custom {{$modelNameSingular}} hook methods
+type {{$modelNameSingular}}Hook func(context.Context, *{{$modelNameSingular}}) error
+
 var {{$varNameSingular}}BeforeInsertHooks []{{$modelNameSingular}}Hook
 var {{$varNameSingular}}BeforeUpdateHooks []{{$modelNameSingular}}Hook
 var {{$varNameSingular}}BeforeDeleteHooks []{{$modelNameSingular}}Hook
@@ -134,4 +137,3 @@ func Add{{$modelNameSingular}}Hook(hookPoint bunny.HookPoint, {{$varNameSingular
 			{{$varNameSingular}}AfterUpsertHooks = append({{$varNameSingular}}AfterUpsertHooks, {{$varNameSingular}}Hook)
 	}
 }
-{{- end}}

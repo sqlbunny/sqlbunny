@@ -2,6 +2,9 @@
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
 // One returns a single {{$varNameSingular}} record from the query.
 func (q {{$varNameSingular}}Query) One() (*{{$modelNameSingular}}, error) {
+	ctx := queries.GetContext(q.Query)
+	_ = ctx  // Suppress "ctx declared and not used" errors. ctx may be used by the hook below.
+
 	o := &{{$modelNameSingular}}{}
 
 	queries.SetLimit(q.Query, 1)
@@ -11,17 +14,16 @@ func (q {{$varNameSingular}}Query) One() (*{{$modelNameSingular}}, error) {
 		return nil, errors.Wrap(err, "{{.PkgName}}: failed to execute a one query for {{.Model.Name}}")
 	}
 
-	{{if not .NoHooks -}}
-	if err := o.doAfterSelectHooks(queries.GetContext(q.Query)); err != nil {
-		return o, err
-	}
-	{{- end}}
+	{{ hook . "after_select" "o" .Model }}
 
 	return o, nil
 }
 
 // All returns all {{$modelNameSingular}} records from the query.
 func (q {{$varNameSingular}}Query) All() ({{$modelNameSingular}}Slice, error) {
+	ctx := queries.GetContext(q.Query)
+	_ = ctx  // Suppress "ctx declared and not used" errors. ctx may be used by the hook below.
+
 	var o []*{{$modelNameSingular}}
 
 	err := q.Bind(&o)
@@ -29,15 +31,7 @@ func (q {{$varNameSingular}}Query) All() ({{$modelNameSingular}}Slice, error) {
 		return nil, errors.Wrap(err, "{{.PkgName}}: failed to assign all query results to {{$modelNameSingular}} slice")
 	}
 
-	{{if not .NoHooks -}}
-	if len({{$varNameSingular}}AfterSelectHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetContext(q.Query)); err != nil {
-				return o, err
-			}
-		}
-	}
-	{{- end}}
+	{{ hook . "after_select_slice" "o" .Model }}
 
 	return o, nil
 }

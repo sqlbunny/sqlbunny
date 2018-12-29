@@ -10,11 +10,8 @@
 // to refresh the records.
 func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... string) error {
 	var err error
-	{{if not .NoHooks -}}
-	if err = o.doBeforeUpdateHooks(ctx); err != nil {
-		return err
-	}
-	{{end -}}
+
+	{{ hook . "before_update" "o" .Model }}
 
 	key := makeCacheKey(whitelist, nil)
 	{{$varNameSingular}}UpdateCacheMut.RLock()
@@ -54,11 +51,9 @@ func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... strin
 		{{$varNameSingular}}UpdateCacheMut.Unlock()
 	}
 
-	{{if not .NoHooks -}}
-	return o.doAfterUpdateHooks(ctx)
-	{{- else -}}
+	{{ hook . "after_update" "o" .Model }}
+
 	return nil
-	{{- end}}
 }
 
 // UpdateAll updates all rows with the specified field values.

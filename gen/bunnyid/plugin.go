@@ -53,7 +53,7 @@ func (p *Plugin) gen() {
 	p.singletonTemplates.ExecuteSingleton(data)
 }
 
-func (p *Plugin) modelHook(buf *bytes.Buffer, data map[string]interface{}) {
+func (p *Plugin) modelHook(buf *bytes.Buffer, data map[string]interface{}, args ...interface{}) {
 	p.modelTemplates.ExecuteBuf(data, buf)
 }
 

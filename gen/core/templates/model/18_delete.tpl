@@ -8,11 +8,7 @@ func (o *{{$modelNameSingular}}) Delete(ctx context.Context) error {
 	return errors.New("{{.PkgName}}: no {{$modelNameSingular}} provided for delete")
 	}
 
-	{{if not .NoHooks -}}
-	if err := o.doBeforeDeleteHooks(ctx); err != nil {
-	return err
-	}
-	{{- end}}
+	{{ hook . "before_delete" "o" .Model }}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), {{$varNameSingular}}PrimaryKeyMapping)
 	sql := "DELETE FROM {{$schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Columns}}{{end}}"
@@ -22,11 +18,7 @@ func (o *{{$modelNameSingular}}) Delete(ctx context.Context) error {
 	return errors.Wrap(err, "{{.PkgName}}: unable to delete from {{.Model.Name}}")
 	}
 
-	{{if not .NoHooks -}}
-	if err := o.doAfterDeleteHooks(ctx); err != nil {
-	return err
-	}
-	{{- end}}
+	{{ hook . "after_delete" "o" .Model }}
 
 	return nil
 }
@@ -57,15 +49,7 @@ func (o {{$modelNameSingular}}Slice) DeleteAll(ctx context.Context) error {
 		return nil
 	}
 
-	{{if not .NoHooks -}}
-	if len({{$varNameSingular}}BeforeDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(ctx); err != nil {
-				return err
-			}
-		}
-	}
-	{{- end}}
+	{{ hook . "before_delete_slice" "o" .Model }}
 
 	var args []interface{}
 	for _, obj := range o {
@@ -81,15 +65,7 @@ func (o {{$modelNameSingular}}Slice) DeleteAll(ctx context.Context) error {
 		return errors.Wrap(err, "{{.PkgName}}: unable to delete all from {{$varNameSingular}} slice")
 	}
 
-	{{if not .NoHooks -}}
-	if len({{$varNameSingular}}AfterDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(ctx); err != nil {
-				return err
-			}
-		}
-	}
-	{{- end}}
+	{{ hook . "after_delete_slice" "o" .Model }}
 
 	return nil
 }

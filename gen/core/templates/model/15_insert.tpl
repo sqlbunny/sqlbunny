@@ -13,11 +13,7 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 
 	var err error
 
-	{{if not .NoHooks -}}
-	if err := o.doBeforeInsertHooks(ctx); err != nil {
-		return err
-	}
-	{{- end}}
+	{{ hook . "before_insert" "o" .Model }}
 
 	nzDefaults := queries.NonZeroDefaultSet({{$varNameSingular}}ColumnsWithDefault, o)
 
@@ -133,9 +129,7 @@ CacheNoHooks:
 		{{$varNameSingular}}InsertCacheMut.Unlock()
 	}
 
-	{{if not .NoHooks -}}
-	return o.doAfterInsertHooks(ctx)
-	{{- else -}}
+	{{ hook . "after_insert" "o" .Model }}
+	
 	return nil
-	{{- end}}
 }

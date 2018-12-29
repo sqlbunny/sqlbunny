@@ -12,7 +12,6 @@ func BaseTemplateData() map[string]interface{} {
 	return map[string]interface{}{
 		"UseLastInsertID": true,
 		"PkgName":         Config.PkgName,
-		"NoHooks":         false,
 		"Dialect":         d,
 		"LQ":              lq,
 		"RQ":              rq,

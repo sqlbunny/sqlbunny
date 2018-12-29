@@ -11,7 +11,7 @@ type Plugin interface {
 	BunnyPlugin()
 }
 
-type HookFunc func(buf *bytes.Buffer, data map[string]interface{})
+type HookFunc func(buf *bytes.Buffer, data map[string]interface{}, args ...interface{})
 
 var (
 	genFuncs  []func()
@@ -30,10 +30,10 @@ func OnHook(name string, f HookFunc) {
 	hookFuncs[name] = append(hookFuncs[name], f)
 }
 
-func hook(data map[string]interface{}, name string) string {
+func hook(data map[string]interface{}, name string, args ...interface{}) string {
 	var buf bytes.Buffer
 	for _, f := range hookFuncs[name] {
-		f(&buf, data)
+		f(&buf, data, args...)
 	}
 	return buf.String()
 }

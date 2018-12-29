@@ -7,11 +7,7 @@ func (o *{{$modelNameSingular}}) Upsert(ctx context.Context, updateOnConflict bo
 		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for upsert")
 	}
 
-	{{if not .NoHooks -}}
-	if err := o.doBeforeUpsertHooks(ctx); err != nil {
-		return err
-	}
-	{{- end}}
+	{{ hook . "before_upsert" "o" .Model }}
 
 	nzDefaults := queries.NonZeroDefaultSet({{$varNameSingular}}ColumnsWithDefault, o)
 
@@ -159,9 +155,7 @@ CacheNoHooks:
 		{{$varNameSingular}}UpsertCacheMut.Unlock()
 	}
 
-	{{if not .NoHooks -}}
-	return o.doAfterUpsertHooks(ctx)
-	{{- else -}}
+	{{ hook . "after_upsert" "o" .Model }}
+
 	return nil
-	{{- end}}
 }
