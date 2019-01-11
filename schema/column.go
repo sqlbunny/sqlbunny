@@ -7,8 +7,7 @@ type Column struct {
 	Type   Type
 	DBType string
 
-	Nullable   bool
-	HasDefault bool
+	Nullable bool
 }
 
 // ColumnNames of the Columns.
@@ -19,17 +18,4 @@ func ColumnNames(cols []*Column) []string {
 	}
 
 	return names
-}
-
-// FilterColumnsByDefault generates the list of fields that have default values
-func FilterColumnsByDefault(defaults bool, columns []*Column) []*Column {
-	var cols []*Column
-
-	for _, c := range columns {
-		if defaults == c.HasDefault {
-			cols = append(cols, c)
-		}
-	}
-
-	return cols
 }

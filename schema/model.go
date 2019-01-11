@@ -143,27 +143,6 @@ func (t *Model) DeleteForeignKey(name string) {
 	}
 }
 
-// CanLastInsertID checks the following:
-// 1. Is there only one primary key?
-// 2. Does the primary key field have a default value?
-// 3. Is the primary key field type one of uintX/intX?
-// If the above is all true, this model can use LastInsertId
-func (t *Model) CanLastInsertID() bool {
-	if t.PrimaryKey == nil || len(t.PrimaryKey.Columns) != 1 {
-		return false
-	}
-
-	col := t.GetColumn(t.PrimaryKey.Columns[0])
-
-	switch col.DBType { // TODO FIXME XXX
-	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
-	default:
-		return false
-	}
-
-	return true
-}
-
 func (t *Model) IsUniqueColumn(name string) bool {
 	for _, c := range t.Uniques {
 		if len(c.Columns) == 1 && c.Columns[0] == name {

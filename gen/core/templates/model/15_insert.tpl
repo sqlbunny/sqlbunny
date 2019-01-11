@@ -15,114 +15,36 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 
 	{{ hook . "before_insert" "o" .Model }}
 
-	nzDefaults := queries.NonZeroDefaultSet({{$varNameSingular}}ColumnsWithDefault, o)
+	if len(whitelist) == 0 {
+		whitelist = {{$varNameSingular}}Columns
+	}
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(whitelist)
 	{{$varNameSingular}}InsertCacheMut.RLock()
 	cache, cached := {{$varNameSingular}}InsertCache[key]
 	{{$varNameSingular}}InsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnFields := strmangle.InsertFieldSet(
-			{{$varNameSingular}}Columns,
-			{{$varNameSingular}}ColumnsWithDefault,
-			{{$varNameSingular}}ColumnsWithoutDefault,
-			nzDefaults,
-			whitelist,
-		)
+		cache.valueMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, whitelist)
+		if err != nil {
+			return err
+		}
 
-		cache.valueMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, wl)
-		if err != nil {
-			return err
-		}
-		cache.retMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, returnFields)
-		if err != nil {
-			return err
-		}
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO {{$schemaModel}} ({{.LQ}}%s{{.RQ}}) %%sVALUES (%s)%%s", strings.Join(wl, "{{.RQ}},{{.LQ}}"), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+		if len(whitelist) != 0 {
+			cache.query = fmt.Sprintf("INSERT INTO {{$schemaModel}} ({{.LQ}}%s{{.RQ}}) VALUES (%s)", strings.Join(whitelist, "{{.RQ}},{{.LQ}}"), strmangle.Placeholders(dialect.IndexPlaceholders, len(whitelist), 1, 1))
 		} else {
 			cache.query = "INSERT INTO {{$schemaModel}} DEFAULT VALUES"
-		}
-
-		var queryOutput, queryReturning string
-
-		if len(cache.retMapping) != 0 {
-			{{if .UseLastInsertID -}}
-			cache.retQuery = fmt.Sprintf("SELECT {{.LQ}}%s{{.RQ}} FROM {{$schemaModel}} WHERE %s", strings.Join(returnFields, "{{.RQ}},{{.LQ}}"), strmangle.WhereClause("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns))
-			{{else -}}
-			queryReturning = fmt.Sprintf(" RETURNING {{.LQ}}%s{{.RQ}}", strings.Join(returnFields, "{{.RQ}},{{.LQ}}"))
-			{{end -}}
-		}
-
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 		}
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
 	vals := queries.ValuesFromMapping(value, cache.valueMapping)
 
-	{{if .UseLastInsertID -}}
-	{{- $canLastInsertID := .Model.CanLastInsertID -}}
-	{{if $canLastInsertID -}}
-	result, err := bunny.Exec(ctx, cache.query, vals...)
-	{{else -}}
 	_, err = bunny.Exec(ctx, cache.query, vals...)
-	{{- end}}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to insert into {{.Model.Name}}")
 	}
 
-	{{if $canLastInsertID -}}
-	var lastID int64
-	{{- end}}
-	var identifierCols []interface{}
-
-	if len(cache.retMapping) == 0 {
-		goto CacheNoHooks
-	}
-
-	{{if $canLastInsertID -}}
-	lastID, err = result.LastInsertId()
-	if err != nil {
-		return ErrSyncFail
-	}
-
-	{{$colName := index .Model.PrimaryKey.Columns 0 -}}
-	{{- $col := .Model.GetColumn $colName -}}
-	{{- $colTitled := $colName | titleCase}}
-	o.{{$colTitled}} = {{$col.Type}}(lastID)
-	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == {{$varNameSingular}}Mapping["{{$colTitled}}"] {
-		goto CacheNoHooks
-	}
-	{{- end}}
-
-	identifierCols = []interface{}{
-		{{range .Model.PrimaryKey.Columns -}}
-		o.{{. | titleCaseIdentifier}},
-		{{end -}}
-	}
-
-	err = bunny.QueryRow(ctx, cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
-	if err != nil {
-		return errors.Wrap(err, "{{.PkgName}}: unable to populate default values for {{.Model.Name}}")
-	}
-	{{else}}
-	if len(cache.retMapping) != 0 {
-		err = bunny.QueryRow(ctx, cache.query, vals...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
-	} else {
-		_, err = bunny.Exec(ctx, cache.query, vals...)
-	}
-
-	if err != nil {
-		return errors.Wrap(err, "{{.PkgName}}: unable to insert into {{.Model.Name}}")
-	}
-	{{end}}
-
-{{if .UseLastInsertID -}}
-CacheNoHooks:
-{{- end}}
 	if !cached {
 		{{$varNameSingular}}InsertCacheMut.Lock()
 		{{$varNameSingular}}InsertCache[key] = cache

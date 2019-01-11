@@ -8,10 +8,8 @@ const (
 	BeforeInsertHook HookPoint = iota + 1
 	BeforeUpdateHook
 	BeforeDeleteHook
-	BeforeUpsertHook
 	AfterInsertHook
 	AfterSelectHook
 	AfterUpdateHook
 	AfterDeleteHook
-	AfterUpsertHook
 )

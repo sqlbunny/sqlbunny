@@ -7,13 +7,11 @@ type {{$modelNameSingular}}Hook func(context.Context, *{{$modelNameSingular}}) e
 var {{$varNameSingular}}BeforeInsertHooks []{{$modelNameSingular}}Hook
 var {{$varNameSingular}}BeforeUpdateHooks []{{$modelNameSingular}}Hook
 var {{$varNameSingular}}BeforeDeleteHooks []{{$modelNameSingular}}Hook
-var {{$varNameSingular}}BeforeUpsertHooks []{{$modelNameSingular}}Hook
 
 var {{$varNameSingular}}AfterInsertHooks []{{$modelNameSingular}}Hook
 var {{$varNameSingular}}AfterSelectHooks []{{$modelNameSingular}}Hook
 var {{$varNameSingular}}AfterUpdateHooks []{{$modelNameSingular}}Hook
 var {{$varNameSingular}}AfterDeleteHooks []{{$modelNameSingular}}Hook
-var {{$varNameSingular}}AfterUpsertHooks []{{$modelNameSingular}}Hook
 
 // doBeforeInsertHooks executes all "before insert" hooks.
 func (o *{{$modelNameSingular}}) doBeforeInsertHooks(ctx context.Context) (err error) {
@@ -40,17 +38,6 @@ func (o *{{$modelNameSingular}}) doBeforeUpdateHooks(ctx context.Context) (err e
 // doBeforeDeleteHooks executes all "before Delete" hooks.
 func (o *{{$modelNameSingular}}) doBeforeDeleteHooks(ctx context.Context) (err error) {
 	for _, hook := range {{$varNameSingular}}BeforeDeleteHooks {
-		if err := hook(ctx, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *{{$modelNameSingular}}) doBeforeUpsertHooks(ctx context.Context) (err error) {
-	for _, hook := range {{$varNameSingular}}BeforeUpsertHooks {
 		if err := hook(ctx, o); err != nil {
 			return err
 		}
@@ -103,17 +90,6 @@ func (o *{{$modelNameSingular}}) doAfterDeleteHooks(ctx context.Context) (err er
 	return nil
 }
 
-// doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *{{$modelNameSingular}}) doAfterUpsertHooks(ctx context.Context) (err error) {
-	for _, hook := range {{$varNameSingular}}AfterUpsertHooks {
-		if err := hook(ctx, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // Add{{$modelNameSingular}}Hook registers your hook function for all future operations.
 func Add{{$modelNameSingular}}Hook(hookPoint bunny.HookPoint, {{$varNameSingular}}Hook {{$modelNameSingular}}Hook) {
 	switch hookPoint {
@@ -123,8 +99,6 @@ func Add{{$modelNameSingular}}Hook(hookPoint bunny.HookPoint, {{$varNameSingular
 			{{$varNameSingular}}BeforeUpdateHooks = append({{$varNameSingular}}BeforeUpdateHooks, {{$varNameSingular}}Hook)
 		case bunny.BeforeDeleteHook:
 			{{$varNameSingular}}BeforeDeleteHooks = append({{$varNameSingular}}BeforeDeleteHooks, {{$varNameSingular}}Hook)
-		case bunny.BeforeUpsertHook:
-			{{$varNameSingular}}BeforeUpsertHooks = append({{$varNameSingular}}BeforeUpsertHooks, {{$varNameSingular}}Hook)
 		case bunny.AfterInsertHook:
 			{{$varNameSingular}}AfterInsertHooks = append({{$varNameSingular}}AfterInsertHooks, {{$varNameSingular}}Hook)
 		case bunny.AfterSelectHook:
@@ -133,7 +107,5 @@ func Add{{$modelNameSingular}}Hook(hookPoint bunny.HookPoint, {{$varNameSingular
 			{{$varNameSingular}}AfterUpdateHooks = append({{$varNameSingular}}AfterUpdateHooks, {{$varNameSingular}}Hook)
 		case bunny.AfterDeleteHook:
 			{{$varNameSingular}}AfterDeleteHooks = append({{$varNameSingular}}AfterDeleteHooks, {{$varNameSingular}}Hook)
-		case bunny.AfterUpsertHook:
-			{{$varNameSingular}}AfterUpsertHooks = append({{$varNameSingular}}AfterUpsertHooks, {{$varNameSingular}}Hook)
 	}
 }

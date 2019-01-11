@@ -2,11 +2,11 @@
 {{else -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
+{{- $cols := .Model.Columns | columnNames -}}
 var (
 	{{$varNameSingular}}Columns               = []string{{"{"}}{{.Model.Columns | columnNames | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
-	{{$varNameSingular}}ColumnsWithoutDefault = []string{{"{"}}{{.Model.Columns | filterColumnsByDefault false | columnNames | stringMap .StringFuncs.quoteWrap | join ","}}{{"}"}}
-	{{$varNameSingular}}ColumnsWithDefault    = []string{{"{"}}{{.Model.Columns | filterColumnsByDefault true | columnNames | stringMap .StringFuncs.quoteWrap | join ","}}{{"}"}}
 	{{$varNameSingular}}PrimaryKeyColumns     = []string{{"{"}}{{.Model.PrimaryKey.Columns | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
+	{{$varNameSingular}}NonPrimaryKeyColumns     = []string{{"{"}}{{.Model.PrimaryKey.Columns | setComplement $cols | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
 )
 
 type (
@@ -19,7 +19,7 @@ type (
 	}
 )
 
-// Cache for insert, update and upsert
+// Cache for insert, update
 var (
 	{{$varNameSingular}}Type = reflect.TypeOf(&{{$modelNameSingular}}{})
 	{{$varNameSingular}}Mapping = queries.MakeStructMapping({{$varNameSingular}}Type)
@@ -28,8 +28,6 @@ var (
 	{{$varNameSingular}}InsertCache = make(map[string]insertCache)
 	{{$varNameSingular}}UpdateCacheMut sync.RWMutex
 	{{$varNameSingular}}UpdateCache = make(map[string]updateCache)
-	{{$varNameSingular}}UpsertCacheMut sync.RWMutex
-	{{$varNameSingular}}UpsertCache = make(map[string]insertCache)
 )
 
 var (

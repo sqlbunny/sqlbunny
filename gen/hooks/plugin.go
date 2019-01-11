@@ -25,12 +25,10 @@ func (p *Plugin) BunnyPlugin() {
 	gen.OnHook("after_select_slice_noreturn", p.hook(gen.MustLoadTemplate(templatesPackage, "templates/after_select_slice_noreturn.tpl")))
 	gen.OnHook("after_select", p.hook(gen.MustLoadTemplate(templatesPackage, "templates/after_select.tpl")))
 	gen.OnHook("after_update", p.hook(gen.MustLoadTemplate(templatesPackage, "templates/after_update.tpl")))
-	gen.OnHook("after_upsert", p.hook(gen.MustLoadTemplate(templatesPackage, "templates/after_upsert.tpl")))
 	gen.OnHook("before_delete_slice", p.hook(gen.MustLoadTemplate(templatesPackage, "templates/before_delete_slice.tpl")))
 	gen.OnHook("before_delete", p.hook(gen.MustLoadTemplate(templatesPackage, "templates/before_delete.tpl")))
 	gen.OnHook("before_insert", p.hook(gen.MustLoadTemplate(templatesPackage, "templates/before_insert.tpl")))
 	gen.OnHook("before_update", p.hook(gen.MustLoadTemplate(templatesPackage, "templates/before_update.tpl")))
-	gen.OnHook("before_upsert", p.hook(gen.MustLoadTemplate(templatesPackage, "templates/before_upsert.tpl")))
 	gen.OnHook("model", p.modelHook(gen.MustLoadTemplate(templatesPackage, "templates/model.tpl")))
 }
 

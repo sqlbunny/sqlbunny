@@ -10,11 +10,10 @@ func BaseTemplateData() map[string]interface{} {
 	rq := strmangle.QuoteCharacter(d.RQ)
 
 	return map[string]interface{}{
-		"UseLastInsertID": true,
-		"PkgName":         Config.PkgName,
-		"Dialect":         d,
-		"LQ":              lq,
-		"RQ":              rq,
-		"StringFuncs":     templateStringMappers,
+		"PkgName":     Config.PkgName,
+		"Dialect":     d,
+		"LQ":          lq,
+		"RQ":          rq,
+		"StringFuncs": templateStringMappers,
 	}
 }

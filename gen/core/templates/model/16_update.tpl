@@ -13,26 +13,26 @@ func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... strin
 
 	{{ hook . "before_update" "o" .Model }}
 
-	key := makeCacheKey(whitelist, nil)
+	if len(whitelist) == 0 {
+		whitelist = {{$varNameSingular}}NonPrimaryKeyColumns
+	}
+
+	if len(whitelist) == 0 {
+		// Nothing to update
+		return nil
+	}
+
+	key := makeCacheKey(whitelist)
 	{{$varNameSingular}}UpdateCacheMut.RLock()
 	cache, cached := {{$varNameSingular}}UpdateCache[key]
 	{{$varNameSingular}}UpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateFieldSet(
-			{{$varNameSingular}}Columns,
-			{{$varNameSingular}}PrimaryKeyColumns,
-			whitelist,
-		)
-		if len(wl) == 0 {
-			return errors.New("{{.PkgName}}: unable to update {{.Model.Name}}, could not build whitelist")
-		}
-
 		cache.query = fmt.Sprintf("UPDATE {{$schemaModel}} SET %s WHERE %s",
-			strmangle.SetParamNames("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, wl),
-			strmangle.WhereClause("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}len(wl)+1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns),
+			strmangle.SetParamNames("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, whitelist),
+			strmangle.WhereClause("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}len(whitelist)+1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns),
 		)
-		cache.valueMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, append(wl, {{$varNameSingular}}PrimaryKeyColumns...))
+		cache.valueMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, append(whitelist, {{$varNameSingular}}PrimaryKeyColumns...))
 		if err != nil {
 			return err
 		}

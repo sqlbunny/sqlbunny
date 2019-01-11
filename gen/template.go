@@ -144,7 +144,8 @@ var TemplateFunctions = template.FuncMap{
 	"typesGo": templateTypesGo,
 
 	// Set operations
-	"setInclude": strmangle.SetInclude,
+	"setInclude":    strmangle.SetInclude,
+	"setComplement": strmangle.SetComplement,
 
 	// Database related mangling
 	"whereClause": strmangle.WhereClause,
