@@ -51,47 +51,11 @@ func Where(clause string, args ...interface{}) QueryMod {
 	}
 }
 
-// And allows you to specify a where clause separated by an AND for your statement
-// And is a duplicate of the Where function, but allows for more natural looking
-// query mod chains, for example: (Where("a=?"), And("b=?"), Or("c=?")))
-func And(clause string, args ...interface{}) QueryMod {
-	return func(q *queries.Query) {
-		queries.AppendWhere(q, clause, args...)
-	}
-}
-
-// Or allows you to specify a where clause separated by an OR for your statement
-func Or(clause string, args ...interface{}) QueryMod {
-	return func(q *queries.Query) {
-		queries.AppendWhere(q, clause, args...)
-		queries.SetLastWhereAsOr(q)
-	}
-}
-
 // WhereIn allows you to specify a "x IN (set)" clause for your where statement
 // Example clauses: "field in ?", "(field1,field2) in ?"
 func WhereIn(clause string, args ...interface{}) QueryMod {
 	return func(q *queries.Query) {
 		queries.AppendIn(q, clause, args...)
-	}
-}
-
-// AndIn allows you to specify a "x IN (set)" clause separated by an AndIn
-// for your where statement. AndIn is a duplicate of the WhereIn function, but
-// allows for more natural looking query mod chains, for example:
-// (WhereIn("field1 in ?"), AndIn("field2 in ?"), OrIn("field3 in ?"))
-func AndIn(clause string, args ...interface{}) QueryMod {
-	return func(q *queries.Query) {
-		queries.AppendIn(q, clause, args...)
-	}
-}
-
-// OrIn allows you to specify an IN clause separated by
-// an OR for your where statement
-func OrIn(clause string, args ...interface{}) QueryMod {
-	return func(q *queries.Query) {
-		queries.AppendIn(q, clause, args...)
-		queries.SetLastInAsOr(q)
 	}
 }
 

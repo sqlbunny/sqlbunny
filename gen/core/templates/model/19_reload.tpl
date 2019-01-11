@@ -31,9 +31,9 @@ func (o *{{$modelNameSingular}}Slice) ReloadAll(ctx context.Context) error {
 	sql := "SELECT {{$schemaModel}}.* FROM {{$schemaModel}} WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(ctx, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&{{$varNamePlural}})
+	err := q.Bind(ctx, &{{$varNamePlural}})
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to reload all in {{$modelNameSingular}}Slice")
 	}

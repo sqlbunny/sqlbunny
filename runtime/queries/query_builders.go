@@ -459,11 +459,7 @@ func whereClause(q *Query, startAt int) (string, []interface{}) {
 	buf.WriteString(" WHERE ")
 	for i, where := range q.where {
 		if i != 0 {
-			if where.orSeparator {
-				buf.WriteString(" OR ")
-			} else {
-				buf.WriteString(" AND ")
-			}
+			buf.WriteString(" AND ")
 		}
 
 		buf.WriteString(fmt.Sprintf("(%s)", where.clause))
@@ -502,11 +498,7 @@ func inClause(q *Query, startAt int) (string, []interface{}) {
 		// clause has been generated UNLESS there is already a where
 		// clause that we have to add on to.
 		if i != 0 || len(q.where) > 0 {
-			if in.orSeparator {
-				buf.WriteString(" OR ")
-			} else {
-				buf.WriteString(" AND ")
-			}
+			buf.WriteString(" AND ")
 		}
 
 		matches := rgxInClause.FindStringSubmatch(in.clause)

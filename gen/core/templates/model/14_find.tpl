@@ -17,9 +17,9 @@ func Find{{$modelNameSingular}}(ctx context.Context, {{$pkArgs}}, selectCols ...
 		"SELECT %s FROM {{.Model.Name | schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Columns}}{{end}}", sel,
 	)
 
-	q := queries.Raw(ctx, query, {{$pkNames | join ", "}})
+	q := queries.Raw(query, {{$pkNames | join ", "}})
 
-	err := q.Bind({{$varNameSingular}}Obj)
+	err := q.Bind(ctx, {{$varNameSingular}}Obj)
 	if err != nil {
 		return nil, errors.Wrap(err, "{{.PkgName}}: unable to select from {{.Model.Name}}")
 	}

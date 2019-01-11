@@ -24,14 +24,14 @@ func (o *{{$modelNameSingular}}) Delete(ctx context.Context) error {
 }
 
 // DeleteAll deletes all matching rows.
-func (q {{$varNameSingular}}Query) DeleteAll() error {
+func (q {{$varNameSingular}}Query) DeleteAll(ctx context.Context) error {
 	if q.Query == nil {
 	return errors.New("{{.PkgName}}: no {{$varNameSingular}}Query provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	_, err := q.Query.Exec(ctx)
 	if err != nil {
 	return errors.Wrap(err, "{{.PkgName}}: unable to delete all from {{.Model.Name}}")
 	}

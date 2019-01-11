@@ -9,7 +9,7 @@
 
 // {{$txt.Function.NameGo}} retrieves all the {{.ForeignModel | singular}}'s {{$txt.ForeignModel.NameHumanReadable}} with an executor
 {{- if not (eq $txt.Function.NameGo $txt.ForeignModel.NamePluralGo)}} via {{.ForeignColumn}} field{{- end}}.
-func (o *{{$txt.LocalModel.NameGo}}) {{$txt.Function.NameGo}}(ctx context.Context, mods ...qm.QueryMod) {{$varNameSingular}}Query {
+func (o *{{$txt.LocalModel.NameGo}}) {{$txt.Function.NameGo}}(mods ...qm.QueryMod) {{$varNameSingular}}Query {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -27,7 +27,7 @@ func (o *{{$txt.LocalModel.NameGo}}) {{$txt.Function.NameGo}}(ctx context.Contex
 	)
 		{{end}}
 
-	query := {{$txt.ForeignModel.NamePluralGo}}(ctx, queryMods...)
+	query := {{$txt.ForeignModel.NamePluralGo}}(queryMods...)
 	queries.SetFrom(query.Query, "{{$schemaForeignModel}}")
 
 	if len(queries.GetSelect(query.Query)) == 0 {

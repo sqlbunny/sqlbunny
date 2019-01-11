@@ -20,7 +20,6 @@ const (
 
 // Query holds the state for the built up query
 type Query struct {
-	ctx        context.Context
 	dialect    *Dialect
 	rawSQL     rawSQL
 	load       []string
@@ -58,15 +57,13 @@ type Dialect struct {
 }
 
 type where struct {
-	clause      string
-	orSeparator bool
-	args        []interface{}
+	clause string
+	args   []interface{}
 }
 
 type in struct {
-	clause      string
-	orSeparator bool
-	args        []interface{}
+	clause string
+	args   []interface{}
 }
 
 type having struct {
@@ -86,9 +83,8 @@ type join struct {
 }
 
 // Raw makes a raw query, usually for use with bind
-func Raw(ctx context.Context, query string, args ...interface{}) *Query {
+func Raw(query string, args ...interface{}) *Query {
 	return &Query{
-		ctx: ctx,
 		rawSQL: rawSQL{
 			sql:  query,
 			args: args,
@@ -97,31 +93,21 @@ func Raw(ctx context.Context, query string, args ...interface{}) *Query {
 }
 
 // Exec executes a query that does not need a row returned
-func (q *Query) Exec() (sql.Result, error) {
+func (q *Query) Exec(ctx context.Context) (sql.Result, error) {
 	qs, args := buildQuery(q)
-	return bunny.Exec(q.ctx, qs, args...)
+	return bunny.Exec(ctx, qs, args...)
 }
 
 // QueryRow executes the query for the One finisher and returns a row
-func (q *Query) QueryRow() *sql.Row {
+func (q *Query) QueryRow(ctx context.Context) *sql.Row {
 	qs, args := buildQuery(q)
-	return bunny.QueryRow(q.ctx, qs, args...)
+	return bunny.QueryRow(ctx, qs, args...)
 }
 
 // Query executes the query for the All finisher and returns multiple rows
-func (q *Query) Query() (*sql.Rows, error) {
+func (q *Query) Query(ctx context.Context) (*sql.Rows, error) {
 	qs, args := buildQuery(q)
-	return bunny.Query(q.ctx, qs, args...)
-}
-
-// SetContext on the query.
-func SetContext(q *Query, ctx context.Context) {
-	q.ctx = ctx
-}
-
-// GetContext on the query.
-func GetContext(q *Query) context.Context {
-	return q.ctx
+	return bunny.Query(ctx, qs, args...)
 }
 
 // SetDialect on the query.
@@ -217,24 +203,6 @@ func AppendWhere(q *Query, clause string, args ...interface{}) {
 // AppendIn on the query.
 func AppendIn(q *Query, clause string, args ...interface{}) {
 	q.in = append(q.in, in{clause: clause, args: args})
-}
-
-// SetLastWhereAsOr sets the or separator for the tail "WHERE" in the slice
-func SetLastWhereAsOr(q *Query) {
-	if len(q.where) == 0 {
-		return
-	}
-
-	q.where[len(q.where)-1].orSeparator = true
-}
-
-// SetLastInAsOr sets the or separator for the tail "IN" in the slice
-func SetLastInAsOr(q *Query) {
-	if len(q.in) == 0 {
-		return
-	}
-
-	q.in[len(q.in)-1].orSeparator = true
 }
 
 // AppendGroupBy on the query.

@@ -57,10 +57,10 @@ func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... strin
 }
 
 // UpdateAll updates all rows with the specified field values.
-func (q {{$varNameSingular}}Query) UpdateAll(cols M) error {
+func (q {{$varNameSingular}}Query) UpdateAll(ctx context.Context, cols M) error {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	_, err := q.Query.Exec(ctx)
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to update all for {{.Model.Name}}")
 	}

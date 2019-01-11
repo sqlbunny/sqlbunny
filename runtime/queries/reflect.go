@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
@@ -90,13 +91,13 @@ func Bind(rows *sql.Rows, obj interface{}) error {
 // result into the passed in object pointer
 //
 // See documentation for bunny.Bind()
-func (q *Query) Bind(obj interface{}) error {
+func (q *Query) Bind(ctx context.Context, obj interface{}) error {
 	structType, sliceType, bkind, err := bindChecks(obj)
 	if err != nil {
 		return err
 	}
 
-	rows, err := q.Query()
+	rows, err := q.Query(ctx)
 	if err != nil {
 		return errors.Wrap(err, "bind failed to execute query")
 	}
@@ -106,7 +107,7 @@ func (q *Query) Bind(obj interface{}) error {
 	}
 
 	if len(q.load) != 0 {
-		return eagerLoad(q.ctx, q.load, obj, bkind)
+		return eagerLoad(ctx, q.load, obj, bkind)
 	}
 
 	return nil

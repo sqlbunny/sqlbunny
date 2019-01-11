@@ -13,9 +13,8 @@ var dialect = queries.Dialect{
 }
 
 // NewQuery initializes a new Query using the passed in QueryMods
-func NewQuery(ctx context.Context, mods ...qm.QueryMod) *queries.Query {
+func NewQuery(mods ...qm.QueryMod) *queries.Query {
 	q := &queries.Query{}
-	queries.SetContext(q, ctx)
 	queries.SetDialect(q, &dialect)
 	qm.Apply(q, mods...)
 
