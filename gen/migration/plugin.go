@@ -2,8 +2,12 @@ package migration
 
 import (
 	"bytes"
+	"context"
+	"database/sql"
 	"fmt"
 	"log"
+
+	"github.com/kernelpayments/sqlbunny/runtime/bunny"
 
 	"github.com/kernelpayments/sqlbunny/gen"
 	"github.com/kernelpayments/sqlbunny/runtime/migration"
@@ -23,6 +27,10 @@ func (p *Plugin) BunnyPlugin() {
 	gen.AddCommand(&cobra.Command{
 		Use: "genmigrations",
 		Run: p.cmdGenMigrations,
+	})
+	gen.AddCommand(&cobra.Command{
+		Use: "gensql",
+		Run: p.cmdGenSQL,
 	})
 }
 
@@ -54,6 +62,45 @@ func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
 	gen.WriteFile("migrations", migrationFile, buf.Bytes())
 }
 
+type fakeExecutor struct {
+	queries []string
+}
+
+func (e *fakeExecutor) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	e.queries = append(e.queries, query)
+	return nil, nil
+}
+func (e *fakeExecutor) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	e.queries = append(e.queries, query)
+	return nil, nil
+}
+func (e *fakeExecutor) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	e.queries = append(e.queries, query)
+	return nil
+}
+
+func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
+	s2 := gen.Config.Schema
+
+	s1 := schema.New()
+	ops := diff(nil, s1, s2)
+
+	if len(ops) == 0 {
+		log.Fatal("No model changes found, doing nothing.")
+	}
+
+	e := &fakeExecutor{}
+	ctx := bunny.WithExecutor(context.Background(), e)
+
+	for _, op := range ops {
+		op.Run(ctx)
+	}
+
+	for _, q := range e.queries {
+		fmt.Println(q + ";\n")
+	}
+}
+
 func (p *Plugin) applyAll(db *schema.Schema) {
 	var i int64 = 1
 	for {
@@ -63,7 +110,7 @@ func (p *Plugin) applyAll(db *schema.Schema) {
 		}
 
 		for _, op := range ops {
-			op.Apply(db)
+			ApplyOperation(op, db)
 		}
 
 		i++
