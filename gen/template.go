@@ -151,10 +151,9 @@ var TemplateFunctions = template.FuncMap{
 	"whereClause": strmangle.WhereClause,
 
 	// dbdrivers ops
-	"filterColumnsByDefault": schema.FilterColumnsByDefault,
-	"sqlColDefinitions":      schema.SQLColDefinitions,
-	"columnNames":            schema.ColumnNames,
-	"getModel":               schema.GetModel,
+	"sqlColDefinitions": schema.SQLColDefinitions,
+	"columnNames":       schema.ColumnNames,
+	"getModel":          schema.GetModel,
 
 	"quotes": func(s string) string {
 		d := Config.Dialect
