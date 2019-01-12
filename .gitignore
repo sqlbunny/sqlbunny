@@ -4,3 +4,4 @@ sqlbunny.toml
 models/
 testschema.sql
 .cover
+docs/.vuepress/dist

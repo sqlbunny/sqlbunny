@@ -1,13 +1,4 @@
-workspace:
-  base: /go
-  path: src/github.com/kernelpayments/sqlbunny
-
 pipeline:
-  build:
-    image: golang:1.11
-    commands:
-    - go get .
-    - CGO_ENABLED=0 go build .
   docker:
     image: gcr.io/kernel-payments/drone-docker
     prefix: gcr.io/kernel-payments
