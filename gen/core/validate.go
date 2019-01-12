@@ -94,10 +94,10 @@ func buildSchema(items []gen.ConfigItem) (*schema.Schema, error) {
 	return s, nil
 }
 
-func makeTags(v *Validation, flags []FieldFlag, context string) schema.Tags {
+func makeTags(v *Validation, flags []FieldItem, context string) schema.Tags {
 	res := make(schema.Tags)
 	for _, i := range flags {
-		if i, ok := i.(tagFlag); ok {
+		if i, ok := i.(fieldTag); ok {
 			if _, ok := res[i.key]; ok {
 				v.AddError("%s has duplicate tag '%s'", context, i.key)
 			}
@@ -107,9 +107,9 @@ func makeTags(v *Validation, flags []FieldFlag, context string) schema.Tags {
 	return res
 }
 
-func isNullable(flags []FieldFlag) bool {
+func isNullable(flags []FieldItem) bool {
 	for _, i := range flags {
-		if _, ok := i.(nullFlag); ok {
+		if _, ok := i.(fieldNull); ok {
 			return true
 		}
 	}
@@ -193,22 +193,22 @@ func makeModel(v *Validation, s *schema.Schema, m *schema.Model, items []ModelIt
 				// implement schema.BaseType.
 				panic("unknown type")
 			}
-		case primaryKey:
+		case modelPrimaryKey:
 			if m.PrimaryKey != nil {
 				v.AddError("Model '%s' has multiple primary key definitions", m.Name)
 			}
 			m.PrimaryKey = &schema.PrimaryKey{
 				Columns: undotAll(prefixAll(i.names, prefix)),
 			}
-		case index:
+		case modelIndex:
 			m.Indexes = append(m.Indexes, &schema.Index{
 				Columns: undotAll(prefixAll(i.names, prefix)),
 			})
-		case unique:
+		case modelUnique:
 			m.Uniques = append(m.Uniques, &schema.Unique{
 				Columns: undotAll(prefixAll(i.names, prefix)),
 			})
-		case foreignKey:
+		case modelForeignKey:
 			m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
 				Model:        m.Name,
 				Column:       undot(prefix + i.columnName),

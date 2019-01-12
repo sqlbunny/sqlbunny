@@ -1,14 +1,35 @@
 package core
 
+type FieldItem interface {
+	isFieldItem()
+}
+
+type fieldNull struct{}
+
+func (fieldNull) isFieldItem() {}
+
+var Null fieldNull
+
+type fieldTag struct {
+	key   string
+	value string
+}
+
+func (fieldTag) isFieldItem() {}
+
+func Tag(key string, value string) fieldTag {
+	return fieldTag{key: key, value: value}
+}
+
 type field struct {
 	name     string
 	typeName string
-	flags    []FieldFlag
+	flags    []FieldItem
 }
 
 func (field) isModelItem() {}
 
-func Field(name string, typeName string, flags ...FieldFlag) field {
+func Field(name string, typeName string, flags ...FieldItem) field {
 	return field{
 		name:     name,
 		typeName: typeName,
@@ -18,50 +39,6 @@ func Field(name string, typeName string, flags ...FieldFlag) field {
 
 type ModelItem interface {
 	isModelItem()
-}
-
-type primaryKey struct {
-	names []string
-}
-
-func (primaryKey) isModelItem() {}
-
-func ModelPrimaryKey(names ...string) primaryKey {
-	return primaryKey{names: names}
-}
-
-type index struct {
-	names []string
-}
-
-func (index) isModelItem() {}
-
-func ModelIndex(names ...string) index {
-	return index{names: names}
-}
-
-type unique struct {
-	names []string
-}
-
-func (unique) isModelItem() {}
-
-func ModelUnique(names ...string) unique {
-	return unique{names: names}
-}
-
-type foreignKey struct {
-	columnName       string
-	foreignModelName string
-}
-
-func (foreignKey) isModelItem() {}
-
-func ModelForeignKey(columnName, foreignModelName string) foreignKey {
-	return foreignKey{
-		columnName:       columnName,
-		foreignModelName: foreignModelName,
-	}
 }
 
 type model struct {
@@ -77,14 +54,14 @@ func expandItems(items []ModelItem) []ModelItem {
 		if i, ok := i.(field); ok {
 			for _, f := range i.flags {
 				switch f := f.(type) {
-				case primaryKeyFlag:
-					res = append(res, primaryKey{names: []string{i.name}})
-				case uniqueFlag:
-					res = append(res, unique{names: []string{i.name}})
-				case indexFlag:
-					res = append(res, index{names: []string{i.name}})
-				case foreignKeyFlag:
-					res = append(res, foreignKey{
+				case fieldPrimaryKey:
+					res = append(res, modelPrimaryKey{names: []string{i.name}})
+				case fieldUnique:
+					res = append(res, modelUnique{names: []string{i.name}})
+				case fieldIndex:
+					res = append(res, modelIndex{names: []string{i.name}})
+				case fieldForeignKey:
+					res = append(res, modelForeignKey{
 						columnName:       i.name,
 						foreignModelName: f.foreignModelName,
 					})
