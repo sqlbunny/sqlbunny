@@ -29,6 +29,14 @@ var _ gen.Plugin = &Plugin{}
 func (*Plugin) IsConfigItem() {}
 
 func (p *Plugin) BunnyPlugin() {
+	schema, err := buildSchema(gen.Config.Items)
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+
+	gen.Config.Schema = schema
+
 	p.ModelTemplates = gen.MustLoadTemplates(templatesPackage, templatesModelDirectory)
 	p.StructTemplates = gen.MustLoadTemplates(templatesPackage, templatesStructDirectory)
 	p.EnumTemplates = gen.MustLoadTemplates(templatesPackage, templatesEnumDirectory)

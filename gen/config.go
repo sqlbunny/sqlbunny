@@ -1,13 +1,16 @@
 package gen
 
 import (
-	"github.com/kernelpayments/sqlbunny/def"
 	"github.com/kernelpayments/sqlbunny/runtime/queries"
 	"github.com/kernelpayments/sqlbunny/schema"
 )
 
+type ConfigItem interface {
+	IsConfigItem()
+}
+
 type ConfigStruct struct {
-	Items  []def.ConfigItem
+	Items  []ConfigItem
 	Schema *schema.Schema
 
 	Dialect queries.Dialect

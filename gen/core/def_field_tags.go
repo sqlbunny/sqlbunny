@@ -1,4 +1,4 @@
-package def
+package core
 
 type FieldFlag interface {
 	isFieldFlag()

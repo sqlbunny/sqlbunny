@@ -62,19 +62,19 @@ func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
 	gen.WriteFile("migrations", migrationFile, buf.Bytes())
 }
 
-type fakeExecutor struct {
+type fakeDB struct {
 	queries []string
 }
 
-func (e *fakeExecutor) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (e *fakeDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	e.queries = append(e.queries, query)
 	return nil, nil
 }
-func (e *fakeExecutor) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (e *fakeDB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	e.queries = append(e.queries, query)
 	return nil, nil
 }
-func (e *fakeExecutor) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (e *fakeDB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	e.queries = append(e.queries, query)
 	return nil
 }
@@ -89,14 +89,14 @@ func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
 		log.Fatal("No model changes found, doing nothing.")
 	}
 
-	e := &fakeExecutor{}
-	ctx := bunny.WithExecutor(context.Background(), e)
+	db := &fakeDB{}
+	ctx := bunny.ContextWithDB(context.Background(), db)
 
 	for _, op := range ops {
 		op.Run(ctx)
 	}
 
-	for _, q := range e.queries {
+	for _, q := range db.queries {
 		fmt.Println(q + ";\n")
 	}
 }

@@ -1,16 +1,13 @@
-package def
+package core
 
 import (
 	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/kernelpayments/sqlbunny/gen"
 	"github.com/kernelpayments/sqlbunny/schema"
 )
-
-type ConfigItem interface {
-	IsConfigItem()
-}
 
 type Validation struct {
 	errors      []error
@@ -21,7 +18,7 @@ func (v *Validation) AddError(message string, args ...interface{}) {
 	v.errors = append(v.errors, fmt.Errorf(message, args...))
 }
 
-func BuildSchema(items []ConfigItem) (*schema.Schema, error) {
+func buildSchema(items []gen.ConfigItem) (*schema.Schema, error) {
 	s := schema.New()
 
 	v := &Validation{

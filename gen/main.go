@@ -1,28 +1,41 @@
 package gen
 
 import (
-	"log"
 	"os"
 
-	"github.com/kernelpayments/sqlbunny/def"
 	"github.com/kernelpayments/sqlbunny/runtime/queries"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd *cobra.Command
 
-func Run(items ...def.ConfigItem) {
-	schema, err := def.BuildSchema(items)
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
+type expander interface {
+	Expand() []ConfigItem
+}
+
+func expand(items []ConfigItem, item ConfigItem) []ConfigItem {
+	items = append(items, item)
+	if e, ok := item.(expander); ok {
+		items = append(items, e.Expand()...)
 	}
+	return items
+}
+
+func expandAll(items []ConfigItem) []ConfigItem {
+	var res []ConfigItem
+	for _, i := range items {
+		res = expand(res, i)
+	}
+	return res
+}
+
+func Run(items []ConfigItem) {
+	items = expandAll(items)
 
 	rootCmd = &cobra.Command{Use: "sqlbunny"}
 
 	Config = &ConfigStruct{
-		Schema: schema,
-		Items:  items,
+		Items: items,
 
 		Dialect: queries.Dialect{
 			LQ:                '"',

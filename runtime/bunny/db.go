@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Executor can perform SQL queries.
-type Executor interface {
+// DB can perform SQL queries.
+type DB interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
@@ -22,12 +22,12 @@ type key int
 
 const dbKey key = 0
 
-func WithExecutor(ctx context.Context, db Executor) context.Context {
+func ContextWithDB(ctx context.Context, db DB) context.Context {
 	return context.WithValue(ctx, dbKey, db)
 }
 
-func ExecutorFromContext(ctx context.Context) Executor {
-	db, ok := ctx.Value(dbKey).(Executor)
+func DBFromContext(ctx context.Context) DB {
+	db, ok := ctx.Value(dbKey).(DB)
 	if !ok {
 		panic("No database in the context")
 	}
@@ -35,9 +35,9 @@ func ExecutorFromContext(ctx context.Context) Executor {
 }
 
 func Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	exec := ExecutorFromContext(ctx)
+	db := DBFromContext(ctx)
 	begin := time.Now()
-	res, err := exec.ExecContext(ctx, query, args...)
+	res, err := db.ExecContext(ctx, query, args...)
 	if queryLogger != nil {
 		queryLogger.LogQuery(ctx, query, time.Since(begin), err, args...)
 	}
@@ -45,9 +45,9 @@ func Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, e
 }
 
 func Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	exec := ExecutorFromContext(ctx)
+	db := DBFromContext(ctx)
 	begin := time.Now()
-	res, err := exec.QueryContext(ctx, query, args...)
+	res, err := db.QueryContext(ctx, query, args...)
 	if queryLogger != nil {
 		queryLogger.LogQuery(ctx, query, time.Since(begin), err, args...)
 	}
@@ -55,9 +55,9 @@ func Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, e
 }
 
 func QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	exec := ExecutorFromContext(ctx)
+	db := DBFromContext(ctx)
 	begin := time.Now()
-	res := exec.QueryRowContext(ctx, query, args...)
+	res := db.QueryRowContext(ctx, query, args...)
 	if queryLogger != nil {
 		queryLogger.LogQuery(ctx, query, time.Since(begin), nil, args...) // TODO how to get the error.
 	}
@@ -181,7 +181,7 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 	begin := time.Now()
 
 	var node *txNode
-	switch db := ExecutorFromContext(ctx).(type) {
+	switch db := DBFromContext(ctx).(type) {
 	case *sql.DB:
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{
 			Isolation: sql.LevelSerializable,
@@ -213,7 +213,7 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 		panic("database does not support transactions")
 	}
 
-	ctx2 := WithExecutor(ctx, node)
+	ctx2 := ContextWithDB(ctx, node)
 
 	// Since the user-provided function might panic, ensure the transaction
 	// releases all resources.
