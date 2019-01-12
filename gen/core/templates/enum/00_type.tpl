@@ -1,6 +1,7 @@
 {{- $dot := . -}}
 {{- $enumName := .Enum.Name | titleCase -}}
 {{- $enumNameCamel := .Enum.Name | camelCase -}}
+{{- $enumNamePlural := .Enum.Name | plural | titleCase -}}
 
 import (
     "bytes"
@@ -15,10 +16,18 @@ import (
 // {{$enumName}} is an enum type.
 type {{$enumName}} int32
 
-const (
+
+var {{$enumNamePlural}} = struct {
     {{- range $index, $choice := .Enum.Choices }}
-    {{$enumName}}{{$choice | titleCase}} = {{$enumName}}({{$index}})
+    {{$choice | titleCase}} {{$enumName}} 
     {{- end}}
+}{
+    {{- range $index, $choice := .Enum.Choices }}
+    {{$choice | titleCase}}: {{$enumName}}({{$index}}),
+    {{- end}}
+}
+
+const (
 )
 
 var {{$enumNameCamel}}Values = map[string]{{$enumName}}{
