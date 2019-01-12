@@ -1,10 +1,7 @@
 package bunnyid
 
 import (
-	"bytes"
-
 	"github.com/kernelpayments/sqlbunny/gen"
-	"github.com/kernelpayments/sqlbunny/schema"
 )
 
 const (
@@ -13,7 +10,6 @@ const (
 
 type Plugin struct {
 	idTemplates        *gen.TemplateList
-	modelTemplates     *gen.TemplateList
 	singletonTemplates *gen.TemplateList
 }
 
@@ -22,14 +18,10 @@ var _ gen.Plugin = &Plugin{}
 func (*Plugin) IsConfigItem() {}
 
 func (p *Plugin) BunnyPlugin() {
-	gen.TemplateFunctions["bunnyid_IsStandardModel"] = p.IsStandardModel
-
 	p.idTemplates = gen.MustLoadTemplates(templatesPackage, "templates/id")
-	p.modelTemplates = gen.MustLoadTemplates(templatesPackage, "templates/model")
 	p.singletonTemplates = gen.MustLoadTemplates(templatesPackage, "templates/singleton")
 
 	gen.OnGen(p.gen)
-	gen.OnHook("model", p.modelHook)
 }
 
 func (p *Plugin) gen() {
@@ -51,18 +43,4 @@ func (p *Plugin) gen() {
 	data["IDTypes"] = idTypes
 
 	p.singletonTemplates.ExecuteSingleton(data)
-}
-
-func (p *Plugin) modelHook(buf *bytes.Buffer, data map[string]interface{}, args ...interface{}) {
-	p.modelTemplates.ExecuteBuf(data, buf)
-}
-
-func (p *Plugin) IsStandardModel(m *schema.Model) bool {
-	for _, c := range m.Fields {
-		_, ok := c.Type.(*IDType)
-		if c.Name == "id" && ok {
-			return true
-		}
-	}
-	return false
 }
