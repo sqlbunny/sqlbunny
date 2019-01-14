@@ -1,4 +1,13 @@
 pipeline:
+  test:
+    image: golangci/golangci-lint:v1.12.2
+    commands:
+    - export GOCACHE=/go/cache
+    - go test ./...
+    #- golangci-lint run
+    volumes:
+    - /tmp/go/pkg:/go/pkg
+    - /tmp/go/cache:/go/cache
   docker:
     image: gcr.io/kernel-payments/drone-docker
     prefix: gcr.io/kernel-payments
