@@ -84,7 +84,7 @@ func TestBuildQuery(t *testing.T) {
 				`"fun".col3`: 3,
 			},
 			where: []where{
-				{clause: "aa=? or bb=? or cc=?", orSeparator: true, args: []interface{}{4, 5, 6}},
+				{clause: "aa=? or bb=? or cc=?", args: []interface{}{4, 5, 6}},
 				{clause: "dd=? or ee=? or ff=? and gg=?", args: []interface{}{7, 8, 9, 10}},
 			},
 			limit: 5,
@@ -165,13 +165,6 @@ func TestWhereClause(t *testing.T) {
 		q      Query
 		expect string
 	}{
-		// Or("a=?")
-		{
-			q: Query{
-				where: []where{{clause: "a=?", orSeparator: true}},
-			},
-			expect: " WHERE (a=$1)",
-		},
 		// Where("a=?")
 		{
 			q: Query{
@@ -192,16 +185,6 @@ func TestWhereClause(t *testing.T) {
 				where: []where{{clause: "((a=? OR b=?))"}},
 			},
 			expect: " WHERE (((a=$1 OR b=$2)))",
-		},
-		// Where("(a=?)", Or("(b=?)")
-		{
-			q: Query{
-				where: []where{
-					{clause: "(a=?)"},
-					{clause: "(b=?)", orSeparator: true},
-				},
-			},
-			expect: " WHERE ((a=$1)) OR ((b=$2))",
 		},
 		// Where("a=? OR b=?")
 		{
@@ -252,28 +235,6 @@ func TestWhereClause(t *testing.T) {
 			},
 			expect: " WHERE ((a=$1 AND b=$2) OR (c=$3 AND d=$4 OR e=$5) OR f=$6 OR g=$7)",
 		},
-		// Where("a=? or b=?"), Or("c=? and d=?"), Or("e=? or f=?")
-		{
-			q: Query{
-				where: []where{
-					{clause: "a=? or b=?", orSeparator: true},
-					{clause: "c=? and d=?", orSeparator: true},
-					{clause: "e=? or f=?", orSeparator: true},
-				},
-			},
-			expect: " WHERE (a=$1 or b=$2) OR (c=$3 and d=$4) OR (e=$5 or f=$6)",
-		},
-		// Where("a=? or b=?"), Or("c=? and d=?"), Or("e=? or f=?")
-		{
-			q: Query{
-				where: []where{
-					{clause: "a=? or b=?"},
-					{clause: "c=? and d=?", orSeparator: true},
-					{clause: "e=? or f=?"},
-				},
-			},
-			expect: " WHERE (a=$1 or b=$2) OR (c=$3 and d=$4) AND (e=$5 or f=$6)",
-		},
 	}
 
 	for i, test := range tests {
@@ -295,13 +256,13 @@ func TestInClause(t *testing.T) {
 	}{
 		{
 			q: Query{
-				in: []in{{clause: "a in ?", args: []interface{}{}, orSeparator: true}},
+				in: []in{{clause: "a in ?", args: []interface{}{}}},
 			},
 			expect: ` WHERE "a" IN ()`,
 		},
 		{
 			q: Query{
-				in: []in{{clause: "a in ?", args: []interface{}{1}, orSeparator: true}},
+				in: []in{{clause: "a in ?", args: []interface{}{1}}},
 			},
 			expect: ` WHERE "a" IN ($1)`,
 			args:   []interface{}{1},
@@ -322,14 +283,14 @@ func TestInClause(t *testing.T) {
 		},
 		{
 			q: Query{
-				in: []in{{clause: "( ? , ? ) in ( ? )", orSeparator: true, args: []interface{}{"a", "b", 1, 2, 3, 4}}},
+				in: []in{{clause: "( ? , ? ) in ( ? )", args: []interface{}{"a", "b", 1, 2, 3, 4}}},
 			},
 			expect: " WHERE ( $1 , $2 ) IN ( (($3,$4),($5,$6)) )",
 			args:   []interface{}{"a", "b", 1, 2, 3, 4},
 		},
 		{
 			q: Query{
-				in: []in{{clause: `("a")in(?)`, orSeparator: true, args: []interface{}{1, 2, 3}}},
+				in: []in{{clause: `("a")in(?)`, args: []interface{}{1, 2, 3}}},
 			},
 			expect: ` WHERE ("a") IN (($1,$2,$3))`,
 			args:   []interface{}{1, 2, 3},
@@ -347,48 +308,28 @@ func TestInClause(t *testing.T) {
 					{clause: "a=?", args: []interface{}{1}},
 				},
 				in: []in{
-					{clause: `?,?,"name" in ?`, orSeparator: true, args: []interface{}{"c", "d", 3, 4, 5, 6, 7, 8}},
-					{clause: `?,?,"name" in ?`, orSeparator: true, args: []interface{}{"e", "f", 9, 10, 11, 12, 13, 14}},
+					{clause: `?,?,"name" in ?`, args: []interface{}{"c", "d", 3, 4, 5, 6, 7, 8}},
+					{clause: `?,?,"name" in ?`, args: []interface{}{"e", "f", 9, 10, 11, 12, 13, 14}},
 				},
 			},
-			expect: ` OR $1,$2,"name" IN (($3,$4,$5),($6,$7,$8)) OR $9,$10,"name" IN (($11,$12,$13),($14,$15,$16))`,
+			expect: ` AND $1,$2,"name" IN (($3,$4,$5),($6,$7,$8)) AND $9,$10,"name" IN (($11,$12,$13),($14,$15,$16))`,
 			args:   []interface{}{"c", "d", 3, 4, 5, 6, 7, 8, "e", "f", 9, 10, 11, 12, 13, 14},
 		},
 		{
 			q: Query{
 				in: []in{
 					{clause: `("a")in`, args: []interface{}{1}},
-					{clause: `("a")in?`, orSeparator: true, args: []interface{}{1}},
-				},
-			},
-			expect: ` WHERE ("a")in OR ("a") IN ($1)`,
-			args:   []interface{}{1, 1},
-		},
-		{
-			q: Query{
-				in: []in{
-					{clause: `\?,\? in \?`, args: []interface{}{1}},
-					{clause: `\?,\?in \?`, orSeparator: true, args: []interface{}{1}},
-				},
-			},
-			expect: ` WHERE ?,? IN ? OR ?,? IN ?`,
-			args:   []interface{}{1, 1},
-		},
-		{
-			q: Query{
-				in: []in{
-					{clause: `("a")in`, args: []interface{}{1}},
 					{clause: `("a") in thing`, args: []interface{}{1, 2, 3}},
-					{clause: `("a")in?`, orSeparator: true, args: []interface{}{4, 5, 6}},
+					{clause: `("a")in?`, args: []interface{}{4, 5, 6}},
 				},
 			},
-			expect: ` WHERE ("a")in AND ("a") IN thing OR ("a") IN ($1,$2,$3)`,
+			expect: ` WHERE ("a")in AND ("a") IN thing AND ("a") IN ($1,$2,$3)`,
 			args:   []interface{}{1, 1, 2, 3, 4, 5, 6},
 		},
 		{
 			q: Query{
 				in: []in{
-					{clause: `("a")in?`, orSeparator: true, args: []interface{}{4, 5, 6}},
+					{clause: `("a")in?`, args: []interface{}{4, 5, 6}},
 					{clause: `("a") in thing`, args: []interface{}{1, 2, 3}},
 					{clause: `("a")in`, args: []interface{}{1}},
 				},
@@ -399,7 +340,7 @@ func TestInClause(t *testing.T) {
 		{
 			q: Query{
 				in: []in{
-					{clause: `("a")in?`, orSeparator: true, args: []interface{}{4, 5, 6}},
+					{clause: `("a")in?`, args: []interface{}{4, 5, 6}},
 					{clause: `("a")in`, args: []interface{}{1}},
 					{clause: `("a") in thing`, args: []interface{}{1, 2, 3}},
 				},

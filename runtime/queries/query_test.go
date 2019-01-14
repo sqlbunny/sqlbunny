@@ -1,8 +1,6 @@
 package queries
 
 import (
-	"context"
-	"database/sql"
 	"reflect"
 	"testing"
 )
@@ -102,40 +100,6 @@ func TestAppendWhere(t *testing.T) {
 		t.Errorf("%#v", q.where)
 	}
 }
-
-func TestSetLastWhereAsOr(t *testing.T) {
-	t.Parallel()
-	q := &Query{}
-
-	AppendWhere(q, "")
-
-	if q.where[0].orSeparator {
-		t.Errorf("Do not want or separator")
-	}
-
-	SetLastWhereAsOr(q)
-
-	if len(q.where) != 1 {
-		t.Errorf("Want len 1")
-	}
-	if !q.where[0].orSeparator {
-		t.Errorf("Want or separator")
-	}
-
-	AppendWhere(q, "")
-	SetLastWhereAsOr(q)
-
-	if len(q.where) != 2 {
-		t.Errorf("Want len 2")
-	}
-	if q.where[0].orSeparator != true {
-		t.Errorf("Expected true")
-	}
-	if q.where[1].orSeparator != true {
-		t.Errorf("Expected true")
-	}
-}
-
 func TestAppendIn(t *testing.T) {
 	t.Parallel()
 
@@ -175,39 +139,6 @@ func TestAppendIn(t *testing.T) {
 
 	if len(q.in) != 1 {
 		t.Errorf("%#v", q.in)
-	}
-}
-
-func TestSetLastInAsOr(t *testing.T) {
-	t.Parallel()
-	q := &Query{}
-
-	AppendIn(q, "")
-
-	if q.in[0].orSeparator {
-		t.Errorf("Do not want or separator")
-	}
-
-	SetLastInAsOr(q)
-
-	if len(q.in) != 1 {
-		t.Errorf("Want len 1")
-	}
-	if !q.in[0].orSeparator {
-		t.Errorf("Want or separator")
-	}
-
-	AppendIn(q, "")
-	SetLastInAsOr(q)
-
-	if len(q.in) != 2 {
-		t.Errorf("Want len 2")
-	}
-	if q.in[0].orSeparator != true {
-		t.Errorf("Expected true")
-	}
-	if q.in[1].orSeparator != true {
-		t.Errorf("Expected true")
 	}
 }
 
@@ -335,18 +266,6 @@ func TestSetDelete(t *testing.T) {
 	}
 }
 
-func TestSetContext(t *testing.T) {
-	t.Parallel()
-
-	q := &Query{}
-	d := context.Background()
-	SetContext(q, d)
-
-	if q.ctx != d {
-		t.Errorf("Expected executor to get set to d, but was: %#v", q.ctx)
-	}
-}
-
 func TestAppendSelect(t *testing.T) {
 	t.Parallel()
 
@@ -374,8 +293,7 @@ func TestAppendSelect(t *testing.T) {
 func TestSQL(t *testing.T) {
 	t.Parallel()
 
-	ctx := execToContext(&sql.DB{})
-	q := Raw(ctx, "thing", 5)
+	q := Raw("thing", 5)
 	if q.rawSQL.sql != "thing" {
 		t.Errorf("Expected %q, got %s", "thing", q.rawSQL.sql)
 	}
