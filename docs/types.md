@@ -1,4 +1,4 @@
-# Defining types 
+# Types 
 
 Types are defined using `Type` in the top-level config (NOT inside a model declaration). Defining a type makes it available for use in `Field` definitions.
 

@@ -171,7 +171,7 @@ book := &models.Book{
 }
 err = book.Insert(ctx)
 if err != nil {
-    // handle error
+    panic(err)
 }
 ```
 

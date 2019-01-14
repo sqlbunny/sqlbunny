@@ -1,4 +1,4 @@
-# Defining models
+# Models
 
 Models are defined using `Model` in the configuration.
 
