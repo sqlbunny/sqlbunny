@@ -7,6 +7,7 @@ module.exports = {
         sidebar: [
             '/',
             '/getting-started',
+            '/types',
             '/models',
             '/query',
             '/query-bind',
