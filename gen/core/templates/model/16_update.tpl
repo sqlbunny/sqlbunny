@@ -56,8 +56,8 @@ func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... strin
 	return nil
 }
 
-// UpdateAll updates all rows with the specified field values.
-func (q {{$varNameSingular}}Query) UpdateAll(ctx context.Context, cols M) error {
+// UpdateMapAll updates all rows with the specified field values.
+func (q {{$varNameSingular}}Query) UpdateMapAll(ctx context.Context, cols M) error {
 	queries.SetUpdate(q.Query, cols)
 
 	_, err := q.Query.Exec(ctx)
@@ -68,8 +68,8 @@ func (q {{$varNameSingular}}Query) UpdateAll(ctx context.Context, cols M) error 
 	return nil
 }
 
-// UpdateAll updates all rows with the specified field values, using an executor.
-func (o {{$modelNameSingular}}Slice) UpdateAll(ctx context.Context, cols M) error {
+// UpdateMapAll updates all rows with the specified field values.
+func (o {{$modelNameSingular}}Slice) UpdateMapAll(ctx context.Context, cols M) error {
 	ln := int64(len(o))
 	if ln == 0 {
 		return nil
