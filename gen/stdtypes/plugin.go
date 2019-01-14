@@ -1,4 +1,4 @@
-package typelib
+package stdtypes
 
 import (
 	"github.com/kernelpayments/sqlbunny/gen"
@@ -17,6 +17,12 @@ func (p *Plugin) BunnyPlugin() {
 
 func (p *Plugin) Expand() []gen.ConfigItem {
 	return []gen.ConfigItem{
+		core.Type("int16", core.BaseType{
+			Go:       "int16",
+			GoNull:   "github.com/kernelpayments/sqlbunny/types/null.Int16",
+			Postgres: "smallint",
+		}),
+
 		core.Type("int32", core.BaseType{
 			Go:       "int32",
 			GoNull:   "github.com/kernelpayments/sqlbunny/types/null.Int32",

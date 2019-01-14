@@ -42,12 +42,12 @@ package main
 import (
 	. "github.com/kernelpayments/sqlbunny/gen/core"
 	"github.com/kernelpayments/sqlbunny/gen/migration"
-	"github.com/kernelpayments/sqlbunny/gen/typelib"
+	"github.com/kernelpayments/sqlbunny/gen/stdtypes"
 )
 
 func main() {
 	Run(
-		&typelib.Plugin{},
+		&stdtypes.Plugin{},
 		&migration.Plugin{},
 
 		Model("book",
@@ -61,7 +61,7 @@ func main() {
 
 The main function calls sqlbunny's `Run`, which takes a slice of configuration items. Everything is done through config items: enabling plugins, defining types and models...
 
-In this case, the first two items enable the `typelib` and `migration` plugins. `typelib` defines many useful data types, and `migration` adds support for generating migrations.
+In this case, the first two items enable the `stdtypes` and `migration` plugins. `stdtypes` defines many useful data types, and `migration` adds support for generating migrations.
 
 The last configuration item defines a model named `book`.
 
