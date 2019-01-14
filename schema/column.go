@@ -19,3 +19,11 @@ func ColumnNames(cols []*Column) []string {
 
 	return names
 }
+
+func (c *Column) TypeGo() TypeGo {
+	if c.Nullable {
+		return c.Type.(NullableType).TypeGoNull()
+	} else {
+		return c.Type.TypeGo()
+	}
+}

@@ -47,39 +47,14 @@ const (
 // result into the passed in object pointer
 //
 // Bind rules:
-//   - Struct tags control bind, in the form of: `bunny:"name,bind"`
-//   - If "name" is omitted the sql field names that come back are TitleCased
-//     and matched against the field name.
-//   - If the "name" part of the struct tag is specified, the given name will
-//     be used instead of the struct field name for binding.
-//   - If the "name" of the struct tag is "-", this field will not be bound to.
-//   - If the ",bind" option is specified on a struct field and that field
-//     is a struct itself, it will be recursed into to look for fields for binding.
-//
-// Example Query:
-//
-//   type JoinStruct struct {
-//     // User1 can have it's struct fields bound to since it specifies
-//     // ,bind in the struct tag, it will look specifically for
-//     // fields that are prefixed with "user." returning from the query.
-//     // For example "user.id" field name will bind to User1.ID
-//     User1      *models.User `bunny:"user,bind"`
-//     // User2 will follow the same rules as noted above except it will use
-//     // "friend." as the prefix it's looking for.
-//     User2      *models.User `bunny:"friend,bind"`
-//     // RandomData will not be recursed into to look for fields to
-//     // bind and will not be bound to because of the - for the name.
-//     RandomData myStruct     `bunny:"-"`
-//     // Date will not be recursed into to look for fields to bind because
-//     // it does not specify ,bind in the struct tag. But it can be bound to
-//     // as it does not specify a - for the name.
-//     Date       time.Time
-//   }
-//
-//   models.Users(qm.InnerJoin("users as friend on users.friend_id = friend.id")).Bind(&joinStruct)
-//
-// For custom objects that want to use eager loading, please see the
-// loadRelationships function.
+//   - Struct tags control bind, in the form of: `bunny:"name,bind,null:valid_column_name"`
+//   - If the `bunny` struct tag is not present, the field will be completely ignored.
+//   - The "name" part specifies the SQL column name that will be bound to this field.
+//   - If the ",bind" option is specified on a field of struct type, Bind will recurse into it
+//     to look for fields for binding. "name" is appended as a prefix to the SQL column names
+//     of the inner fields.
+//   - If the ",null:valid_column_name" option is specified in addition to ",bind", the SQL boolean column
+//     "valid_column_name" is used to tell whether the nested struct is valid (not null) or not (null).
 func Bind(rows *sql.Rows, obj interface{}) error {
 	structType, sliceType, singular, err := bindChecks(obj)
 	if err != nil {

@@ -176,7 +176,7 @@ err := models.Users(
 ```
 
 ### Bind
-Executes the query, binding the result to the given struct or slice. See [binding](/query-bind) for more info.
+Executes the query, binding the result to the given struct or slice. See [binding](/query-bind.html) for more info.
 
 ### Query, QueryRow, Exec
 Executes the query and returns the raw SQL result. These functions simply mirror thir [`sql.DB`](https://golang.org/pkg/database/sql/#DB) counterparts.
