@@ -42,7 +42,7 @@ package main
 import (
 	. "github.com/kernelpayments/sqlbunny/gen/core"
 	"github.com/kernelpayments/sqlbunny/gen/migration"
-	"github.com/kernelpayments/sqlbunny/gen/types"
+	"github.com/kernelpayments/sqlbunny/gen/typelib"
 )
 
 func main() {
@@ -153,7 +153,7 @@ All ORM functions need a context with an active database. To set the database in
 ```go
 db, err := sql.Open("postgres", "host=localhost port=5432 dbname=postgres user=postgres password=postgres sslmode=disable")
 if err != nil {
-    // handle error
+	panic(err)
 }
 
 ctx := context.Background()
@@ -181,7 +181,7 @@ if err != nil {
 // Fetch all books
 books, err := models.Books().All(ctx)
 if err != nil {
-    // handle error
+	panic(err)
 }
 ```
 
