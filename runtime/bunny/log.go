@@ -5,15 +5,35 @@ import (
 	"time"
 )
 
-type QueryLogger interface {
-	LogQuery(ctx context.Context, query string, duration time.Duration, err error, args ...interface{})
-	LogBegin(ctx context.Context, readOnly bool) context.Context
-	LogCommit(ctx context.Context, duration time.Duration)
-	LogRollback(ctx context.Context, duration time.Duration, cause error)
+type QueryLogInfo struct {
+	Query    string
+	Args     []interface{}
+	Duration time.Duration
+	Err      error
 }
 
-var queryLogger QueryLogger
+type BeginLogInfo struct {
+	ReadOnly bool
+}
 
-func SetQueryLogger(ql QueryLogger) {
-	queryLogger = ql
+type CommitLogInfo struct {
+	Duration time.Duration
+}
+
+type RollbackLogInfo struct {
+	Duration time.Duration
+	Err      error
+}
+
+type Logger interface {
+	LogQuery(ctx context.Context, info QueryLogInfo)
+	LogBegin(ctx context.Context, info BeginLogInfo) context.Context
+	LogCommit(ctx context.Context, info CommitLogInfo)
+	LogRollback(ctx context.Context, info RollbackLogInfo)
+}
+
+var logger Logger
+
+func SetLogger(l Logger) {
+	logger = l
 }

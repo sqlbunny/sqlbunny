@@ -38,8 +38,13 @@ func Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, e
 	db := DBFromContext(ctx)
 	begin := time.Now()
 	res, err := db.ExecContext(ctx, query, args...)
-	if queryLogger != nil {
-		queryLogger.LogQuery(ctx, query, time.Since(begin), err, args...)
+	if logger != nil {
+		logger.LogQuery(ctx, QueryLogInfo{
+			Query:    query,
+			Duration: time.Since(begin),
+			Err:      err,
+			Args:     args,
+		})
 	}
 	return res, err
 }
@@ -48,8 +53,13 @@ func Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, e
 	db := DBFromContext(ctx)
 	begin := time.Now()
 	res, err := db.QueryContext(ctx, query, args...)
-	if queryLogger != nil {
-		queryLogger.LogQuery(ctx, query, time.Since(begin), err, args...)
+	if logger != nil {
+		logger.LogQuery(ctx, QueryLogInfo{
+			Query:    query,
+			Duration: time.Since(begin),
+			Err:      err,
+			Args:     args,
+		})
 	}
 	return res, err
 }
@@ -58,8 +68,13 @@ func QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	db := DBFromContext(ctx)
 	begin := time.Now()
 	res := db.QueryRowContext(ctx, query, args...)
-	if queryLogger != nil {
-		queryLogger.LogQuery(ctx, query, time.Since(begin), nil, args...) // TODO how to get the error.
+	if logger != nil {
+		logger.LogQuery(ctx, QueryLogInfo{
+			Query:    query,
+			Duration: time.Since(begin),
+			Err:      nil, // TODO how to get the error without causing quantum decoherence in res?
+			Args:     args,
+		})
 	}
 	return res
 }
@@ -115,8 +130,11 @@ func shouldRetryTransaction(err error) bool {
 // of panic.
 func rollbackOnPanic(ctx context.Context, tx *txNode, begin time.Time) {
 	if err := recover(); err != nil {
-		if queryLogger != nil {
-			queryLogger.LogRollback(ctx, time.Since(begin), fmt.Errorf("panic %v", err))
+		if logger != nil {
+			logger.LogRollback(ctx, RollbackLogInfo{
+				Duration: time.Since(begin),
+				Err:      fmt.Errorf("panic %v", err),
+			})
 		}
 
 		err2 := tx.Rollback()
@@ -175,8 +193,10 @@ func (t *txNode) Rollback() error {
 // transaction.  Any errors returned from
 // the user-supplied function are returned from this function.
 func doTransaction(ctx context.Context, fn func(ctx context.Context) error, readOnly bool) error {
-	if queryLogger != nil {
-		ctx = queryLogger.LogBegin(ctx, readOnly)
+	if logger != nil {
+		ctx = logger.LogBegin(ctx, BeginLogInfo{
+			ReadOnly: readOnly,
+		})
 	}
 	begin := time.Now()
 
@@ -188,11 +208,15 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 			ReadOnly:  readOnly,
 		})
 		if err != nil {
-			if queryLogger != nil {
-				queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "BeginTx"))
+			retErr := errors.Wrap(err, "BeginTx failed")
+			if logger != nil {
+				logger.LogRollback(ctx, RollbackLogInfo{
+					Duration: time.Since(begin),
+					Err:      retErr,
+				})
 			}
 			_ = tx.Rollback()
-			return err
+			return retErr
 		}
 		node = &txNode{
 			dbTx:  tx,
@@ -221,26 +245,36 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 
 	err := fn(ctx2)
 	if err != nil {
-		if queryLogger != nil {
-			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "tx function returned error"))
+		retErr := errors.Wrap(err, "tx function returned error")
+		if logger != nil {
+			logger.LogRollback(ctx, RollbackLogInfo{
+				Duration: time.Since(begin),
+				Err:      retErr,
+			})
 		}
 		err2 := node.Rollback()
 		if err2 != nil {
 			panic(err2)
 		}
-		return errors.Wrap(err, "tx function returned error")
+		return retErr
 	}
 
 	err = node.Commit()
 	if err != nil {
-		if queryLogger != nil {
-			queryLogger.LogRollback(ctx, time.Since(begin), errors.Wrap(err, "commit"))
+		retErr := errors.Wrap(err, "commit")
+		if logger != nil {
+			logger.LogRollback(ctx, RollbackLogInfo{
+				Duration: time.Since(begin),
+				Err:      retErr,
+			})
 		}
 		_ = node.Rollback()
-		return err
+		return retErr
 	}
-	if queryLogger != nil {
-		queryLogger.LogCommit(ctx, time.Since(begin))
+	if logger != nil {
+		logger.LogCommit(ctx, CommitLogInfo{
+			Duration: time.Since(begin),
+		})
 	}
 
 	return nil
