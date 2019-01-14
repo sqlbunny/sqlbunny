@@ -244,7 +244,7 @@ You can explicitly specify a list of columns to be updated. If not set, all non-
 
 ```go
 book.Name = "SuperNiceBook"
-err = book.Insert(ctx,
+err = book.Update(ctx,
     models.BookColumns.Name,
 )
 ```
