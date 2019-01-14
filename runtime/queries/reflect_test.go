@@ -11,8 +11,8 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func execToContext(exec bunny.Executor) context.Context {
-	return bunny.WithExecutor(context.Background(), exec)
+func dbToContext(exec bunny.DB) context.Context {
+	return bunny.ContextWithDB(context.Background(), exec)
 }
 
 func stringifyField(x MappedField) string {
@@ -63,8 +63,8 @@ func TestBindStruct(t *testing.T) {
 	ret.AddRow(driver.Value(int64(35)), driver.Value("pat"))
 	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
 
-	SetContext(query, execToContext(db))
-	err = query.Bind(&testResults)
+	ctx := dbToContext(db)
+	err = query.Bind(ctx, &testResults)
 	if err != nil {
 		t.Error(err)
 	}
@@ -104,8 +104,8 @@ func TestBindSlice(t *testing.T) {
 	ret.AddRow(driver.Value(int64(12)), driver.Value("cat"))
 	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
 
-	SetContext(query, execToContext(db))
-	err = query.Bind(&testResults)
+	ctx := dbToContext(db)
+	err = query.Bind(ctx, &testResults)
 	if err != nil {
 		t.Error(err)
 	}
@@ -155,8 +155,8 @@ func TestBindPtrSlice(t *testing.T) {
 	ret.AddRow(driver.Value(int64(12)), driver.Value("cat"))
 	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
 
-	SetContext(query, execToContext(db))
-	err = query.Bind(&testResults)
+	ctx := dbToContext(db)
+	err = query.Bind(ctx, &testResults)
 	if err != nil {
 		t.Error(err)
 	}
@@ -221,11 +221,11 @@ func TestMakeStructMapping(t *testing.T) {
 
 			Nested2 struct {
 				Nose string `bunny:"nose"`
-			} `bunny:"nested2,bind"`
+			} `bunny:"nested2.,bind"`
 			Nested3 struct {
 				Nose string `bunny:"nose"`
-			} `bunny:"nested3,structbind"`
-		} `bunny:"nested,bind"`
+			} `bunny:"nested3__,bind"`
+		} `bunny:"nested.,bind"`
 
 		NullStruct struct {
 			Struct struct {
@@ -237,10 +237,10 @@ func TestMakeStructMapping(t *testing.T) {
 						Ear string `bunny:"ear"`
 					}
 					Valid bool
-				} `bunny:"null_struct_2,structbind,null"`
+				} `bunny:"null_struct_2__,bind,null:null_struct_2"`
 			}
 			Valid bool
-		} `bunny:"null_struct,structbind,null"`
+		} `bunny:"null_struct__,bind,null:null_struct"`
 	}{}
 
 	got := MakeStructMapping(reflect.TypeOf(testStruct))
@@ -400,8 +400,8 @@ func TestGetBunnyTag(t *testing.T) {
 		FirstName   string `bunny:"test_one,bind"`
 		LastName    string `bunny:"test_two"`
 		MiddleName  string `bunny:"middle_name,bind"`
-		AwesomeName string `bunny:"awesome_name,structbind"`
-		Age         string `bunny:"age,bind,structbind"`
+		AwesomeName string `bunny:"awesome_name,bind,null:awesome_name_null"`
+		Age         string `bunny:"age,null:agenull"`
 		Nose        string
 		Fail        string `bunny:"fail,invalidflag"`
 	}
@@ -426,7 +426,7 @@ func TestGetBunnyTag(t *testing.T) {
 		{present: true, name: "test_one", bind: true},
 		{present: true, name: "test_two"},
 		{present: true, name: "middle_name", bind: true},
-		{present: true, name: "awesome_name", structbind: true},
+		{present: true, name: "awesome_name", bind: true, null: "awesome_name_null"},
 		nil,
 		{present: false},
 		nil,
@@ -512,8 +512,8 @@ func TestBindSingular(t *testing.T) {
 	ret.AddRow(driver.Value(int64(35)), driver.Value("pat"))
 	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
 
-	SetContext(query, execToContext(db))
-	err = query.Bind(&testResults)
+	ctx := dbToContext(db)
+	err = query.Bind(ctx, &testResults)
 	if err != nil {
 		t.Error(err)
 	}
@@ -558,8 +558,8 @@ func TestBind_InnerJoin(t *testing.T) {
 	ret.AddRow(driver.Value(int64(11)))
 	mock.ExpectQuery(`SELECT "fun"\.\* FROM "fun" INNER JOIN happy as h on fun.id = h.fun_id;`).WillReturnRows(ret)
 
-	SetContext(query, execToContext(db))
-	err = query.Bind(&testResults)
+	ctx := dbToContext(db)
+	err = query.Bind(ctx, &testResults)
 	if err != nil {
 		t.Error(err)
 	}
@@ -592,10 +592,10 @@ func TestBind_InnerJoinSelect(t *testing.T) {
 	testResults := []*struct {
 		Happy struct {
 			ID int `bunny:"id"`
-		} `bunny:"h,bind"`
+		} `bunny:"h.,bind"`
 		Fun struct {
 			ID int `bunny:"id"`
-		} `bunny:"fun,bind"`
+		} `bunny:"fun.,bind"`
 	}{}
 
 	query := &Query{
@@ -615,8 +615,8 @@ func TestBind_InnerJoinSelect(t *testing.T) {
 	ret.AddRow(driver.Value(int64(12)), driver.Value(int64(13)))
 	mock.ExpectQuery(`SELECT "fun"."id" as "fun.id", "h"."id" as "h.id" FROM "fun" INNER JOIN happy as h on fun.happy_id = h.id;`).WillReturnRows(ret)
 
-	SetContext(query, execToContext(db))
-	err = query.Bind(&testResults)
+	ctx := dbToContext(db)
+	err = query.Bind(ctx, &testResults)
 	if err != nil {
 		t.Error(err)
 	}
@@ -635,6 +635,95 @@ func TestBind_InnerJoinSelect(t *testing.T) {
 		t.Error("wrong ID:", id)
 	}
 	if id := testResults[1].Fun.ID; id != 12 {
+		t.Error("wrong ID:", id)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestBind_NullBind(t *testing.T) {
+	t.Parallel()
+
+	testResults := []*struct {
+		Foo struct {
+			Foo struct {
+				ID int `bunny:"id"`
+			}
+			Valid bool
+		} `bunny:"foo__,bind,null:foo"`
+		Bar struct {
+			Bar struct {
+				ID int `bunny:"id"`
+			}
+			Valid bool
+		} `bunny:"bar__,bind,null:bar"`
+	}{}
+
+	query := &Query{
+		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+		from:    []string{"fun"},
+	}
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Error(err)
+	}
+
+	ret := sqlmock.NewRows([]string{"foo", "foo__id", "bar", "bar__id"})
+	ret.AddRow(driver.Value(false), driver.Value(nil), driver.Value(false), driver.Value(nil))
+	ret.AddRow(driver.Value(true), driver.Value(int64(10)), driver.Value(false), driver.Value(nil))
+	ret.AddRow(driver.Value(false), driver.Value(nil), driver.Value(true), driver.Value(int64(11)))
+	ret.AddRow(driver.Value(true), driver.Value(int64(12)), driver.Value(true), driver.Value(int64(13)))
+	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
+
+	ctx := dbToContext(db)
+	err = query.Bind(ctx, &testResults)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(testResults) != 4 {
+		t.Fatal("wrong number of results:", len(testResults))
+	}
+	if valid := testResults[0].Foo.Valid; valid != false {
+		t.Error("wrong valid:", valid)
+	}
+	if valid := testResults[0].Bar.Valid; valid != false {
+		t.Error("wrong valid:", valid)
+	}
+
+	if valid := testResults[1].Foo.Valid; valid != true {
+		t.Error("wrong valid:", valid)
+	}
+	if valid := testResults[1].Bar.Valid; valid != false {
+		t.Error("wrong valid:", valid)
+	}
+	if id := testResults[1].Foo.Foo.ID; id != 10 {
+		t.Error("wrong ID:", id)
+	}
+
+	if valid := testResults[2].Foo.Valid; valid != false {
+		t.Error("wrong valid:", valid)
+	}
+	if valid := testResults[2].Bar.Valid; valid != true {
+		t.Error("wrong valid:", valid)
+	}
+	if id := testResults[2].Bar.Bar.ID; id != 11 {
+		t.Error("wrong ID:", id)
+	}
+
+	if valid := testResults[3].Foo.Valid; valid != true {
+		t.Error("wrong valid:", valid)
+	}
+	if valid := testResults[3].Bar.Valid; valid != true {
+		t.Error("wrong valid:", valid)
+	}
+	if id := testResults[3].Foo.Foo.ID; id != 12 {
+		t.Error("wrong ID:", id)
+	}
+	if id := testResults[3].Bar.Bar.ID; id != 13 {
 		t.Error("wrong ID:", id)
 	}
 

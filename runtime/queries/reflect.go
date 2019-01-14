@@ -393,20 +393,11 @@ func makeStructMappingHelper(typ reflect.Type, prefix string, current MappedFiel
 
 		name := tag.name
 		if len(prefix) != 0 {
-			name = fmt.Sprintf("%s%s", prefix, name)
+			name = prefix + name
 		}
 
 		if tag.bind {
-			next := MappedField{
-				Path:        current.Path | uint64(i+1)<<depth,
-				ParentValid: current.ParentValid,
-			}
-			makeStructMappingHelper(f.Type, name+".", next, depth+8, fieldMaps)
-			continue
-		}
-
-		if tag.structbind {
-			if tag.null {
+			if len(tag.null) != 0 {
 				// TODO autodiscover this
 				structFieldIdx := 0
 				validFieldIdx := 1
@@ -416,18 +407,18 @@ func makeStructMappingHelper(typ reflect.Type, prefix string, current MappedFiel
 					ParentValid: current.ParentValid,
 				}
 
-				fieldMaps[name] = valid
+				fieldMaps[prefix+tag.null] = valid
 				next := MappedField{
 					Path:        current.Path | uint64(i+1)<<depth | (uint64(structFieldIdx+1) << (depth + 8)),
 					ParentValid: &valid,
 				}
-				makeStructMappingHelper(f.Type.Field(structFieldIdx).Type, name+"__", next, depth+16, fieldMaps)
+				makeStructMappingHelper(f.Type.Field(structFieldIdx).Type, name, next, depth+16, fieldMaps)
 			} else {
 				next := MappedField{
 					Path:        current.Path | uint64(i+1)<<depth,
 					ParentValid: current.ParentValid,
 				}
-				makeStructMappingHelper(f.Type, name+"__", next, depth+8, fieldMaps)
+				makeStructMappingHelper(f.Type, name, next, depth+8, fieldMaps)
 			}
 			continue
 		}
@@ -440,11 +431,10 @@ func makeStructMappingHelper(typ reflect.Type, prefix string, current MappedFiel
 }
 
 type bunnyTag struct {
-	present    bool
-	name       string
-	bind       bool
-	structbind bool
-	null       bool
+	present bool
+	name    string
+	bind    bool
+	null    string
 }
 
 func getBunnyTag(field reflect.StructField) (bunnyTag, error) {
@@ -463,20 +453,17 @@ func getBunnyTag(field reflect.StructField) (bunnyTag, error) {
 		name:    parts[0],
 	}
 	for _, flag := range parts[1:] {
-		switch flag {
-		case "bind":
+		if flag == "bind" {
 			res.bind = true
-		case "structbind":
-			res.structbind = true
-		case "null":
-			res.null = true
-		default:
+		} else if strings.HasPrefix(flag, "null:") {
+			res.null = strings.TrimPrefix(flag, "null:")
+		} else {
 			return bunnyTag{}, fmt.Errorf("Invalid flag in bunny tag in field '%s': '%s'", field.Name, flag)
 		}
 	}
 
-	if res.bind && res.structbind {
-		return bunnyTag{}, fmt.Errorf("Invalid flags in bunny tag in field '%s': bind and structbind can't be active at the same time", field.Name)
+	if len(res.null) != 0 && !res.bind {
+		return bunnyTag{}, fmt.Errorf("Invalid flags in bunny tag in field '%s': null requires bind to be set", field.Name)
 	}
 
 	return res, nil
@@ -487,6 +474,7 @@ func makeCacheKey(typ string, cols []string) string {
 	buf.WriteString(typ)
 	for _, s := range cols {
 		buf.WriteString(s)
+		buf.WriteByte(',')
 	}
 	mapKey := buf.String()
 	strmangle.PutBuffer(buf)

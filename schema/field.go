@@ -14,10 +14,10 @@ func (f *Field) GenerateTags() string {
 	if _, ok := f.Tags["bunny"]; !ok {
 		f.Tags["bunny"] = f.Name
 		if f.IsStruct() {
-			f.Tags["bunny"] += ",structbind"
-		}
-		if f.Nullable {
-			f.Tags["bunny"] += ",null"
+			f.Tags["bunny"] += "__,bind"
+			if f.Nullable {
+				f.Tags["bunny"] += ",null:" + f.Name
+			}
 		}
 	}
 	if _, ok := f.Tags["json"]; !ok {
@@ -28,8 +28,6 @@ func (f *Field) GenerateTags() string {
 	}
 	return f.Tags.String()
 }
-
-//generateTags $dot.Tags $field.Name}}bunny:"{{$field.Name}}" json:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" toml:"{{$field.Name}}" yaml:"{{$field.Name}}{{if $field.Nullable}},omitempty{{end}}" {{$field.Tag}}
 
 func (f *Field) HasTag(tag string) bool {
 	_, ok := f.Tags[tag]
