@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/kernelpayments/sqlbunny/runtime/bunny"
+
 	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
 	"github.com/kernelpayments/sqlbunny/types/null/convert"
 	"github.com/pkg/errors"
@@ -218,6 +220,10 @@ func bind(rows *sql.Rows, obj interface{}, structType, sliceType reflect.Type, b
 
 	foundOne := false
 	for rows.Next() {
+		if bkind == kindStruct && foundOne {
+			return bunny.ErrMultipleRows
+		}
+
 		foundOne = true
 		var newStruct reflect.Value
 		var pointers []interface{}

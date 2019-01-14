@@ -2,6 +2,7 @@ package queries
 
 import (
 	"context"
+	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"reflect"
@@ -523,6 +524,72 @@ func TestBindSingular(t *testing.T) {
 	}
 	if name := testResults.Name; name != "pat" {
 		t.Error("wrong name:", name)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestBindSingularNoRows(t *testing.T) {
+	t.Parallel()
+
+	testResults := struct {
+		ID   int    `bunny:"id"`
+		Name string `bunny:"test"`
+	}{}
+
+	query := &Query{
+		from:    []string{"fun"},
+		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+	}
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Error(err)
+	}
+
+	ret := sqlmock.NewRows([]string{"id", "test"})
+	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
+
+	ctx := dbToContext(db)
+	err = query.Bind(ctx, &testResults)
+	if err != sql.ErrNoRows {
+		t.Errorf("Invalid error, expected sql.ErrNoRows, got %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestBindSingularMultipleRows(t *testing.T) {
+	t.Parallel()
+
+	testResults := struct {
+		ID   int    `bunny:"id"`
+		Name string `bunny:"test"`
+	}{}
+
+	query := &Query{
+		from:    []string{"fun"},
+		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+	}
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Error(err)
+	}
+
+	ret := sqlmock.NewRows([]string{"id", "test"})
+	ret.AddRow(driver.Value(int64(35)), driver.Value("pat"))
+	ret.AddRow(driver.Value(int64(35)), driver.Value("pat"))
+	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
+
+	ctx := dbToContext(db)
+	err = query.Bind(ctx, &testResults)
+	if err != bunny.ErrMultipleRows {
+		t.Errorf("Invalid error, expected bunny.ErrMultipleRows, got %v", err)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {

@@ -1,7 +1,23 @@
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
-// One returns a single {{$varNameSingular}} record from the query.
+// One returns a single {{$varNameSingular}} record from the query. If the query returns no objects, ErrNoRows is returned. 
+// If the query returns multiple rows, bunny.ErrMultipleRows is returned.
 func (q {{$varNameSingular}}Query) One(ctx context.Context) (*{{$modelNameSingular}}, error) {
+	o := &{{$modelNameSingular}}{}
+
+	err := q.Bind(ctx, o)
+	if err != nil {
+		return nil, errors.Wrap(err, "{{.PkgName}}: failed to execute a one query for {{.Model.Name}}")
+	}
+
+	{{ hook . "after_select" "o" .Model }}
+
+	return o, nil
+}
+
+// First returns a single {{$varNameSingular}} record from the query. If the query returns no objects, ErrNoRows is returned. 
+// If the query returns multiple objects, the first one is picked (and no error is generated).
+func (q {{$varNameSingular}}Query) First(ctx context.Context) (*{{$modelNameSingular}}, error) {
 	o := &{{$modelNameSingular}}{}
 
 	queries.SetLimit(q.Query, 1)
