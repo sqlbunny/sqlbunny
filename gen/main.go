@@ -44,8 +44,8 @@ func Run(items []ConfigItem) {
 			UseTopClause:      false,
 		},
 
-		OutputPath: "models",
-		PkgName:    "models",
+		OutputPath:        ".",
+		ModelsPackageName: "models",
 	}
 
 	rootCmd.AddCommand(&cobra.Command{

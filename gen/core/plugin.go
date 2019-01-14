@@ -46,8 +46,8 @@ func (p *Plugin) BunnyPlugin() {
 }
 
 func (p *Plugin) gen() {
-	if err := os.MkdirAll(gen.Config.OutputPath, os.ModePerm); err != nil {
-		log.Fatalf("Error creating output directory %s: %v", gen.Config.OutputPath, err)
+	if err := os.MkdirAll(gen.Config.ModelsOutputPath(), os.ModePerm); err != nil {
+		log.Fatalf("Error creating output directory %s: %v", gen.Config.ModelsOutputPath(), err)
 	}
 
 	var models []*schema.Model

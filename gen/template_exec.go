@@ -34,11 +34,11 @@ func (t *TemplateList) Execute(data map[string]interface{}, filename string) {
 	out.Reset()
 
 	WriteFileDisclaimer(out)
-	WritePackageName(out, Config.PkgName)
+	WritePackageName(out, Config.ModelsPackageName)
 	WriteImports(out, imports)
 	out.Write(innerOut.Bytes())
 
-	WriteFile(Config.OutputPath, filename, out.Bytes())
+	WriteFile(Config.ModelsOutputPath(), filename, out.Bytes())
 }
 
 func (t *TemplateList) ExecuteSingleton(data map[string]interface{}) {
@@ -51,10 +51,10 @@ func (t *TemplateList) ExecuteSingleton(data map[string]interface{}) {
 		fName = fName[:len(fName)-len(ext)]
 
 		WriteFileDisclaimer(out)
-		WritePackageName(out, Config.PkgName)
+		WritePackageName(out, Config.ModelsPackageName)
 
 		executeTemplate(out, t.Template, tplName, data)
-		WriteFile(Config.OutputPath, fName+".go", out.Bytes())
+		WriteFile(Config.ModelsOutputPath(), fName+".go", out.Bytes())
 	}
 }
 

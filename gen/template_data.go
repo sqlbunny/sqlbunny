@@ -10,7 +10,7 @@ func BaseTemplateData() map[string]interface{} {
 	rq := strmangle.QuoteCharacter(d.RQ)
 
 	return map[string]interface{}{
-		"PkgName":     Config.PkgName,
+		"PkgName":     Config.ModelsPackageName,
 		"Dialect":     d,
 		"LQ":          lq,
 		"RQ":          rq,
