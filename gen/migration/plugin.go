@@ -6,6 +6,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/kernelpayments/sqlbunny/runtime/bunny"
 
@@ -16,7 +18,8 @@ import (
 )
 
 type Plugin struct {
-	Store *migration.Store
+	Store                 *migration.Store
+	MigrationsPackageName string
 }
 
 var _ gen.Plugin = &Plugin{}
@@ -24,6 +27,9 @@ var _ gen.Plugin = &Plugin{}
 func (*Plugin) IsConfigItem() {}
 
 func (p *Plugin) BunnyPlugin() {
+	if p.MigrationsPackageName == "" {
+		p.MigrationsPackageName = "migrations"
+	}
 	gen.AddCommand(&cobra.Command{
 		Use: "genmigrations",
 		Run: p.cmdGenMigrations,
@@ -34,32 +40,63 @@ func (p *Plugin) BunnyPlugin() {
 	})
 }
 
+func (p *Plugin) migrationsOutputPath() string {
+	return filepath.Join(gen.Config.OutputPath, p.MigrationsPackageName)
+}
+
 func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
+	if err := os.MkdirAll(p.migrationsOutputPath(), os.ModePerm); err != nil {
+		log.Fatalf("Error creating output directory %s: %v", p.migrationsOutputPath(), err)
+	}
+
+	if _, err := os.Stat(filepath.Join(p.migrationsOutputPath(), "store.go")); os.IsNotExist(err) {
+		var buf bytes.Buffer
+		gen.WritePackageName(&buf, p.MigrationsPackageName)
+		buf.WriteString("import \"github.com/kernelpayments/sqlbunny/runtime/migration\"\n")
+		buf.WriteString("\n")
+		buf.WriteString("// Store contains the migrations for this project\n")
+		buf.WriteString("var Store migration.Store\n")
+
+		gen.WriteFile(p.migrationsOutputPath(), "store.go", buf.Bytes())
+
+		if p.Store == nil {
+			log.Println("Initial migrations package created.")
+			log.Println("To generate migrations, you need to add a reference to the")
+			log.Println("migration store in the plugin config, like this:")
+			log.Println()
+			log.Println("    &migration.Plugin{")
+			log.Println("        Store: &migrations.Store,")
+			log.Println("    },")
+			log.Println()
+			log.Println("Once you've done this, run genmigrations again.")
+			return
+		}
+	}
+
 	if p.Store == nil {
 		log.Fatal("migrate.Plugin.Store is not set.")
 	}
 
-	s2 := gen.Config.Schema
-
 	s1 := schema.New()
 	p.applyAll(s1)
-
+	s2 := gen.Config.Schema
 	ops := diff(nil, s1, s2)
 
 	if len(ops) == 0 {
 		log.Fatal("No model changes found, doing nothing.")
 	}
+
 	migrationNumber := p.nextFree()
 	migrationFile := fmt.Sprintf("migration_%05d.go", migrationNumber)
 
 	var buf bytes.Buffer
-	gen.WritePackageName(&buf, "migrations")
-	buf.WriteString("import \"github.com/kernelpayments/sqlbunny/migration\"\n")
-	buf.WriteString(fmt.Sprintf("func init() {\nMigrations.Register(%d, ", migrationNumber))
+	gen.WritePackageName(&buf, p.MigrationsPackageName)
+	buf.WriteString("import \"github.com/kernelpayments/sqlbunny/runtime/migration\"\n")
+	buf.WriteString(fmt.Sprintf("func init() {\nStore.Register(%d, ", migrationNumber))
 	ops.Dump(&buf)
 	buf.WriteString(")\n}")
 
-	gen.WriteFile("migrations", migrationFile, buf.Bytes())
+	gen.WriteFile(p.migrationsOutputPath(), migrationFile, buf.Bytes())
 }
 
 type fakeDB struct {

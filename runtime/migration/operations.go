@@ -132,7 +132,7 @@ func (o AlterTableAddColumn) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableAddColumn) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableAddColumn {\n")
+	buf.WriteString("migration.AlterTableAddColumn {\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("Type: \"" + o.Type + "\",\n")
 	buf.WriteString("Nullable: " + dumpBool(o.Nullable) + ",\n")
@@ -155,7 +155,7 @@ func (o AlterTableDropColumn) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableDropColumn) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableDropColumn {Name: \"" + o.Name + "\"}")
+	buf.WriteString("migration.AlterTableDropColumn {Name: \"" + o.Name + "\"}")
 }
 
 func columnList(columns []string) string {
@@ -180,7 +180,7 @@ func (o AlterTableCreatePrimaryKey) AlterTableSQL(ato *AlterTableOperation) stri
 }
 
 func (o AlterTableCreatePrimaryKey) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableCreatePrimaryKey{\n")
+	buf.WriteString("migration.AlterTableCreatePrimaryKey{\n")
 	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
 	buf.WriteString("}")
 }
@@ -193,7 +193,7 @@ func (o AlterTableDropPrimaryKey) AlterTableSQL(ato *AlterTableOperation) string
 }
 
 func (o AlterTableDropPrimaryKey) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableDropPrimaryKey{}")
+	buf.WriteString("migration.AlterTableDropPrimaryKey{}")
 }
 
 type AlterTableCreateUnique struct {
@@ -206,7 +206,7 @@ func (o AlterTableCreateUnique) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableCreateUnique) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableCreateUnique{\n")
+	buf.WriteString("migration.AlterTableCreateUnique{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
 	buf.WriteString("}")
@@ -221,7 +221,7 @@ func (o AlterTableDropUnique) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableDropUnique) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableDropUnique{\n")
+	buf.WriteString("migration.AlterTableDropUnique{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("}")
 }
@@ -238,7 +238,7 @@ func (o AlterTableCreateForeignKey) AlterTableSQL(ato *AlterTableOperation) stri
 }
 
 func (o AlterTableCreateForeignKey) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableCreateForeignKey{\n")
+	buf.WriteString("migration.AlterTableCreateForeignKey{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
 	buf.WriteString("ForeignTable: \"" + o.ForeignTable + "\",\n")
@@ -255,7 +255,7 @@ func (o AlterTableDropForeignKey) AlterTableSQL(ato *AlterTableOperation) string
 }
 
 func (o AlterTableDropForeignKey) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableDropForeignKey{\n")
+	buf.WriteString("migration.AlterTableDropForeignKey{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("}")
 }
@@ -269,7 +269,7 @@ func (o AlterTableSetNotNull) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableSetNotNull) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableSetNotNull{Name: \"" + o.Name + "\"}")
+	buf.WriteString("migration.AlterTableSetNotNull{Name: \"" + o.Name + "\"}")
 }
 
 type AlterTableSetNull struct {
@@ -281,7 +281,7 @@ func (o AlterTableSetNull) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableSetNull) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableSetNull{Name: \"" + o.Name + "\"}")
+	buf.WriteString("migration.AlterTableSetNull{Name: \"" + o.Name + "\"}")
 }
 
 type AlterTableSetType struct {
@@ -294,7 +294,7 @@ func (o AlterTableSetType) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableSetType) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.AlterTableSetType{\n")
+	buf.WriteString("migration.AlterTableSetType{\n")
 	buf.WriteString("Name: \"" + o.Name + "\",\n")
 	buf.WriteString("Type: \"" + o.Type + "\",\n")
 	buf.WriteString("}")
@@ -366,7 +366,7 @@ func (o RenameColumnOperation) Run(ctx context.Context) error {
 }
 
 func (o RenameColumnOperation) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.RenameColumnOperation {Name: \"" + o.Name + "\", OldColumnName: \"" + o.OldColumnName + "\", NewColumnName: \"" + o.NewColumnName + "\"}")
+	buf.WriteString("migration.RenameColumnOperation {Name: \"" + o.Name + "\", OldColumnName: \"" + o.OldColumnName + "\", NewColumnName: \"" + o.NewColumnName + "\"}")
 }
 
 type DropIndexOperation struct {

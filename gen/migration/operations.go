@@ -111,7 +111,7 @@ func ApplyOperation(o migration.Operation, d *schema.Schema) {
 		// do nothing.
 
 	default:
-		panic(fmt.Sprintf("Unknown operation type: %t", o))
+		panic(fmt.Sprintf("Unknown operation type: %T", o))
 	}
 }
 
@@ -210,5 +210,8 @@ func ApplyAlterTableOperation(o migration.AlterTableSuboperation, d *schema.Sche
 			panic(fmt.Sprintf("AlterTableSetType column doesn't exist: table %s, column %s ", m.Name, o.Name))
 		}
 		c.DBType = o.Type
+
+	default:
+		panic(fmt.Sprintf("Unknown alter table suboperation type: %T", o))
 	}
 }
