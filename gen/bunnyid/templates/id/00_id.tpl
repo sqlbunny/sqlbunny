@@ -169,6 +169,9 @@ func (id *{{$modelName}}) Scan(value interface{}) (err error) {
 		}
 		copy(id.raw[:], val[:])
 		return nil
+	case nil:
+		*id = {{$modelName}}{}
+		return nil
 	default:
 		return errors.Errorf("xid: scanning unsupported type: %T", value)
 	}
