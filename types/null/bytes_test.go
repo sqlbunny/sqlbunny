@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	bytesJSON = []byte(`"hello"`)
+	bytesJSON = []byte(`"aGVsbG8="`)
 )
 
 func TestBytesFrom(t *testing.T) {
@@ -70,10 +70,10 @@ func TestTextUnmarshalBytes(t *testing.T) {
 }
 
 func TestMarshalBytes(t *testing.T) {
-	i := BytesFrom([]byte(`"hello"`))
+	i := BytesFrom([]byte("hello"))
 	data, err := json.Marshal(i)
 	maybePanic(err)
-	assertJSONEquals(t, data, `"hello"`, "non-empty json marshal")
+	assertJSONEquals(t, data, `"aGVsbG8="`, "non-empty json marshal")
 
 	// invalid values should be encoded as null
 	null := NewBytes(nil, false)
