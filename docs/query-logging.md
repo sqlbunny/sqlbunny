@@ -27,6 +27,6 @@ bunny.SetLogger(&logger{})
 
 ## Transaction logging
 
-You have the opportunity to attach your own data to the context in the `LogBegin` call. The returned context is passed to the inner transactio function.
+You have the opportunity to attach your own data to the context in the `LogBegin` call. The returned context is passed to the inner transaction function.
 
 This can be useful if you're attaching logging info to your context, so that all log entries made from within a transaction are annotated like so.
