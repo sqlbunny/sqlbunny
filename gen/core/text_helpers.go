@@ -59,7 +59,7 @@ func txtsFromFKey(models []*schema.Model, model *schema.Model, fkey *schema.Fore
 	r.Function.LocalAssignment = strmangle.TitleCaseIdentifier(fkey.Column)
 	if fkey.Nullable {
 		col := model.GetColumn(fkey.Column)
-		r.Function.LocalAssignment += "." + col.Type.(schema.NullableType).TypeGoNullField()
+		r.Function.LocalAssignment += "." + col.Type.(schema.NullableType).GoTypeNullField()
 	}
 
 	foreignModel := schema.GetModel(models, fkey.ForeignModel)
@@ -67,10 +67,10 @@ func txtsFromFKey(models []*schema.Model, model *schema.Model, fkey *schema.Fore
 
 	r.Function.ForeignAssignment = strmangle.TitleCaseIdentifier(fkey.ForeignColumn)
 	if fkey.ForeignColumnNullable {
-		r.Function.ForeignAssignment += "." + ForeignColumn.Type.(schema.NullableType).TypeGoNullField()
+		r.Function.ForeignAssignment += "." + ForeignColumn.Type.(schema.NullableType).GoTypeNullField()
 	}
 
-	r.Function.UsesBytes = ForeignColumn.Type.TypeGo().Name == "[]byte"
+	r.Function.UsesBytes = ForeignColumn.Type.GoType().Name == "[]byte"
 
 	return r
 }
@@ -96,7 +96,7 @@ func txtsFromOneToOne(models []*schema.Model, model *schema.Model, oneToOne *sch
 	rel.ForeignKey.Column, rel.ForeignKey.ForeignColumn = rel.ForeignKey.ForeignColumn, rel.ForeignKey.Column
 	rel.ForeignKey.Nullable, rel.ForeignKey.ForeignColumnNullable = rel.ForeignKey.ForeignColumnNullable, rel.ForeignKey.Nullable
 	rel.ForeignKey.Unique, rel.ForeignKey.ForeignColumnUnique = rel.ForeignKey.ForeignColumnUnique, rel.ForeignKey.Unique
-	rel.Function.UsesBytes = col.Type.TypeGo().Name == "[]byte"
+	rel.Function.UsesBytes = col.Type.GoType().Name == "[]byte"
 	rel.Function.ForeignName, rel.Function.Name = txtNameToOne(&schema.ForeignKey{
 		Model:         oneToOne.ForeignModel,
 		Column:        oneToOne.ForeignColumn,
@@ -158,17 +158,17 @@ func txtsFromToMany(models []*schema.Model, model *schema.Model, rel *schema.ToM
 	col := model.GetColumn(rel.Column)
 	r.Function.LocalAssignment = strmangle.TitleCaseIdentifier(rel.Column)
 	if rel.Nullable {
-		r.Function.LocalAssignment += "." + col.Type.(schema.NullableType).TypeGoNullField()
+		r.Function.LocalAssignment += "." + col.Type.(schema.NullableType).GoTypeNullField()
 	}
 
 	r.Function.ForeignAssignment = strmangle.TitleCaseIdentifier(rel.ForeignColumn)
 	if rel.ForeignColumnNullable {
 		foreignModel := schema.GetModel(models, rel.ForeignModel)
 		ForeignColumn := foreignModel.GetColumn(rel.ForeignColumn)
-		r.Function.ForeignAssignment += "." + ForeignColumn.Type.(schema.NullableType).TypeGoNullField()
+		r.Function.ForeignAssignment += "." + ForeignColumn.Type.(schema.NullableType).GoTypeNullField()
 	}
 
-	r.Function.UsesBytes = col.Type.TypeGo().Name == "[]byte"
+	r.Function.UsesBytes = col.Type.GoType().Name == "[]byte"
 
 	return r
 }

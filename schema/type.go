@@ -4,67 +4,75 @@ import "strings"
 
 type Type interface {
 	GetName() string
-	TypeGo() TypeGo
+	GoType() GoType
 }
 
 type BaseType interface {
 	GetName() string
-	TypeGo() TypeGo
-	TypeDB() string
+	GoType() GoType
+	SQLType() SQLType
 }
 
 type NullableType interface {
 	GetName() string
-	TypeGo() TypeGo
-	TypeGoNull() TypeGo
-	TypeGoNullField() string
+	GoType() GoType
+	GoTypeNull() GoType
+	GoTypeNullField() string
 }
 
-type TypeGo struct {
+type GoType struct {
 	Pkg  string
 	Name string
 }
 
 type BaseTypeNotNullable struct {
 	Name     string
-	Go       TypeGo
-	Postgres string
+	Go       GoType
+	Postgres SQLType
+}
+
+type SQLType struct {
+	Type      string
+	ZeroValue string
 }
 
 func (t *BaseTypeNotNullable) GetName() string {
 	return t.Name
 }
 
-func (t *BaseTypeNotNullable) TypeGo() TypeGo {
+func (t *BaseTypeNotNullable) GoType() GoType {
 	return t.Go
 }
 
-func (t *BaseTypeNotNullable) TypeDB() string {
+func (t *BaseTypeNotNullable) SQLType() SQLType {
 	return t.Postgres
 }
 
 type BaseTypeNullable struct {
 	Name     string
-	Go       TypeGo
-	GoNull   TypeGo
-	Postgres string
+	Go       GoType
+	GoNull   GoType
+	Postgres SQLType
 }
 
 func (t *BaseTypeNullable) GetName() string {
 	return t.Name
 }
-func (t *BaseTypeNullable) TypeGo() TypeGo {
+func (t *BaseTypeNullable) GoType() GoType {
 	return t.Go
 }
-func (t *BaseTypeNullable) TypeGoNull() TypeGo {
+func (t *BaseTypeNullable) GoTypeNull() GoType {
 	return t.GoNull
 }
-func (t *BaseTypeNullable) TypeGoNullField() string {
+func (t *BaseTypeNullable) GoTypeNullField() string {
 	if strings.HasPrefix(t.GoNull.Name, "Null") {
 		return t.GoNull.Name[4:]
 	}
 	return t.GoNull.Name
 }
-func (t *BaseTypeNullable) TypeDB() string {
+func (t *BaseTypeNullable) SQLType() SQLType {
 	return t.Postgres
 }
+
+var _ BaseType = &BaseTypeNullable{}
+var _ BaseType = &BaseTypeNotNullable{}

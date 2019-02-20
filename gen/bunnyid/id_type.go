@@ -11,19 +11,26 @@ type IDType struct {
 func (t *IDType) GetName() string {
 	return t.Name
 }
-func (t *IDType) TypeGo() schema.TypeGo {
-	return schema.TypeGo{
+
+func (t *IDType) GoType() schema.GoType {
+	return schema.GoType{
 		Name: strmangle.TitleCase(t.Name),
 	}
 }
-func (t *IDType) TypeGoNull() schema.TypeGo {
-	return schema.TypeGo{
+
+func (t *IDType) GoTypeNull() schema.GoType {
+	return schema.GoType{
 		Name: "Null" + strmangle.TitleCase(t.Name),
 	}
 }
-func (t *IDType) TypeGoNullField() string {
+
+func (t *IDType) GoTypeNullField() string {
 	return "ID"
 }
-func (t *IDType) TypeDB() string {
-	return "bytea"
+
+func (t *IDType) SQLType() schema.SQLType {
+	return schema.SQLType{
+		Type:      "bytea",
+		ZeroValue: "'\\x000000000000'",
+	}
 }

@@ -135,7 +135,8 @@ func diffAlterModels(ops migration.OperationList, s1, s2 *schema.Schema) migrati
 				if c1 == nil {
 					subops = append(subops, migration.AlterTableAddColumn{
 						Name:     c2.Name,
-						Type:     c2.DBType,
+						Type:     c2.SQLType,
+						Default:  c2.SQLDefault,
 						Nullable: c2.Nullable,
 					})
 				}
@@ -237,7 +238,8 @@ func makeColumns(m []*schema.Column) []migration.Column {
 	for _, c := range m {
 		res = append(res, migration.Column{
 			Name:     c.Name,
-			Type:     c.DBType,
+			Type:     c.SQLType,
+			Default:  c.SQLDefault,
 			Nullable: c.Nullable,
 		})
 	}
@@ -251,10 +253,22 @@ func diffColumn(ops []migration.AlterTableSuboperation, c1, c2 *schema.Column) [
 	if !c1.Nullable && c2.Nullable {
 		ops = append(ops, migration.AlterTableSetNull{Name: c1.Name})
 	}
-	if c1.DBType != c2.DBType {
+	if c1.SQLDefault != c2.SQLDefault {
+		if c2.SQLDefault == "" {
+			ops = append(ops, migration.AlterTableDropDefault{
+				Name: c1.Name,
+			})
+		} else {
+			ops = append(ops, migration.AlterTableSetDefault{
+				Name:    c1.Name,
+				Default: c2.SQLDefault,
+			})
+		}
+	}
+	if c1.SQLType != c2.SQLType {
 		ops = append(ops, migration.AlterTableSetType{
 			Name: c1.Name,
-			Type: c2.DBType,
+			Type: c2.SQLType,
 		})
 	}
 	return ops

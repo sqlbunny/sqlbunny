@@ -39,11 +39,11 @@ func (f *Field) IsStruct() bool {
 	return ok
 }
 
-func (f *Field) TypeGo() TypeGo {
+func (f *Field) GoType() GoType {
 	if f.Nullable {
-		return f.Type.(NullableType).TypeGoNull()
+		return f.Type.(NullableType).GoTypeNull()
 	} else {
-		return f.Type.TypeGo()
+		return f.Type.GoType()
 	}
 }
 

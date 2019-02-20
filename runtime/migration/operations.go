@@ -9,26 +9,8 @@ import (
 	"github.com/kernelpayments/sqlbunny/runtime/bunny"
 )
 
-func getDefaultForType(dbType string) string {
-	switch dbType {
-	case "smallint", "integer", "bigint", "decimal", "numeric", "real", "double precision", "int2", "int4", "int8":
-		return "0"
-	case "boolean":
-		return "false"
-	case "varchar", "text":
-		return "''"
-	case "bytea":
-		return "''"
-	case "jsonb":
-		return "'{}'"
-	}
-
-	// For arrays, the default is an empty array.
-	if strings.HasSuffix(dbType, "[]") {
-		return "'{}'"
-	}
-
-	return ""
+func esc(s string) string {
+	return fmt.Sprintf("%#v", s)
 }
 
 type Operation interface {
@@ -50,6 +32,7 @@ func (o OperationList) Dump(buf *bytes.Buffer) {
 type Column struct {
 	Name     string
 	Type     string
+	Default  string
 	Nullable bool
 }
 
@@ -68,12 +51,12 @@ func (o CreateTableOperation) Run(ctx context.Context) error {
 		var n string
 		if !c.Nullable {
 			n = " NOT NULL"
-			d := getDefaultForType(c.Type)
-			if d != "" {
-				n += " DEFAULT " + d
-			}
 		}
-		x = append(x, fmt.Sprintf("    \"%s\" %s%s", c.Name, c.Type, n))
+		var d string
+		if c.Default != "" {
+			d = " DEFAULT " + c.Default
+		}
+		x = append(x, fmt.Sprintf("    \"%s\" %s%s%s", c.Name, c.Type, n, d))
 	}
 	q := fmt.Sprintf("CREATE TABLE \"%s\" (\n%s\n)", o.Name, strings.Join(x, ",\n"))
 	_, err := bunny.Exec(ctx, q)
@@ -82,7 +65,7 @@ func (o CreateTableOperation) Run(ctx context.Context) error {
 
 func (o CreateTableOperation) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.CreateTableOperation {\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
 	buf.WriteString("Columns: []migration.Column{\n")
 	for _, c := range o.Columns {
 		c.Dump(buf)
@@ -104,7 +87,7 @@ func (o DropTableOperation) Run(ctx context.Context) error {
 
 func (o DropTableOperation) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.DropTableOperation {\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
 	buf.WriteString("}")
 }
 
@@ -116,25 +99,28 @@ type AlterTableSuboperation interface {
 type AlterTableAddColumn struct {
 	Name     string
 	Type     string
+	Default  string
 	Nullable bool
 }
 
 func (o AlterTableAddColumn) AlterTableSQL(ato *AlterTableOperation) string {
 	var n string
 	if !o.Nullable {
-		n = "NOT NULL"
-		d := getDefaultForType(o.Type)
-		if d != "" {
-			n += " DEFAULT " + d
-		}
+		n = " NOT NULL"
 	}
-	return fmt.Sprintf("ADD COLUMN \"%s\" %s %s", o.Name, o.Type, n)
+	var d string
+	if o.Default != "" {
+		d = " DEFAULT " + o.Default
+
+	}
+	return fmt.Sprintf("ADD COLUMN \"%s\" %s%s%s", o.Name, o.Type, n, d)
 }
 
 func (o AlterTableAddColumn) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.AlterTableAddColumn {\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
-	buf.WriteString("Type: \"" + o.Type + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
+	buf.WriteString("Type: " + esc(o.Type) + ",\n")
+	buf.WriteString("Default: " + esc(o.Default) + ",\n")
 	buf.WriteString("Nullable: " + dumpBool(o.Nullable) + ",\n")
 	buf.WriteString("}")
 }
@@ -155,7 +141,7 @@ func (o AlterTableDropColumn) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableDropColumn) Dump(buf *bytes.Buffer) {
-	buf.WriteString("migration.AlterTableDropColumn {Name: \"" + o.Name + "\"}")
+	buf.WriteString("migration.AlterTableDropColumn {Name: " + esc(o.Name) + "}")
 }
 
 func columnList(columns []string) string {
@@ -207,7 +193,7 @@ func (o AlterTableCreateUnique) AlterTableSQL(ato *AlterTableOperation) string {
 
 func (o AlterTableCreateUnique) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.AlterTableCreateUnique{\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
 	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
 	buf.WriteString("}")
 }
@@ -222,7 +208,7 @@ func (o AlterTableDropUnique) AlterTableSQL(ato *AlterTableOperation) string {
 
 func (o AlterTableDropUnique) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.AlterTableDropUnique{\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
 	buf.WriteString("}")
 }
 
@@ -239,9 +225,9 @@ func (o AlterTableCreateForeignKey) AlterTableSQL(ato *AlterTableOperation) stri
 
 func (o AlterTableCreateForeignKey) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.AlterTableCreateForeignKey{\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
 	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
-	buf.WriteString("ForeignTable: \"" + o.ForeignTable + "\",\n")
+	buf.WriteString("ForeignTable: " + esc(o.ForeignTable) + ",\n")
 	buf.WriteString("ForeignColumns: []string{" + columnList(o.ForeignColumns) + "},\n")
 	buf.WriteString("}")
 }
@@ -256,7 +242,7 @@ func (o AlterTableDropForeignKey) AlterTableSQL(ato *AlterTableOperation) string
 
 func (o AlterTableDropForeignKey) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.AlterTableDropForeignKey{\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
 	buf.WriteString("}")
 }
 
@@ -269,7 +255,7 @@ func (o AlterTableSetNotNull) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableSetNotNull) Dump(buf *bytes.Buffer) {
-	buf.WriteString("migration.AlterTableSetNotNull{Name: \"" + o.Name + "\"}")
+	buf.WriteString("migration.AlterTableSetNotNull{Name: " + esc(o.Name) + "}")
 }
 
 type AlterTableSetNull struct {
@@ -281,7 +267,32 @@ func (o AlterTableSetNull) AlterTableSQL(ato *AlterTableOperation) string {
 }
 
 func (o AlterTableSetNull) Dump(buf *bytes.Buffer) {
-	buf.WriteString("migration.AlterTableSetNull{Name: \"" + o.Name + "\"}")
+	buf.WriteString("migration.AlterTableSetNull{Name: " + esc(o.Name) + "}")
+}
+
+type AlterTableSetDefault struct {
+	Name    string
+	Default string
+}
+
+func (o AlterTableSetDefault) AlterTableSQL(ato *AlterTableOperation) string {
+	return fmt.Sprintf("ALTER COLUMN \"%s\" SET DEFAULT %s", o.Name, o.Default)
+}
+
+func (o AlterTableSetDefault) Dump(buf *bytes.Buffer) {
+	buf.WriteString("migration.AlterTableSetDefault{Name: " + esc(o.Name) + ", Default: " + esc(o.Default) + "}")
+}
+
+type AlterTableDropDefault struct {
+	Name string
+}
+
+func (o AlterTableDropDefault) AlterTableSQL(ato *AlterTableOperation) string {
+	return fmt.Sprintf("ALTER COLUMN \"%s\" DROP DEFAULT", o.Name)
+}
+
+func (o AlterTableDropDefault) Dump(buf *bytes.Buffer) {
+	buf.WriteString("migration.AlterTableDropDefault{Name: " + esc(o.Name) + "}")
 }
 
 type AlterTableSetType struct {
@@ -295,8 +306,8 @@ func (o AlterTableSetType) AlterTableSQL(ato *AlterTableOperation) string {
 
 func (o AlterTableSetType) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.AlterTableSetType{\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
-	buf.WriteString("Type: \"" + o.Type + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
+	buf.WriteString("Type: " + esc(o.Type) + ",\n")
 	buf.WriteString("}")
 }
 
@@ -323,7 +334,7 @@ func (o AlterTableOperation) Run(ctx context.Context) error {
 
 func (o AlterTableOperation) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.AlterTableOperation {\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
 	buf.WriteString("Ops: []migration.AlterTableSuboperation{\n")
 	for _, op := range o.Ops {
 		op.Dump(buf)
@@ -347,8 +358,8 @@ func (o CreateIndexOperation) Run(ctx context.Context) error {
 
 func (o CreateIndexOperation) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.CreateIndexOperation {\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
-	buf.WriteString("IndexName: \"" + o.IndexName + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
+	buf.WriteString("IndexName: " + esc(o.IndexName) + ",\n")
 	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
 	buf.WriteString("}")
 }
@@ -366,7 +377,7 @@ func (o RenameColumnOperation) Run(ctx context.Context) error {
 }
 
 func (o RenameColumnOperation) Dump(buf *bytes.Buffer) {
-	buf.WriteString("migration.RenameColumnOperation {Name: \"" + o.Name + "\", OldColumnName: \"" + o.OldColumnName + "\", NewColumnName: \"" + o.NewColumnName + "\"}")
+	buf.WriteString("migration.RenameColumnOperation {Name: " + esc(o.Name) + ", OldColumnName: " + esc(o.OldColumnName) + ", NewColumnName: " + esc(o.NewColumnName) + "}")
 }
 
 type DropIndexOperation struct {
@@ -382,8 +393,8 @@ func (o DropIndexOperation) Run(ctx context.Context) error {
 
 func (o DropIndexOperation) Dump(buf *bytes.Buffer) {
 	buf.WriteString("migration.DropIndexOperation {\n")
-	buf.WriteString("Name: \"" + o.Name + "\",\n")
-	buf.WriteString("IndexName: \"" + o.IndexName + "\",\n")
+	buf.WriteString("Name: " + esc(o.Name) + ",\n")
+	buf.WriteString("IndexName: " + esc(o.IndexName) + ",\n")
 	buf.WriteString("}")
 }
 

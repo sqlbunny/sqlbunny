@@ -10,16 +10,18 @@ type Struct struct {
 func (s *Struct) GetName() string {
 	return s.Name
 }
-func (s *Struct) TypeGo() TypeGo {
-	return TypeGo{
+func (s *Struct) GoType() GoType {
+	return GoType{
 		Name: strmangle.TitleCase(s.Name),
 	}
 }
-func (s *Struct) TypeGoNull() TypeGo {
-	return TypeGo{
+func (s *Struct) GoTypeNull() GoType {
+	return GoType{
 		Name: "Null" + strmangle.TitleCase(s.Name),
 	}
 }
-func (s *Struct) TypeGoNullField() string {
+func (s *Struct) GoTypeNullField() string {
 	return strmangle.TitleCase(s.Name)
 }
+
+var _ Type = &Struct{}

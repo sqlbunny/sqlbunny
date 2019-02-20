@@ -168,25 +168,34 @@ func makeModel(v *Validation, s *schema.Schema, m *schema.Model, items []ModelIt
 						Name: undot(prefix + i.name),
 						Type: &schema.BaseTypeNullable{
 							Name: "bool",
-							Go: schema.TypeGo{
+							Go: schema.GoType{
 								Name: "bool",
 							},
-							GoNull: schema.TypeGo{
+							GoNull: schema.GoType{
 								Pkg:  "github.com/kernelpayments/sqlbunny/types/null",
 								Name: "Bool",
 							},
-							Postgres: "boolean",
+							Postgres: schema.SQLType{
+								Type:      "boolean",
+								ZeroValue: "false",
+							},
 						},
-						DBType:   "boolean",
+						SQLType:  "boolean",
 						Nullable: forceNullable,
 					})
 				}
 			case schema.BaseType:
+				null := nullable || forceNullable
+				def := t.SQLType().ZeroValue
+				if null {
+					def = ""
+				}
 				m.Columns = append(m.Columns, &schema.Column{
-					Name:     undot(prefix + i.name),
-					Type:     t,
-					DBType:   t.TypeDB(),
-					Nullable: nullable || forceNullable,
+					Name:       undot(prefix + i.name),
+					Type:       t,
+					SQLType:    t.SQLType().Type,
+					SQLDefault: def,
+					Nullable:   null,
 				})
 			default:
 				// Should never happen, because all types except Struct

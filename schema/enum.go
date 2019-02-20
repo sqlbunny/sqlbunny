@@ -11,22 +11,27 @@ func (e *Enum) GetName() string {
 	return e.Name
 }
 
-func (e *Enum) TypeGo() TypeGo {
-	return TypeGo{
+func (e *Enum) GoType() GoType {
+	return GoType{
 		Name: strmangle.TitleCase(e.Name),
 	}
 }
 
-func (e *Enum) TypeGoNull() TypeGo {
-	return TypeGo{
+func (e *Enum) GoTypeNull() GoType {
+	return GoType{
 		Name: "Null" + strmangle.TitleCase(e.Name),
 	}
 }
 
-func (e *Enum) TypeGoNullField() string {
+func (e *Enum) GoTypeNullField() string {
 	return strmangle.TitleCase(e.Name)
 }
 
-func (e *Enum) TypeDB() string {
-	return "integer"
+func (e *Enum) SQLType() SQLType {
+	return SQLType{
+		Type:      "integer",
+		ZeroValue: "0",
+	}
 }
+
+var _ BaseType = &Enum{}

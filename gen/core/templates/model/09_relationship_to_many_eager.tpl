@@ -59,10 +59,10 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 	{{- $foreignModel := getModel $dot.Models .ForeignModel -}}
 	{{- $joinModel := getModel $dot.Models .JoinModel -}}
 	{{- $localCol := $joinModel.GetColumn .JoinLocalColumn}}
-	var localJoinCols []{{typeGo $localCol.TypeGo}}
+	var localJoinCols []{{goType $localCol.GoType}}
 	for results.Next() {
 		one := new({{$txt.ForeignModel.NameGo}})
-		var localJoinCol {{typeGo $localCol.TypeGo}}
+		var localJoinCol {{goType $localCol.GoType}}
 
 		err = results.Scan({{$foreignModel.Columns | columnNames | stringMap $dot.StringFuncs.titleCaseIdentifier | prefixStringSlice "&one." | join ", "}}, &localJoinCol)
 		if err = results.Err(); err != nil {

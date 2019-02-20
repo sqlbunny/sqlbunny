@@ -27,7 +27,7 @@ The database types must specify the type and the SQL value corresponding to the 
 Type("string", BaseType{
     Go:       "string",
     GoNull:   "github.com/kernelpayments/sqlbunny/types/null.String",
-    Postgres: DBType{
+    Postgres: SQLType{
         Type: "text",
         ZeroValue: "''",
     },
@@ -36,7 +36,7 @@ Type("string", BaseType{
 Type("amount", BaseType{
     Go:       "github.com/exampleorg/exampleproject/types.Amount",
     GoNull:   "github.com/exampleorg/exampleproject/types.NullAmount",
-    Postgres: DBType{
+    Postgres: SQLType{
         Type: "bigint",
         ZeroValue: "0",
     },

@@ -15,6 +15,6 @@ import (
 // {{$modelName}} is an object representing the database model.
 type {{$modelName}} struct {
 	{{range $field := .Struct.Fields }}
-	{{titleCase $field.Name}} {{typeGo $field.TypeGo}} `{{$field.GenerateTags}}`
+	{{titleCase $field.Name}} {{goType $field.GoType}} `{{$field.GenerateTags}}`
 	{{- end -}}
 }

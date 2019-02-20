@@ -140,7 +140,7 @@ var TemplateFunctions = template.FuncMap{
 
 	// Imports
 	"import":  templateImport,
-	"typeGo":  templateTypeGo,
+	"goType":  templateGoType,
 	"typesGo": templateTypesGo,
 
 	// Set operations

@@ -30,17 +30,22 @@ func Type(name string, t TypeDef) typeEntry {
 type BaseType struct {
 	Go       string
 	GoNull   string
-	Postgres string
+	Postgres SQLType
 }
 
-func parseGoType(s string) schema.TypeGo {
+type SQLType struct {
+	Type      string
+	ZeroValue string
+}
+
+func parseGoType(s string) schema.GoType {
 	i := strings.LastIndex(s, ".")
 	if i == -1 {
-		return schema.TypeGo{
+		return schema.GoType{
 			Name: s,
 		}
 	}
-	return schema.TypeGo{
+	return schema.GoType{
 		Pkg:  s[:i],
 		Name: s[i+1:],
 	}
@@ -49,16 +54,22 @@ func parseGoType(s string) schema.TypeGo {
 func (t BaseType) GetType(name string) schema.Type {
 	if t.GoNull == "" {
 		return &schema.BaseTypeNotNullable{
-			Name:     name,
-			Postgres: t.Postgres,
-			Go:       parseGoType(t.Go),
+			Name: name,
+			Postgres: schema.SQLType{
+				Type:      t.Postgres.Type,
+				ZeroValue: t.Postgres.ZeroValue,
+			},
+			Go: parseGoType(t.Go),
 		}
 	}
 	return &schema.BaseTypeNullable{
-		Name:     name,
-		Postgres: t.Postgres,
-		Go:       parseGoType(t.Go),
-		GoNull:   parseGoType(t.GoNull),
+		Name: name,
+		Postgres: schema.SQLType{
+			Type:      t.Postgres.Type,
+			ZeroValue: t.Postgres.ZeroValue,
+		},
+		Go:     parseGoType(t.Go),
+		GoNull: parseGoType(t.GoNull),
 	}
 }
 
@@ -89,9 +100,12 @@ type array struct {
 
 func (t array) GetType(name string) schema.Type {
 	return &schema.BaseTypeNotNullable{
-		Name:     name,
-		Postgres: "bytea[]",
-		Go: schema.TypeGo{
+		Name: name,
+		Postgres: schema.SQLType{
+			Type:      "bytea[]",
+			ZeroValue: "'{}'",
+		},
+		Go: schema.GoType{
 			Name: strmangle.TitleCase(name),
 		},
 	}

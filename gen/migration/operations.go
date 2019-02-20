@@ -16,9 +16,10 @@ func ApplyOperation(o migration.Operation, d *schema.Schema) {
 		cols := make([]*schema.Column, len(o.Columns))
 		for i, c := range o.Columns {
 			cols[i] = &schema.Column{
-				Name:     c.Name,
-				Nullable: c.Nullable,
-				DBType:   c.Type,
+				Name:       c.Name,
+				Nullable:   c.Nullable,
+				SQLType:    c.Type,
+				SQLDefault: c.Default,
 			}
 		}
 		d.Models[o.Name] = &schema.Model{
@@ -122,9 +123,10 @@ func ApplyAlterTableOperation(o migration.AlterTableSuboperation, d *schema.Sche
 			panic(fmt.Sprintf("AlterTableAddColumn already-existing: table %s, column %s", m.Name, o.Name))
 		}
 		m.Columns = append(m.Columns, &schema.Column{
-			Name:     o.Name,
-			DBType:   o.Type,
-			Nullable: o.Nullable,
+			Name:       o.Name,
+			SQLType:    o.Type,
+			SQLDefault: o.Default,
+			Nullable:   o.Nullable,
 		})
 
 	case migration.AlterTableDropColumn:
@@ -204,12 +206,26 @@ func ApplyAlterTableOperation(o migration.AlterTableSuboperation, d *schema.Sche
 		}
 		c.Nullable = true
 
+	case migration.AlterTableSetDefault:
+		c := m.FindColumn(o.Name)
+		if c == nil {
+			panic(fmt.Sprintf("AlterTableSetDefault column doesn't exist: table %s, column %s ", m.Name, o.Name))
+		}
+		c.SQLDefault = o.Default
+
+	case migration.AlterTableDropDefault:
+		c := m.FindColumn(o.Name)
+		if c == nil {
+			panic(fmt.Sprintf("AlterTableDropDefault column doesn't exist: table %s, column %s ", m.Name, o.Name))
+		}
+		c.SQLDefault = ""
+
 	case migration.AlterTableSetType:
 		c := m.FindColumn(o.Name)
 		if c == nil {
 			panic(fmt.Sprintf("AlterTableSetType column doesn't exist: table %s, column %s ", m.Name, o.Name))
 		}
-		c.DBType = o.Type
+		c.SQLType = o.Type
 
 	default:
 		panic(fmt.Sprintf("Unknown alter table suboperation type: %T", o))

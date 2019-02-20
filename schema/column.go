@@ -3,9 +3,11 @@ package schema
 // Field holds information about a database field.
 // Types are Go types, converted by TranslateFieldType.
 type Column struct {
-	Name   string
-	Type   Type
-	DBType string
+	Name string
+	Type Type
+
+	SQLType    string
+	SQLDefault string
 
 	Nullable bool
 }
@@ -20,10 +22,10 @@ func ColumnNames(cols []*Column) []string {
 	return names
 }
 
-func (c *Column) TypeGo() TypeGo {
+func (c *Column) GoType() GoType {
 	if c.Nullable {
-		return c.Type.(NullableType).TypeGoNull()
+		return c.Type.(NullableType).GoTypeNull()
 	} else {
-		return c.Type.TypeGo()
+		return c.Type.GoType()
 	}
 }

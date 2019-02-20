@@ -25,15 +25,15 @@ func templateImport(name string, pkg string) string {
 	return ""
 }
 
-func templateTypesGo(t []schema.TypeGo) []string {
+func templateTypesGo(t []schema.GoType) []string {
 	r := make([]string, len(t))
 	for i, j := range t {
-		r[i] = templateTypeGo(j)
+		r[i] = templateGoType(j)
 	}
 	return r
 }
 
-func templateTypeGo(t schema.TypeGo) string {
+func templateGoType(t schema.GoType) string {
 	if t.Pkg == "" {
 		return t.Name
 	}
