@@ -37,7 +37,7 @@ type Column struct {
 }
 
 func (o Column) Dump(buf *bytes.Buffer) {
-	buf.WriteString(fmt.Sprintf("migration.Column{Name: \"%s\", Type: \"%s\", Nullable: %s}", o.Name, o.Type, dumpBool(o.Nullable)))
+	buf.WriteString(fmt.Sprintf("migration.Column{Name: %s, Type: %s, Default: %s, Nullable: %s}", esc(o.Name), esc(o.Type), esc(o.Default), dumpBool(o.Nullable)))
 }
 
 type CreateTableOperation struct {
