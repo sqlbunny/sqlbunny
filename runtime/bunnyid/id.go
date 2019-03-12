@@ -12,10 +12,6 @@ type ID interface {
 	Raw() Raw
 }
 
-type Model interface {
-	GetID() ID
-}
-
 type Raw [RawLen]byte
 
 func (id Raw) Slice() []byte {
