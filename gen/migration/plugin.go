@@ -35,6 +35,10 @@ func (p *Plugin) BunnyPlugin() {
 		Run: p.cmdGenMigrations,
 	})
 	gen.AddCommand(&cobra.Command{
+		Use: "checkmigrations",
+		Run: p.cmdCheckMigrations,
+	})
+	gen.AddCommand(&cobra.Command{
 		Use: "gensql",
 		Run: p.cmdGenSQL,
 	})
@@ -42,6 +46,21 @@ func (p *Plugin) BunnyPlugin() {
 
 func (p *Plugin) migrationsOutputPath() string {
 	return filepath.Join(gen.Config.OutputPath, p.MigrationsPackageName)
+}
+
+func (p *Plugin) cmdCheckMigrations(cmd *cobra.Command, args []string) {
+	if p.Store == nil {
+		log.Fatal("migrate.Plugin.Store is not set.")
+	}
+
+	s1 := schema.New()
+	p.applyAll(s1)
+	s2 := gen.Config.Schema
+	ops := diff(nil, s1, s2)
+
+	if len(ops) != 0 {
+		log.Fatal("Migrations are not up to date with the defined models. You need to run genmigrations.")
+	}
 }
 
 func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
