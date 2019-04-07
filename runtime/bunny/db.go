@@ -215,7 +215,6 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 					Err:      retErr,
 				})
 			}
-			_ = tx.Rollback()
 			return retErr
 		}
 		node = &txNode{
