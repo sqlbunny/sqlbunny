@@ -33,6 +33,27 @@ func ApplyOperation(o migration.Operation, d *schema.Schema) {
 		}
 		delete(d.Models, o.Name)
 
+	case migration.RenameTableOperation:
+		m, ok := d.Models[o.OldName]
+		if !ok {
+			panic("RenameTableOperation on non-existing table: " + o.OldName)
+		}
+		if _, ok := d.Models[o.NewName]; ok {
+			panic("RenameTableOperation new table name already exists: " + o.NewName)
+		}
+
+		delete(d.Models, o.OldName)
+		d.Models[o.NewName] = m
+		m.Name = o.NewName
+
+		for _, m2 := range d.Models {
+			for _, fk := range m2.ForeignKeys {
+				if fk.ForeignModel == o.OldName {
+					fk.ForeignModel = o.NewName
+				}
+			}
+		}
+
 	case migration.AlterTableOperation:
 		t, ok := d.Models[o.Name]
 		if !ok {

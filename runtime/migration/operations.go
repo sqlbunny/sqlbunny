@@ -91,6 +91,24 @@ func (o DropTableOperation) Dump(buf *bytes.Buffer) {
 	buf.WriteString("}")
 }
 
+type RenameTableOperation struct {
+	OldName string
+	NewName string
+}
+
+func (o RenameTableOperation) Run(ctx context.Context) error {
+	q := fmt.Sprintf("ALTER TABLE \"%s\" RENAME TO \"%s\"", o.OldName, o.NewName)
+	_, err := bunny.Exec(ctx, q)
+	return err
+}
+
+func (o RenameTableOperation) Dump(buf *bytes.Buffer) {
+	buf.WriteString("migration.RenameTableOperation {\n")
+	buf.WriteString("OldName: " + esc(o.OldName) + ",\n")
+	buf.WriteString("NewName: " + esc(o.NewName) + ",\n")
+	buf.WriteString("}")
+}
+
 type AlterTableSuboperation interface {
 	AlterTableSQL(ato *AlterTableOperation) string
 	Dump(buf *bytes.Buffer)
