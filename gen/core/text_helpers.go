@@ -45,12 +45,12 @@ func txtsFromFKey(models []*schema.Model, model *schema.Model, fkey *schema.Fore
 	r.ForeignKey = fkey
 
 	r.LocalModel.NameGo = strmangle.TitleCase(strmangle.Singular(model.Name))
-	r.LocalModel.ColumnNameGo = strmangle.TitleCase(strmangle.Singular(fkey.Column))
+	r.LocalModel.ColumnNameGo = strmangle.TitleCaseIdentifier(strmangle.Singular(fkey.Column))
 
 	r.ForeignModel.NameGo = strmangle.TitleCase(strmangle.Singular(fkey.ForeignModel))
 	r.ForeignModel.NamePluralGo = strmangle.TitleCase(strmangle.Plural(fkey.ForeignModel))
 	r.ForeignModel.ColumnName = fkey.ForeignColumn
-	r.ForeignModel.ColumnNameGo = strmangle.TitleCase(strmangle.Singular(fkey.ForeignColumn))
+	r.ForeignModel.ColumnNameGo = strmangle.TitleCaseIdentifier(strmangle.Singular(fkey.ForeignColumn))
 
 	r.Function.Name, r.Function.ForeignName = txtNameToOne(fkey)
 	r.Function.NameGo = strmangle.TitleCase(r.Function.Name)
@@ -147,7 +147,7 @@ func txtsFromToMany(models []*schema.Model, model *schema.Model, rel *schema.ToM
 	foreignNameSingular := strmangle.Singular(rel.ForeignModel)
 	r.ForeignModel.NamePluralGo = strmangle.TitleCase(strmangle.Plural(rel.ForeignModel))
 	r.ForeignModel.NameGo = strmangle.TitleCase(foreignNameSingular)
-	r.ForeignModel.ColumnNameGo = strmangle.TitleCase(rel.ForeignColumn)
+	r.ForeignModel.ColumnNameGo = strmangle.TitleCaseIdentifier(rel.ForeignColumn)
 	r.ForeignModel.Slice = fmt.Sprintf("%sSlice", strmangle.TitleCase(foreignNameSingular))
 	r.ForeignModel.NameHumanReadable = strings.Replace(rel.ForeignModel, "_", " ", -1)
 
