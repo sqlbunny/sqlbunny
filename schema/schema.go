@@ -35,7 +35,7 @@ func (s *Schema) setIsJoinModel(t *Model) {
 	for _, c := range t.PrimaryKey.Columns {
 		found := false
 		for _, f := range t.ForeignKeys {
-			if c == f.Column {
+			if len(f.Columns) == 1 && f.Columns[0] == c {
 				found = true
 				break
 			}
@@ -50,9 +50,9 @@ func (s *Schema) setIsJoinModel(t *Model) {
 
 func (s *Schema) setForeignKeyConstraints(t *Model) {
 	for i, fkey := range t.ForeignKeys {
-		localColumn := t.GetColumn(fkey.Column)
+		localColumn := t.GetColumn(fkey.Columns[0])
 		foreignModel := s.Models[fkey.ForeignModel]
-		foreignColumn := foreignModel.GetColumn(fkey.ForeignColumn)
+		foreignColumn := foreignModel.GetColumn(fkey.ForeignColumns[0])
 
 		t.ForeignKeys[i].Nullable = localColumn.Nullable
 		t.ForeignKeys[i].Unique = t.IsUniqueColumn(localColumn.Name)
@@ -64,7 +64,7 @@ func (s *Schema) setForeignKeyConstraints(t *Model) {
 func (s *Schema) setRelationships(model *Model) {
 	for _, t := range s.Models {
 		for _, f := range t.ForeignKeys {
-			if f.ForeignModel == model.Name {
+			if f.ForeignModel == model.Name && len(f.Columns) == 1 && len(f.ForeignColumns) == 1 {
 				if !t.IsJoinModel && f.Unique {
 					model.ToOneRelationships = append(model.ToOneRelationships, buildToOneRelationship(model, f, t))
 				} else {

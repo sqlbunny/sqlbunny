@@ -62,13 +62,13 @@ func WriteImports(out *bytes.Buffer, imports map[string]string) {
 // WriteFile writes to the given folder and filename, formatting the buffer
 // given.
 func WriteFile(outFolder string, fileName string, code []byte) {
-	code, err := removeUnusedImports(code)
-	if err != nil {
-		log.Fatalf("Error removing unused imports: %v", err)
+	code2, err := removeUnusedImports(code)
+	if err == nil {
+		code = code2
 	}
-	code, err = formatBuffer(code)
-	if err != nil {
-		log.Fatalf("Error formatting code: %v", err)
+	code2, err = formatBuffer(code)
+	if err == nil {
+		code = code2
 	}
 
 	path := filepath.Join(outFolder, fileName)

@@ -121,10 +121,24 @@ func ApplyOperation(o migration.Operation, d *schema.Schema) {
 			}
 		}
 
+		for _, fk := range m.ForeignKeys {
+			for i := range fk.Columns {
+				if fk.Columns[i] == o.OldColumnName {
+					fk.Columns[i] = o.NewColumnName
+				}
+			}
+		}
+
 		for _, m2 := range d.Models {
 			for _, fk := range m2.ForeignKeys {
-				if fk.ForeignModel == m.Name && fk.ForeignColumn == o.OldColumnName {
-					fk.ForeignColumn = o.NewColumnName
+				if fk.ForeignModel == m.Name {
+					for _, fk := range m2.ForeignKeys {
+						for i := range fk.ForeignColumns {
+							if fk.ForeignColumns[i] == o.OldColumnName {
+								fk.ForeignColumns[i] = o.NewColumnName
+							}
+						}
+					}
 				}
 			}
 		}
@@ -195,15 +209,12 @@ func ApplyAlterTableOperation(o migration.AlterTableSuboperation, d *schema.Sche
 		if len(o.Columns) != len(o.ForeignColumns) {
 			panic(fmt.Sprintf("AlterTableCreateForeignKey lengths of Columns and ForeignColumns must match: table %s, ForeignKey %s ", m.Name, o.Name))
 		}
-		if len(o.Columns) != 1 || len(o.ForeignColumns) != 1 {
-			panic(fmt.Sprintf("AlterTableCreateForeignKey multi-column FKs are not yet supported: table %s, ForeignKey %s ", m.Name, o.Name))
-		}
 		m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
-			Name:          o.Name,
-			Model:         m.Name,
-			Column:        o.Columns[0],
-			ForeignModel:  o.ForeignTable,
-			ForeignColumn: o.ForeignColumns[0],
+			Name:           o.Name,
+			Model:          m.Name,
+			Columns:        o.Columns,
+			ForeignModel:   o.ForeignTable,
+			ForeignColumns: o.ForeignColumns,
 		})
 
 	case migration.AlterTableDropForeignKey:

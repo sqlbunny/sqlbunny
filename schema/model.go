@@ -21,6 +21,16 @@ type Model struct {
 	ToManyRelationships []*ToManyRelationship
 }
 
+func (m *Model) SingleColumnForeignKeys() []*ForeignKey {
+	var res []*ForeignKey
+	for _, f := range m.ForeignKeys {
+		if len(f.Columns) == 1 {
+			res = append(res, f)
+		}
+	}
+	return res
+}
+
 // GetModel by name. Panics if not found (for use in templates mostly).
 func GetModel(models []*Model, name string) (tbl *Model) {
 	for _, t := range models {

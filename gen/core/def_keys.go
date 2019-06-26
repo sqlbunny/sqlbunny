@@ -43,8 +43,9 @@ var Unique fieldUnique = func(names ...string) modelUnique {
 }
 
 type modelForeignKey struct {
-	columnName       string
-	foreignModelName string
+	foreignModelName   string
+	columnNames        []string
+	foreignColumnNames []string
 }
 
 func (modelForeignKey) isModelItem() {}
@@ -58,5 +59,12 @@ func (fieldForeignKey) isFieldItem() {}
 func ForeignKey(foreignModelName string) fieldForeignKey {
 	return fieldForeignKey{
 		foreignModelName: foreignModelName,
+	}
+}
+
+func ModelForeignKey(foreignModelName string, columnNames ...string) modelForeignKey {
+	return modelForeignKey{
+		foreignModelName: foreignModelName,
+		columnNames:      columnNames,
 	}
 }

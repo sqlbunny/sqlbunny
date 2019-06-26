@@ -109,6 +109,26 @@ You can declare a field to be a foreign key to another model. In this case, the 
     Field("user_id", "string", ForeignKey("user")),
 ```
 
+Foreign keys to models with a multi-column primary key are also supported.
+
+```go
+Model("repo",
+    Field("organization_id", "string"),
+    Field("repo_id", "string"),
+    Field("path", "string"),
+    PrimaryKey("organization_id", "repo_id"),
+    ...
+),
+
+Model("repo_file",
+    Field("organization_id", "string"),
+    Field("repo_id", "string"),
+    ModelForeignKey("repo", "organization_id", "repo_id"),
+    Field("path", "string"),
+    PrimaryKey("organization_id", "repo_id", "path"),
+),
+```
+
 Foreign keys spanning multiple columns (needed to refer to models with multi-column primary keys) are currently not supported.
 
 ## Field tags

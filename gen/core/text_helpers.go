@@ -45,27 +45,27 @@ func txtsFromFKey(models []*schema.Model, model *schema.Model, fkey *schema.Fore
 	r.ForeignKey = fkey
 
 	r.LocalModel.NameGo = strmangle.TitleCase(strmangle.Singular(model.Name))
-	r.LocalModel.ColumnNameGo = strmangle.TitleCaseIdentifier(strmangle.Singular(fkey.Column))
+	r.LocalModel.ColumnNameGo = strmangle.TitleCaseIdentifier(strmangle.Singular(fkey.Columns[0]))
 
 	r.ForeignModel.NameGo = strmangle.TitleCase(strmangle.Singular(fkey.ForeignModel))
 	r.ForeignModel.NamePluralGo = strmangle.TitleCase(strmangle.Plural(fkey.ForeignModel))
-	r.ForeignModel.ColumnName = fkey.ForeignColumn
-	r.ForeignModel.ColumnNameGo = strmangle.TitleCaseIdentifier(strmangle.Singular(fkey.ForeignColumn))
+	r.ForeignModel.ColumnName = fkey.ForeignColumns[0]
+	r.ForeignModel.ColumnNameGo = strmangle.TitleCaseIdentifier(strmangle.Singular(fkey.ForeignColumns[0]))
 
 	r.Function.Name, r.Function.ForeignName = txtNameToOne(fkey)
 	r.Function.NameGo = strmangle.TitleCase(r.Function.Name)
 	r.Function.ForeignNameGo = strmangle.TitleCase(r.Function.ForeignName)
 
-	r.Function.LocalAssignment = strmangle.TitleCaseIdentifier(fkey.Column)
+	r.Function.LocalAssignment = strmangle.TitleCaseIdentifier(fkey.Columns[0])
 	if fkey.Nullable {
-		col := model.GetColumn(fkey.Column)
+		col := model.GetColumn(fkey.Columns[0])
 		r.Function.LocalAssignment += "." + col.Type.(schema.NullableType).GoTypeNullField()
 	}
 
 	foreignModel := schema.GetModel(models, fkey.ForeignModel)
-	ForeignColumn := foreignModel.GetColumn(fkey.ForeignColumn)
+	ForeignColumn := foreignModel.GetColumn(fkey.ForeignColumns[0])
 
-	r.Function.ForeignAssignment = strmangle.TitleCaseIdentifier(fkey.ForeignColumn)
+	r.Function.ForeignAssignment = strmangle.TitleCaseIdentifier(fkey.ForeignColumns[0])
 	if fkey.ForeignColumnNullable {
 		r.Function.ForeignAssignment += "." + ForeignColumn.Type.(schema.NullableType).GoTypeNullField()
 	}
@@ -78,12 +78,12 @@ func txtsFromFKey(models []*schema.Model, model *schema.Model, fkey *schema.Fore
 func txtsFromOneToOne(models []*schema.Model, model *schema.Model, oneToOne *schema.ToOneRelationship) TxtToOne {
 	fkey := &schema.ForeignKey{
 		Model:    oneToOne.Model,
-		Column:   oneToOne.Column,
+		Columns:  []string{oneToOne.Column},
 		Nullable: oneToOne.Nullable,
 		Unique:   oneToOne.Unique,
 
 		ForeignModel:          oneToOne.ForeignModel,
-		ForeignColumn:         oneToOne.ForeignColumn,
+		ForeignColumns:        []string{oneToOne.ForeignColumn},
 		ForeignColumnNullable: oneToOne.ForeignColumnNullable,
 		ForeignColumnUnique:   oneToOne.ForeignColumnUnique,
 	}
@@ -93,16 +93,16 @@ func txtsFromOneToOne(models []*schema.Model, model *schema.Model, oneToOne *sch
 
 	// Reverse foreign key
 	rel.ForeignKey.Model, rel.ForeignKey.ForeignModel = rel.ForeignKey.ForeignModel, rel.ForeignKey.Model
-	rel.ForeignKey.Column, rel.ForeignKey.ForeignColumn = rel.ForeignKey.ForeignColumn, rel.ForeignKey.Column
+	rel.ForeignKey.Columns, rel.ForeignKey.ForeignColumns = rel.ForeignKey.ForeignColumns, rel.ForeignKey.Columns
 	rel.ForeignKey.Nullable, rel.ForeignKey.ForeignColumnNullable = rel.ForeignKey.ForeignColumnNullable, rel.ForeignKey.Nullable
 	rel.ForeignKey.Unique, rel.ForeignKey.ForeignColumnUnique = rel.ForeignKey.ForeignColumnUnique, rel.ForeignKey.Unique
 	rel.Function.UsesBytes = col.Type.GoType().Name == "[]byte"
 	rel.Function.ForeignName, rel.Function.Name = txtNameToOne(&schema.ForeignKey{
-		Model:         oneToOne.ForeignModel,
-		Column:        oneToOne.ForeignColumn,
-		Unique:        true,
-		ForeignModel:  oneToOne.Model,
-		ForeignColumn: oneToOne.Column,
+		Model:          oneToOne.ForeignModel,
+		Columns:        []string{oneToOne.ForeignColumn},
+		Unique:         true,
+		ForeignModel:   oneToOne.Model,
+		ForeignColumns: []string{oneToOne.Column},
 	})
 	rel.Function.NameGo = strmangle.TitleCase(rel.Function.Name)
 	rel.Function.ForeignNameGo = strmangle.TitleCase(rel.Function.ForeignName)
@@ -202,7 +202,7 @@ func txtsFromToMany(models []*schema.Model, model *schema.Model, rel *schema.ToM
 // fk == model = industry.Industry | industry.Industry
 // fk != model = industry.ParentIndustry | industry.Industry
 func txtNameToOne(fk *schema.ForeignKey) (localFn, foreignFn string) {
-	localFn = strmangle.Singular(trimSuffixes(fk.Column))
+	localFn = strmangle.Singular(trimSuffixes(fk.Columns[0]))
 	fkeyIsModelName := localFn != strmangle.Singular(fk.ForeignModel)
 
 	if fkeyIsModelName {

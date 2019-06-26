@@ -216,9 +216,9 @@ func diffCreateForeignKeys(ops migration.OperationList, s1, s2 *schema.Schema) m
 			if !hasForeignKey(s1.Models[name], i2.Name) {
 				subops = append(subops, migration.AlterTableCreateForeignKey{
 					Name:           i2.Name,
-					Columns:        []string{i2.Column},
+					Columns:        i2.Columns,
 					ForeignTable:   i2.ForeignModel,
-					ForeignColumns: []string{i2.ForeignColumn},
+					ForeignColumns: i2.ForeignColumns,
 				})
 			}
 		}

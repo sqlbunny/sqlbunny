@@ -1,7 +1,7 @@
 {{- if .Model.IsJoinModel -}}
 {{- else -}}
 	{{- $dot := . -}}
-	{{- range .Model.ForeignKeys -}}
+	{{- range .Model.SingleColumnForeignKeys -}}
 		{{- $txt := txtsFromFKey $dot.Models $dot.Model . -}}
 		{{- $foreignNameSingular := .ForeignModel | singular | camelCase -}}
 		{{- $varNameSingular := .Model | singular | camelCase}}

@@ -62,7 +62,7 @@ func expandItems(items []ModelItem) []ModelItem {
 					res = append(res, modelIndex{names: []string{i.name}})
 				case fieldForeignKey:
 					res = append(res, modelForeignKey{
-						columnName:       i.name,
+						columnNames:      []string{i.name},
 						foreignModelName: f.foreignModelName,
 					})
 				}

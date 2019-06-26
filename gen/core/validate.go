@@ -218,9 +218,13 @@ func makeModel(v *Validation, s *schema.Schema, m *schema.Model, items []ModelIt
 				Columns: undotAll(prefixAll(i.names, prefix)),
 			})
 		case modelForeignKey:
+			var cols []string
+			for _, c := range i.columnNames {
+				cols = append(cols, undot(prefix+c))
+			}
 			m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
 				Model:        m.Name,
-				Column:       undot(prefix + i.columnName),
+				Columns:      cols,
 				ForeignModel: i.foreignModelName,
 			})
 		}
@@ -304,22 +308,51 @@ func checkUniques(v *Validation, s *schema.Schema, m *schema.Model) {
 
 func checkForeignKeys(v *Validation, s *schema.Schema, m *schema.Model) {
 	for _, f := range m.ForeignKeys {
-		f.Name = makeName(m.Name, []string{f.Column}, "fkey")
+		f.Name = makeName(m.Name, f.Columns, "fkey")
 
-		c := m.FindColumn(f.Column)
-		if c == nil {
-			v.AddError("Model '%s' has a foreign key on non-existing field '%s'", m.Name, f.Column)
+		if len(f.Columns) == 0 {
+			v.AddError("Model '%s' foreign key '%s': local column list is empty", m.Name, strings.Join(f.Columns, ","))
+		}
+		for _, n := range f.Columns {
+			c := m.FindColumn(n)
+			if c == nil {
+				v.AddError("Model '%s' foreign key '%s': field '%s' does not exist", m.Name, strings.Join(f.Columns, ","), n)
+			}
 		}
 
 		m2, ok := s.Models[f.ForeignModel]
 		if !ok {
-			v.AddError("Model '%s' field '%s' has foreign key to non-existing model '%s'", m.Name, f.Column, f.ForeignModel)
+			v.AddError("Model '%s' foreign key '%s': foreign model '%s' does not exist", m.Name, strings.Join(f.Columns, ","), f.ForeignModel)
 			continue
 		}
-		if len(m2.PrimaryKey.Columns) != 1 {
-			v.AddError("Model '%s' field '%s' has foreign key to model with multi-column primary key '%s'", m.Name, f.Column, f.ForeignModel)
+		if f.ForeignColumns == nil {
+			f.ForeignColumns = m2.PrimaryKey.Columns
 		}
-		ff := m2.PrimaryKey.Columns[0]
-		f.ForeignColumn = ff
+
+		if len(f.ForeignColumns) == 0 {
+			v.AddError("Model '%s' foreign key '%s': foreign column list is empty", m.Name, strings.Join(f.Columns, ","))
+		}
+		for _, n := range f.ForeignColumns {
+			fc := m2.FindColumn(n)
+			if fc == nil {
+				v.AddError("Model '%s' foreign key '%s': foreign model field '%s' does not exist", m.Name, strings.Join(f.Columns, ","), n)
+			}
+		}
+
+		if len(f.Columns) != len(f.ForeignColumns) {
+			v.AddError("Model '%s' foreign key '%s': local (%d) and foreign (%d) column count doesn't match", m.Name, strings.Join(f.Columns, ","), len(f.Columns), len(f.ForeignColumns))
+			continue // Do not compare types if count doesn't match
+		}
+
+		for i := range f.ForeignColumns {
+			fc := m2.FindColumn(f.ForeignColumns[i])
+			lc := m.FindColumn(f.Columns[i])
+			if fc == nil || lc == nil {
+				continue // Ignore these errors, they've already been reported before.
+			}
+			if fc.Type != lc.Type {
+				v.AddError("Model '%s' foreign key '%s': local field '%s' and foreign field '%s' have different types: %+v %+v", m.Name, strings.Join(f.Columns, ","), f.Columns[i], f.ForeignColumns[i], lc.Type, fc.Type)
+			}
+		}
 	}
 }

@@ -21,17 +21,25 @@ type Unique struct {
 
 // ForeignKey represents a foreign key constraint in a database
 type ForeignKey struct {
-	Name string
+	Model string
+	Name  string
 
-	Model    string
-	Column   string
-	Nullable bool
-	Unique   bool
+	Columns        []string
+	ForeignModel   string
+	ForeignColumns []string
 
-	ForeignModel          string
-	ForeignColumn         string
+	Nullable              bool
+	Unique                bool
 	ForeignColumnNullable bool
 	ForeignColumnUnique   bool
+}
+
+func (f *ForeignKey) Column() string {
+	return f.Columns[0]
+}
+
+func (f *ForeignKey) ForeignColumn() string {
+	return f.ForeignColumns[0]
 }
 
 // SQLColumnDef formats a field name and type like an SQL field definition.

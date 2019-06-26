@@ -44,7 +44,7 @@ var {{$modelName}}Columns = struct {
 {{- else}}
 // {{$modelNameCamel}}R is where relationships are stored.
 type {{$modelNameCamel}}R struct {
-	{{range .Model.ForeignKeys -}}
+	{{range .Model.SingleColumnForeignKeys -}}
 	{{- $txt := txtsFromFKey $dot.Models $dot.Model . -}}
 	{{$txt.Function.NameGo}} *{{$txt.ForeignModel.NameGo}}
 	{{end -}}

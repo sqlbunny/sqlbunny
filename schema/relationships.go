@@ -45,12 +45,12 @@ type ToManyRelationship struct {
 func buildToOneRelationship(localModel *Model, foreignKey *ForeignKey, foreignModel *Model) *ToOneRelationship {
 	return &ToOneRelationship{
 		Model:    localModel.Name,
-		Column:   foreignKey.ForeignColumn,
+		Column:   foreignKey.ForeignColumns[0],
 		Nullable: foreignKey.ForeignColumnNullable,
 		Unique:   foreignKey.ForeignColumnUnique,
 
 		ForeignModel:          foreignModel.Name,
-		ForeignColumn:         foreignKey.Column,
+		ForeignColumn:         foreignKey.Columns[0],
 		ForeignColumnNullable: foreignKey.Nullable,
 		ForeignColumnUnique:   foreignKey.Unique,
 	}
@@ -60,11 +60,11 @@ func buildToManyRelationship(localModel *Model, foreignKey *ForeignKey, foreignM
 	if !foreignModel.IsJoinModel {
 		return &ToManyRelationship{
 			Model:                 localModel.Name,
-			Column:                foreignKey.ForeignColumn,
+			Column:                foreignKey.ForeignColumns[0],
 			Nullable:              foreignKey.ForeignColumnNullable,
 			Unique:                foreignKey.ForeignColumnUnique,
 			ForeignModel:          foreignModel.Name,
-			ForeignColumn:         foreignKey.Column,
+			ForeignColumn:         foreignKey.Columns[0],
 			ForeignColumnNullable: foreignKey.Nullable,
 			ForeignColumnUnique:   foreignKey.Unique,
 			ToJoinModel:           false,
@@ -73,14 +73,14 @@ func buildToManyRelationship(localModel *Model, foreignKey *ForeignKey, foreignM
 
 	relationship := &ToManyRelationship{
 		Model:    localModel.Name,
-		Column:   foreignKey.ForeignColumn,
+		Column:   foreignKey.ForeignColumns[0],
 		Nullable: foreignKey.ForeignColumnNullable,
 		Unique:   foreignKey.ForeignColumnUnique,
 
 		ToJoinModel: true,
 		JoinModel:   foreignModel.Name,
 
-		JoinLocalColumn:         foreignKey.Column,
+		JoinLocalColumn:         foreignKey.Columns[0],
 		JoinLocalColumnNullable: foreignKey.Nullable,
 		JoinLocalColumnUnique:   foreignKey.Unique,
 	}
@@ -90,12 +90,12 @@ func buildToManyRelationship(localModel *Model, foreignKey *ForeignKey, foreignM
 			continue
 		}
 
-		relationship.JoinForeignColumn = fk.Column
+		relationship.JoinForeignColumn = fk.Columns[0]
 		relationship.JoinForeignColumnNullable = fk.Nullable
 		relationship.JoinForeignColumnUnique = fk.Unique
 
 		relationship.ForeignModel = fk.ForeignModel
-		relationship.ForeignColumn = fk.ForeignColumn
+		relationship.ForeignColumn = fk.ForeignColumns[0]
 		relationship.ForeignColumnNullable = fk.ForeignColumnNullable
 		relationship.ForeignColumnUnique = fk.ForeignColumnUnique
 	}
