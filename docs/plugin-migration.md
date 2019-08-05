@@ -34,7 +34,7 @@ Run(
 To create the `migrations` package, run:
 
 ```
-go run ./cmd/sqlbunny/main.go genmigrations
+go run ./cmd/sqlbunny/main.go migration gen
 ```
 
 The first run will create the package, and the migration store in `migrations/store.go`.
@@ -56,7 +56,7 @@ Run(
 To generate a migration, run:
 
 ```
-go run ./cmd/sqlbunny/main.go genmigrations
+go run ./cmd/sqlbunny/main.go migration gen
 ```
 
 Migrations are generated according to the following algorithm:

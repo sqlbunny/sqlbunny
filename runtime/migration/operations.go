@@ -18,17 +18,6 @@ type Operation interface {
 	Dump(buf *bytes.Buffer)
 }
 
-type OperationList []Operation
-
-func (o OperationList) Dump(buf *bytes.Buffer) {
-	buf.WriteString("migration.OperationList {\n")
-	for _, op := range o {
-		op.Dump(buf)
-		buf.WriteString(",\n")
-	}
-	buf.WriteString("}")
-}
-
 type Column struct {
 	Name     string
 	Type     string

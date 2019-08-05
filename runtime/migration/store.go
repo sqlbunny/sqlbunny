@@ -1,71 +1,132 @@
 package migration
 
 import (
-	"context"
 	"fmt"
-	"time"
 
-	"github.com/sqlbunny/sqlbunny/runtime/bunny"
+	"github.com/pkg/errors"
 )
 
 type Store struct {
-	Migrations map[int64]OperationList
+	Migrations map[string]*Migration
 }
 
-const (
-	checkMigrationsTableSQL  = "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'migrations'"
-	createMigrationsTableSQL = "CREATE TABLE migrations (id integer PRIMARY KEY, time timestamptz)"
-	insertMigrationSQL       = "INSERT INTO migrations (id, time) VALUES($1, $2)"
-	maxMigrationSQL          = "SELECT coalesce(max(id), 0) from migrations"
-)
-
-func (m *Store) Run(ctx context.Context) error {
-	var count int64
-	if err := bunny.QueryRow(ctx, checkMigrationsTableSQL).Scan(&count); err != nil {
-		return err
+func (s *Store) Register(m *Migration) {
+	if s.Migrations == nil {
+		s.Migrations = make(map[string]*Migration)
 	}
-	if count == 0 {
-		if _, err := bunny.Exec(ctx, createMigrationsTableSQL); err != nil {
-			return err
+	if _, ok := s.Migrations[m.Name]; ok {
+		panic(fmt.Sprintf("Migration with name '%s' registered multiple times", m.Name))
+	}
+	s.Migrations[m.Name] = m
+}
+
+func (s *Store) Validate() error {
+	// TODO: Check no migrations with name ""
+	// TODO: Check no cycles
+	// TODO: Check all migrations dependencies exist
+	// TODO: Check that the map key and the object name match
+	// TODO: Check that migration dependencies slices contains no duplicates
+	// TODO: Check that migration dependencies slices doesn't contain the migration itself (special case of no cycles)
+	return nil
+}
+
+func (s *Store) calcReverseDeps() map[string][]string {
+	res := make(map[string][]string)
+	for _, m := range s.Migrations {
+		for _, d := range m.Dependencies {
+			res[d] = append(res[d], m.Name)
 		}
 	}
+	return res
+}
 
-	var max int64
-	if err := bunny.QueryRow(ctx, maxMigrationSQL).Scan(&max); err != nil {
-		return err
-	}
-
-	var i int64 = 1
-	for {
-		ops, ok := m.Migrations[i]
-		if !ok {
-			break
-		}
-
-		if i > max {
-			for _, op := range ops {
-				err := op.Run(ctx)
-				if err != nil {
-					return err
-				}
-			}
-
-			if _, err := bunny.Exec(ctx, insertMigrationSQL, i, time.Now()); err != nil {
-				return err
+func (s *Store) validateApplied(applied map[string]struct{}) error {
+	for mn := range applied {
+		m := s.Migrations[mn]
+		for _, dn := range m.Dependencies {
+			if _, ok := applied[dn]; !ok {
+				return errors.Errorf("Migration '%s' is applied, but its dependency '%s' is not", mn, dn)
 			}
 		}
-
-		i++
 	}
 	return nil
 }
 
-func (m *Store) Register(index int64, ops OperationList) {
-	if m.Migrations == nil {
-		m.Migrations = make(map[int64]OperationList)
+func (s *Store) FindHeads() []string {
+	notHeads := make(map[string]struct{})
+	for _, m := range s.Migrations {
+		for _, dn := range m.Dependencies {
+			notHeads[dn] = struct{}{}
+		}
 	}
-	if _, ok := m.Migrations[index]; ok {
-		panic(fmt.Sprintf("Migration index %d registered multiple times", index))
+	var res []string
+	for _, m := range s.Migrations {
+		if _, ok := notHeads[m.Name]; !ok {
+			res = append(res, m.Name)
+		}
 	}
-	m.Migrations[index] = ops
+	return res
+}
+
+func (s *Store) RunMigration(target string, applied map[string]struct{}, fn func(*Migration) error) error {
+	if _, ok := applied[target]; ok {
+		return nil
+	}
+
+	reverse := s.calcReverseDeps()
+
+	ready := make(map[string]struct{})
+	blocked := make(map[string]int)
+
+	visited := make(map[string]struct{})
+	q := []string{target}
+	for len(q) != 0 {
+		m := s.Migrations[q[0]]
+		q = q[1:]
+
+		count := 0
+		for _, dn := range m.Dependencies {
+			if _, ok := applied[dn]; !ok {
+				count++
+				if _, ok2 := visited[dn]; !ok2 {
+					visited[dn] = struct{}{}
+					q = append(q, dn)
+				}
+			}
+		}
+		if count == 0 {
+			ready[m.Name] = struct{}{}
+		} else {
+			blocked[m.Name] = count
+		}
+	}
+
+	for len(ready) != 0 {
+		for mn := range ready {
+			delete(ready, mn)
+			m := s.Migrations[mn]
+			if err := fn(m); err != nil {
+				return err
+			}
+			for _, dn := range reverse[mn] {
+				count, ok := blocked[dn]
+				if !ok {
+					continue
+				}
+				count--
+				if count == 0 {
+					ready[dn] = struct{}{}
+					delete(blocked, dn)
+				} else {
+					blocked[dn] = count
+				}
+			}
+		}
+	}
+
+	if len(blocked) != 0 {
+		panic("this should never happen")
+	}
+
+	return nil
 }

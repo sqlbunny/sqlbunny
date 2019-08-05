@@ -7,7 +7,7 @@ import (
 	"github.com/sqlbunny/sqlbunny/schema"
 )
 
-func diff(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diff(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	ops = diffDropForeignKeys(ops, s1, s2)
 	ops = diffDropConstraints(ops, s1, s2)
 	ops = diffDropIndexes(ops, s1, s2)
@@ -49,7 +49,7 @@ func hasForeignKey(m *schema.Model, indexName string) bool {
 	return m.FindForeignKey(indexName) != nil
 }
 
-func diffDropForeignKeys(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diffDropForeignKeys(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	for name, m1 := range s1.Models {
 		var subops []migration.AlterTableSuboperation
 
@@ -69,7 +69,7 @@ func diffDropForeignKeys(ops migration.OperationList, s1, s2 *schema.Schema) mig
 	return ops
 }
 
-func diffDropConstraints(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diffDropConstraints(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	for name, m1 := range s1.Models {
 		var subops []migration.AlterTableSuboperation
 
@@ -93,7 +93,7 @@ func diffDropConstraints(ops migration.OperationList, s1, s2 *schema.Schema) mig
 	return ops
 }
 
-func diffDropIndexes(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diffDropIndexes(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	for name, m1 := range s1.Models {
 		for _, i1 := range m1.Indexes {
 			if !hasIndex(s2.Models[name], i1.Name) {
@@ -107,7 +107,7 @@ func diffDropIndexes(ops migration.OperationList, s1, s2 *schema.Schema) migrati
 	return ops
 }
 
-func diffDropModels(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diffDropModels(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	for name := range s1.Models {
 		if _, ok := s2.Models[name]; !ok {
 			ops = append(ops, migration.DropTableOperation{
@@ -118,7 +118,7 @@ func diffDropModels(ops migration.OperationList, s1, s2 *schema.Schema) migratio
 	return ops
 }
 
-func diffAlterModels(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diffAlterModels(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	for name, m1 := range s1.Models {
 		if m2, ok := s2.Models[name]; ok {
 			var subops []migration.AlterTableSuboperation
@@ -154,7 +154,7 @@ func diffAlterModels(ops migration.OperationList, s1, s2 *schema.Schema) migrati
 	return ops
 }
 
-func diffCreateModels(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diffCreateModels(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	for name, m2 := range s2.Models {
 		if _, ok := s1.Models[name]; !ok {
 			ops = append(ops, migration.CreateTableOperation{
@@ -166,7 +166,7 @@ func diffCreateModels(ops migration.OperationList, s1, s2 *schema.Schema) migrat
 	return ops
 }
 
-func diffCreateIndexes(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diffCreateIndexes(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	for name, m2 := range s2.Models {
 		for _, i2 := range m2.Indexes {
 			if !hasIndex(s1.Models[name], i2.Name) {
@@ -181,7 +181,7 @@ func diffCreateIndexes(ops migration.OperationList, s1, s2 *schema.Schema) migra
 	return ops
 }
 
-func diffCreateConstraints(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diffCreateConstraints(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	for name, m2 := range s2.Models {
 		var subops []migration.AlterTableSuboperation
 
@@ -208,7 +208,7 @@ func diffCreateConstraints(ops migration.OperationList, s1, s2 *schema.Schema) m
 	return ops
 }
 
-func diffCreateForeignKeys(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {
+func diffCreateForeignKeys(ops []migration.Operation, s1, s2 *schema.Schema) []migration.Operation {
 	for name, m2 := range s2.Models {
 		var subops []migration.AlterTableSuboperation
 

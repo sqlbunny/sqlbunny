@@ -3,7 +3,9 @@ package migration
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -11,10 +13,10 @@ import (
 
 	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 
+	"github.com/spf13/cobra"
 	"github.com/sqlbunny/sqlbunny/gen"
 	"github.com/sqlbunny/sqlbunny/runtime/migration"
 	"github.com/sqlbunny/sqlbunny/schema"
-	"github.com/spf13/cobra"
 )
 
 type Plugin struct {
@@ -30,15 +32,24 @@ func (p *Plugin) BunnyPlugin() {
 	if p.MigrationsPackageName == "" {
 		p.MigrationsPackageName = "migrations"
 	}
-	gen.AddCommand(&cobra.Command{
-		Use: "genmigrations",
-		Run: p.cmdGenMigrations,
+	cmd := &cobra.Command{
+		Use: "migration",
+	}
+	gen.AddCommand(cmd)
+
+	cmd.AddCommand(&cobra.Command{
+		Use: "gen",
+		Run: p.cmdGen,
 	})
-	gen.AddCommand(&cobra.Command{
-		Use: "checkmigrations",
-		Run: p.cmdCheckMigrations,
+	cmd.AddCommand(&cobra.Command{
+		Use: "check",
+		Run: p.cmdCheck,
 	})
-	gen.AddCommand(&cobra.Command{
+	cmd.AddCommand(&cobra.Command{
+		Use: "merge",
+		Run: p.cmdMerge,
+	})
+	cmd.AddCommand(&cobra.Command{
 		Use: "gensql",
 		Run: p.cmdGenSQL,
 	})
@@ -48,7 +59,7 @@ func (p *Plugin) migrationsOutputPath() string {
 	return filepath.Join(gen.Config.OutputPath, p.MigrationsPackageName)
 }
 
-func (p *Plugin) cmdCheckMigrations(cmd *cobra.Command, args []string) {
+func (p *Plugin) cmdCheck(cmd *cobra.Command, args []string) {
 	if p.Store == nil {
 		log.Fatal("migrate.Plugin.Store is not set.")
 	}
@@ -59,11 +70,57 @@ func (p *Plugin) cmdCheckMigrations(cmd *cobra.Command, args []string) {
 	ops := diff(nil, s1, s2)
 
 	if len(ops) != 0 {
-		log.Fatal("Migrations are not up to date with the defined models. You need to run genmigrations.")
+		log.Fatal("Migrations are not up to date with the defined models. You need to run 'migration gen'.")
 	}
 }
 
-func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
+func (p *Plugin) cmdMerge(cmd *cobra.Command, args []string) {
+	p.ensureStore()
+
+	s := p.Store
+	heads := s.FindHeads()
+	if len(heads) == 0 {
+		log.Fatal("No migrations found, nothing to merge.")
+	}
+	if len(heads) == 1 {
+		log.Fatal("There is only one migration head, there's nothing to merge.")
+	}
+
+	m := &migration.Migration{
+		Name:         p.genName(),
+		Dependencies: heads,
+	}
+	p.writeMigration(m)
+}
+
+func (p *Plugin) cmdGen(cmd *cobra.Command, args []string) {
+	p.ensureStore()
+
+	s1 := schema.New()
+	head := p.applyAll(s1)
+	s2 := gen.Config.Schema
+	ops := diff(nil, s1, s2)
+	if len(ops) == 0 {
+		log.Fatal("No model changes found, doing nothing.")
+	}
+
+	m := &migration.Migration{
+		Name:         p.genName(),
+		Dependencies: []string{head},
+		Operations:   ops,
+	}
+	p.writeMigration(m)
+}
+
+func (p *Plugin) genName() string {
+	// TODO generate better names.
+	// Probably starting with a sequential ID, so migrations sort nicely
+	var b [8]byte
+	_, _ = rand.Read(b[:])
+	return hex.EncodeToString(b[:])
+}
+
+func (p *Plugin) ensureStore() {
 	if err := os.MkdirAll(p.migrationsOutputPath(), os.ModePerm); err != nil {
 		log.Fatalf("Error creating output directory %s: %v", p.migrationsOutputPath(), err)
 	}
@@ -87,32 +144,30 @@ func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
 			log.Println("        Store: &migrations.Store,")
 			log.Println("    },")
 			log.Println()
-			log.Println("Once you've done this, run genmigrations again.")
-			return
+			p.Store = &migration.Store{}
+		}
+	} else {
+		if p.Store == nil {
+			log.Println("No migration store in the plugin config, but it seems to exist on disk!")
+			log.Println("To generate migrations, you need to add a reference to the")
+			log.Println("migration store in the plugin config, like this:")
+			log.Println()
+			log.Println("    &migration.Plugin{")
+			log.Println("        Store: &migrations.Store,")
+			log.Println("    },")
+			log.Println()
+			log.Fatal("Exiting")
 		}
 	}
+}
 
-	if p.Store == nil {
-		log.Fatal("migrate.Plugin.Store is not set.")
-	}
-
-	s1 := schema.New()
-	p.applyAll(s1)
-	s2 := gen.Config.Schema
-	ops := diff(nil, s1, s2)
-
-	if len(ops) == 0 {
-		log.Fatal("No model changes found, doing nothing.")
-	}
-
-	migrationNumber := p.nextFree()
-	migrationFile := fmt.Sprintf("migration_%05d.go", migrationNumber)
-
+func (p *Plugin) writeMigration(m *migration.Migration) {
+	migrationFile := fmt.Sprintf("migration_%s.go", m.Name)
 	var buf bytes.Buffer
 	gen.WritePackageName(&buf, p.MigrationsPackageName)
 	buf.WriteString("import \"github.com/sqlbunny/sqlbunny/runtime/migration\"\n")
-	buf.WriteString(fmt.Sprintf("func init() {\nStore.Register(%d, ", migrationNumber))
-	ops.Dump(&buf)
+	buf.WriteString(fmt.Sprintf("func init() {\nStore.Register("))
+	m.Dump(&buf)
 	buf.WriteString(")\n}")
 
 	gen.WriteFile(p.migrationsOutputPath(), migrationFile, buf.Bytes())
@@ -140,14 +195,12 @@ func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
 
 	s1 := schema.New()
 	ops := diff(nil, s1, s2)
-
 	if len(ops) == 0 {
-		log.Fatal("No model changes found, doing nothing.")
+		log.Fatal("No models found, doing nothing.")
 	}
 
 	db := &fakeDB{}
 	ctx := bunny.ContextWithDB(context.Background(), db)
-
 	for _, op := range ops {
 		op.Run(ctx)
 	}
@@ -157,31 +210,20 @@ func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
 	}
 }
 
-func (p *Plugin) applyAll(db *schema.Schema) {
-	var i int64 = 1
-	for {
-		ops, ok := p.Store.Migrations[i]
-		if !ok {
-			break
-		}
-
-		for _, op := range ops {
-			ApplyOperation(op, db)
-		}
-
-		i++
+func (p *Plugin) applyAll(db *schema.Schema) string {
+	s := p.Store
+	heads := s.FindHeads()
+	if len(heads) != 1 {
+		log.Fatal("Found multiple migration heads, you must run 'migration merge' first")
 	}
-}
+	head := heads[0]
 
-func (p *Plugin) nextFree() int64 {
-	var i int64 = 1
-	for {
-		_, ok := p.Store.Migrations[i]
-		if !ok {
-			break
-		}
-
-		i++
+	err := s.RunMigration(head, nil, func(m *migration.Migration) error {
+		return ApplyMigration(m, db)
+	})
+	if err != nil {
+		log.Fatalf("Error applying migrations: %v", err)
 	}
-	return i
+
+	return head
 }
