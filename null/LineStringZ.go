@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"github.com/kernelpayments/geo"
+	"github.com/sqlbunny/geo"
 )
 
 // LineStringZ is a nullable geo.LineStringZ.

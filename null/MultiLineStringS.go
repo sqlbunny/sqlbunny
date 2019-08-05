@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"github.com/kernelpayments/geo"
+	"github.com/sqlbunny/geo"
 )
 
 // MultiLineStringS is a nullable geo.MultiLineStringS.

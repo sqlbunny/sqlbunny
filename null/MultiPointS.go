@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"github.com/kernelpayments/geo"
+	"github.com/sqlbunny/geo"
 )
 
 // MultiPointS is a nullable geo.MultiPointS.
