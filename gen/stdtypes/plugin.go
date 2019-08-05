@@ -103,7 +103,7 @@ func (p *Plugin) Expand() []gen.ConfigItem {
 			GoNull: "github.com/sqlbunny/sqlbunny/types/null.Time",
 			Postgres: core.SQLType{
 				Type:      "timestamptz",
-				ZeroValue: "",
+				ZeroValue: "'0001-01-01 00:00:00+00'",
 			},
 		}),
 	}
