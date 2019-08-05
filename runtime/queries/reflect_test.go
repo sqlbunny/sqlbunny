@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/sqlbunny/sqlbunny/runtime/bunny"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"gopkg.in/DATA-DOG/go-sqlmock.v2"
 )
 
 func dbToContext(exec bunny.DB) context.Context {
