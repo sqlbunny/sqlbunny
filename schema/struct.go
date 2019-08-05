@@ -1,6 +1,6 @@
 package schema
 
-import "github.com/kernelpayments/sqlbunny/runtime/strmangle"
+import "github.com/sqlbunny/sqlbunny/runtime/strmangle"
 
 type Struct struct {
 	Name   string

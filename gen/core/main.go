@@ -1,7 +1,7 @@
 package core
 
 import (
-	"github.com/kernelpayments/sqlbunny/gen"
+	"github.com/sqlbunny/sqlbunny/gen"
 )
 
 func Run(items ...gen.ConfigItem) {

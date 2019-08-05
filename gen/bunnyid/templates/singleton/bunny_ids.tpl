@@ -3,7 +3,7 @@ import (
     "fmt"
     "strings"
 
-    "github.com/kernelpayments/sqlbunny/runtime/bunnyid"
+    "github.com/sqlbunny/sqlbunny/runtime/bunnyid"
 )
 
 func IDFromString(s string) (bunnyid.ID, error) {

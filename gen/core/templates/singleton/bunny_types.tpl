@@ -1,6 +1,6 @@
 import (
-    "github.com/kernelpayments/sqlbunny/runtime/strmangle"
-	"github.com/kernelpayments/sqlbunny/runtime/queries"
+    "github.com/sqlbunny/sqlbunny/runtime/strmangle"
+	"github.com/sqlbunny/sqlbunny/runtime/queries"
 	"github.com/pkg/errors"
 )
 

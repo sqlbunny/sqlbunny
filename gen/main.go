@@ -3,7 +3,7 @@ package gen
 import (
 	"os"
 
-	"github.com/kernelpayments/sqlbunny/runtime/queries"
+	"github.com/sqlbunny/sqlbunny/runtime/queries"
 	"github.com/spf13/cobra"
 )
 

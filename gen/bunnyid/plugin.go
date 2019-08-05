@@ -1,11 +1,11 @@
 package bunnyid
 
 import (
-	"github.com/kernelpayments/sqlbunny/gen"
+	"github.com/sqlbunny/sqlbunny/gen"
 )
 
 const (
-	templatesPackage = "github.com/kernelpayments/sqlbunny/gen/bunnyid"
+	templatesPackage = "github.com/sqlbunny/sqlbunny/gen/bunnyid"
 )
 
 type Plugin struct {

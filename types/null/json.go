@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kernelpayments/sqlbunny/types/null/convert"
+	"github.com/sqlbunny/sqlbunny/types/null/convert"
 )
 
 // JSON is a nullable []byte.

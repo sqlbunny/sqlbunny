@@ -9,11 +9,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kernelpayments/sqlbunny/runtime/bunny"
+	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 
-	"github.com/kernelpayments/sqlbunny/gen"
-	"github.com/kernelpayments/sqlbunny/runtime/migration"
-	"github.com/kernelpayments/sqlbunny/schema"
+	"github.com/sqlbunny/sqlbunny/gen"
+	"github.com/sqlbunny/sqlbunny/runtime/migration"
+	"github.com/sqlbunny/sqlbunny/schema"
 	"github.com/spf13/cobra"
 )
 
@@ -71,7 +71,7 @@ func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
 	if _, err := os.Stat(filepath.Join(p.migrationsOutputPath(), "store.go")); os.IsNotExist(err) {
 		var buf bytes.Buffer
 		gen.WritePackageName(&buf, p.MigrationsPackageName)
-		buf.WriteString("import \"github.com/kernelpayments/sqlbunny/runtime/migration\"\n")
+		buf.WriteString("import \"github.com/sqlbunny/sqlbunny/runtime/migration\"\n")
 		buf.WriteString("\n")
 		buf.WriteString("// Store contains the migrations for this project\n")
 		buf.WriteString("var Store migration.Store\n")
@@ -110,7 +110,7 @@ func (p *Plugin) cmdGenMigrations(cmd *cobra.Command, args []string) {
 
 	var buf bytes.Buffer
 	gen.WritePackageName(&buf, p.MigrationsPackageName)
-	buf.WriteString("import \"github.com/kernelpayments/sqlbunny/runtime/migration\"\n")
+	buf.WriteString("import \"github.com/sqlbunny/sqlbunny/runtime/migration\"\n")
 	buf.WriteString(fmt.Sprintf("func init() {\nStore.Register(%d, ", migrationNumber))
 	ops.Dump(&buf)
 	buf.WriteString(")\n}")

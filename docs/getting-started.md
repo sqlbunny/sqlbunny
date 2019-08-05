@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-go get -u github.com/kernelpayments/sqlbunny
+go get -u github.com/sqlbunny/sqlbunny
 ```
 ## Project structure
 
@@ -40,9 +40,9 @@ Put the following code at `./cmd/sqlbunny/main.go`:
 package main
 
 import (
-	. "github.com/kernelpayments/sqlbunny/gen/core"
-	"github.com/kernelpayments/sqlbunny/gen/migration"
-	"github.com/kernelpayments/sqlbunny/gen/stdtypes"
+	. "github.com/sqlbunny/sqlbunny/gen/core"
+	"github.com/sqlbunny/sqlbunny/gen/migration"
+	"github.com/sqlbunny/sqlbunny/gen/stdtypes"
 )
 
 func main() {
@@ -139,7 +139,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/kernelpayments/sqlbunny/runtime/bunny"
+	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 	"example.com/sqlbunny_demo/models"
 )
 

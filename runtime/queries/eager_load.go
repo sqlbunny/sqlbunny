@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
+	"github.com/sqlbunny/sqlbunny/runtime/strmangle"
 	"github.com/pkg/errors"
 )
 

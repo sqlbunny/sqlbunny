@@ -13,8 +13,8 @@ import (
     "strings"
 
     "github.com/pkg/errors"
-    "github.com/kernelpayments/sqlbunny/runtime/bunny"
-    "github.com/kernelpayments/sqlbunny/runtime/bunnyid"
+    "github.com/sqlbunny/sqlbunny/runtime/bunny"
+    "github.com/sqlbunny/sqlbunny/runtime/bunnyid"
 )
 
 const {{$modelNameCamel}}PrefixLength = {{ len .IDType.Prefix }} + 1

@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/kernelpayments/sqlbunny/types/null/convert"
+	"github.com/sqlbunny/sqlbunny/types/null/convert"
 )
 
 // Uint8 is an nullable uint8.

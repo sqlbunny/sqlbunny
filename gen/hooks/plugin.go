@@ -3,11 +3,11 @@ package hooks
 import (
 	"bytes"
 
-	"github.com/kernelpayments/sqlbunny/gen"
+	"github.com/sqlbunny/sqlbunny/gen"
 )
 
 const (
-	templatesPackage = "github.com/kernelpayments/sqlbunny/gen/hooks"
+	templatesPackage = "github.com/sqlbunny/sqlbunny/gen/hooks"
 )
 
 type Plugin struct {

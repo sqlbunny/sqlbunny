@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kernelpayments/sqlbunny/gen"
-	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
-	"github.com/kernelpayments/sqlbunny/schema"
+	"github.com/sqlbunny/sqlbunny/gen"
+	"github.com/sqlbunny/sqlbunny/runtime/strmangle"
+	"github.com/sqlbunny/sqlbunny/schema"
 )
 
 // TxtToOne contains text that will be used by templates for a one-to-many or

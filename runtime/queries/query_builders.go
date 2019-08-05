@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
+	"github.com/sqlbunny/sqlbunny/runtime/strmangle"
 )
 
 var (

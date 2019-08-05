@@ -1,8 +1,8 @@
 import (
 	"context"
 
-	"github.com/kernelpayments/sqlbunny/runtime/queries"
-	"github.com/kernelpayments/sqlbunny/runtime/qm"
+	"github.com/sqlbunny/sqlbunny/runtime/queries"
+	"github.com/sqlbunny/sqlbunny/runtime/qm"
 )
 
 var dialect = queries.Dialect{

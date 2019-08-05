@@ -1,7 +1,7 @@
 package bunnyid
 
-import "github.com/kernelpayments/sqlbunny/gen/core"
-import "github.com/kernelpayments/sqlbunny/schema"
+import "github.com/sqlbunny/sqlbunny/gen/core"
+import "github.com/sqlbunny/sqlbunny/schema"
 
 type ID struct {
 	Prefix string

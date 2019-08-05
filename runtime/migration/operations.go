@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kernelpayments/sqlbunny/runtime/bunny"
+	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 )
 
 func esc(s string) string {

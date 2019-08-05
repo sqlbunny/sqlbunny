@@ -3,8 +3,8 @@ package migration
 import (
 	"reflect"
 
-	"github.com/kernelpayments/sqlbunny/runtime/migration"
-	"github.com/kernelpayments/sqlbunny/schema"
+	"github.com/sqlbunny/sqlbunny/runtime/migration"
+	"github.com/sqlbunny/sqlbunny/schema"
 )
 
 func diff(ops migration.OperationList, s1, s2 *schema.Schema) migration.OperationList {

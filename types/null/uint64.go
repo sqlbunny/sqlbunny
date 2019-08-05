@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/kernelpayments/sqlbunny/types/null/convert"
+	"github.com/sqlbunny/sqlbunny/types/null/convert"
 )
 
 // Uint64 is an nullable uint64.

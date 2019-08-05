@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kernelpayments/sqlbunny/gen"
-	"github.com/kernelpayments/sqlbunny/schema"
+	"github.com/sqlbunny/sqlbunny/gen"
+	"github.com/sqlbunny/sqlbunny/schema"
 )
 
 type Validation struct {
@@ -172,7 +172,7 @@ func makeModel(v *Validation, s *schema.Schema, m *schema.Model, items []ModelIt
 								Name: "bool",
 							},
 							GoNull: schema.GoType{
-								Pkg:  "github.com/kernelpayments/sqlbunny/types/null",
+								Pkg:  "github.com/sqlbunny/sqlbunny/types/null",
 								Name: "Bool",
 							},
 							Postgres: schema.SQLType{

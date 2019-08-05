@@ -4,8 +4,8 @@ import (
     "database/sql/driver"
     "encoding/json"
 
-    "github.com/kernelpayments/sqlbunny/runtime/bunny"
-    "github.com/kernelpayments/sqlbunny/types/null/convert"
+    "github.com/sqlbunny/sqlbunny/runtime/bunny"
+    "github.com/sqlbunny/sqlbunny/types/null/convert"
 )
 
 {{- $dot := . -}}

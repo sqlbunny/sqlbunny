@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
-	"github.com/kernelpayments/sqlbunny/schema"
+	"github.com/sqlbunny/sqlbunny/runtime/strmangle"
+	"github.com/sqlbunny/sqlbunny/schema"
 )
 
 type typeEntry struct {

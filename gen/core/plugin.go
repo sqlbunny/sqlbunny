@@ -4,12 +4,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/kernelpayments/sqlbunny/gen"
-	"github.com/kernelpayments/sqlbunny/schema"
+	"github.com/sqlbunny/sqlbunny/gen"
+	"github.com/sqlbunny/sqlbunny/schema"
 )
 
 const (
-	templatesPackage = "github.com/kernelpayments/sqlbunny/gen/core"
+	templatesPackage = "github.com/sqlbunny/sqlbunny/gen/core"
 
 	templatesModelDirectory     = "templates/model"
 	templatesStructDirectory    = "templates/struct"

@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/kernelpayments/sqlbunny/types/null/convert"
+	"github.com/sqlbunny/sqlbunny/types/null/convert"
 )
 
 // Int32 is an nullable int32.

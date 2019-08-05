@@ -1,4 +1,4 @@
-module github.com/kernelpayments/sqlbunny
+module github.com/sqlbunny/sqlbunny
 
 require (
 	github.com/cosiner/argv v0.0.1 // indirect

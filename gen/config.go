@@ -3,8 +3,8 @@ package gen
 import (
 	"path/filepath"
 
-	"github.com/kernelpayments/sqlbunny/runtime/queries"
-	"github.com/kernelpayments/sqlbunny/schema"
+	"github.com/sqlbunny/sqlbunny/runtime/queries"
+	"github.com/sqlbunny/sqlbunny/schema"
 )
 
 type ConfigItem interface {

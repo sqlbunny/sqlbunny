@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/kernelpayments/sqlbunny/types/null/convert"
+	"github.com/sqlbunny/sqlbunny/types/null/convert"
 )
 
 // Bool is a nullable bool.

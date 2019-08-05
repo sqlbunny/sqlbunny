@@ -3,8 +3,8 @@ package migration
 import (
 	"fmt"
 
-	"github.com/kernelpayments/sqlbunny/runtime/migration"
-	"github.com/kernelpayments/sqlbunny/schema"
+	"github.com/sqlbunny/sqlbunny/runtime/migration"
+	"github.com/sqlbunny/sqlbunny/schema"
 )
 
 func ApplyOperation(o migration.Operation, d *schema.Schema) {

@@ -86,8 +86,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/kernelpayments/sqlbunny/runtime/bunny"
-	"github.com/kernelpayments/sqlbunny_demo/migrations"
+	"github.com/sqlbunny/sqlbunny/runtime/bunny"
+	"github.com/sqlbunny/sqlbunny_demo/migrations"
 )
 
 func main() {

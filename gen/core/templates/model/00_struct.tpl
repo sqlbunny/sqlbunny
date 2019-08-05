@@ -7,10 +7,10 @@
 {{ import "strings" "strings" }}
 {{ import "sync" "sync" }}
 {{ import "time" "time" }}
-{{ import "bunny" "github.com/kernelpayments/sqlbunny/runtime/bunny" }}
-{{ import "queries" "github.com/kernelpayments/sqlbunny/runtime/queries" }}
-{{ import "qm" "github.com/kernelpayments/sqlbunny/runtime/qm" }}
-{{ import "strmangle" "github.com/kernelpayments/sqlbunny/runtime/strmangle" }}
+{{ import "bunny" "github.com/sqlbunny/sqlbunny/runtime/bunny" }}
+{{ import "queries" "github.com/sqlbunny/sqlbunny/runtime/queries" }}
+{{ import "qm" "github.com/sqlbunny/sqlbunny/runtime/qm" }}
+{{ import "strmangle" "github.com/sqlbunny/sqlbunny/runtime/strmangle" }}
 {{ import "errors" "github.com/pkg/errors" }}
 
 {{- $dot := . -}}

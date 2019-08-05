@@ -1,7 +1,7 @@
 package bunnyid
 
-import "github.com/kernelpayments/sqlbunny/runtime/strmangle"
-import "github.com/kernelpayments/sqlbunny/schema"
+import "github.com/sqlbunny/sqlbunny/runtime/strmangle"
+import "github.com/sqlbunny/sqlbunny/schema"
 
 type IDType struct {
 	Name   string

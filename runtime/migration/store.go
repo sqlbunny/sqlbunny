@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kernelpayments/sqlbunny/runtime/bunny"
+	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 )
 
 type Store struct {

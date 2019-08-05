@@ -1,7 +1,7 @@
 package gen
 
 import (
-	"github.com/kernelpayments/sqlbunny/runtime/strmangle"
+	"github.com/sqlbunny/sqlbunny/runtime/strmangle"
 )
 
 func BaseTemplateData() map[string]interface{} {

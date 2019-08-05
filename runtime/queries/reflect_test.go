@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kernelpayments/sqlbunny/runtime/bunny"
+	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
