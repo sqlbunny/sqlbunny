@@ -10,6 +10,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 
@@ -113,11 +115,33 @@ func (p *Plugin) cmdGen(cmd *cobra.Command, args []string) {
 }
 
 func (p *Plugin) genName() string {
-	// TODO generate better names.
-	// Probably starting with a sequential ID, so migrations sort nicely
-	var b [8]byte
+	n := 0
+	for m := range p.Store.Migrations {
+		i := strings.IndexFunc(m, func(r rune) bool {
+			return r < '0' || r > '9'
+		})
+		if i == -1 {
+			i = len(m)
+		}
+		if i == 0 {
+			continue
+		}
+
+		j, err := strconv.Atoi(m[:i])
+		if err != nil {
+			panic(err) // This should never happen
+		}
+
+		if n < j {
+			n = j
+		}
+	}
+	n++
+
+	var b [3]byte
 	_, _ = rand.Read(b[:])
-	return hex.EncodeToString(b[:])
+
+	return fmt.Sprintf("%05d_%s", n, hex.EncodeToString(b[:]))
 }
 
 func (p *Plugin) ensureStore() {
