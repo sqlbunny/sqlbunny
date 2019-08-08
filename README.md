@@ -13,7 +13,7 @@ sqlbunny is a Go ORM based on code generation.
 
 ## Documentation
 
-Documentation and guides are available at https://sqlbunny.kernelpay.com/
+Documentation and guides are available at https://sqlbunny.io/
 
 ## Sneak peek
 
@@ -42,7 +42,7 @@ err = book.Insert(ctx)
 books, err := models.Books().All(ctx)
 ```
 
-Want more? Check out the [Getting Started](https://sqlbunny.kernelpay.com/getting-started.html) guide.
+Want more? Check out the [Getting Started](https://sqlbunny.io/getting-started.html) guide.
 
 ## Credits
 

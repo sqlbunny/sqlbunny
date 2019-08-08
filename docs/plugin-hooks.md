@@ -1,3 +1,0 @@
-# Hooks plugin
-
-Coming soon.

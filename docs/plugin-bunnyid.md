@@ -1,3 +1,0 @@
-# BunnyID plugin
-
-Coming soon.

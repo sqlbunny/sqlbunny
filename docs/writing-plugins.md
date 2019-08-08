@@ -1,3 +1,0 @@
-# Writing plugins
-
-Coming soon.
