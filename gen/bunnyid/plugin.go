@@ -33,7 +33,7 @@ func (p *Plugin) gen() {
 			data := gen.BaseTemplateData()
 			data["IDType"] = t
 
-			p.idTemplates.Execute(data, t.Name+".go")
+			p.idTemplates.Execute(data, t.Name+".gen.go")
 
 			idTypes = append(idTypes, t)
 		}

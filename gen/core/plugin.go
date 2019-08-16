@@ -64,11 +64,11 @@ func (p *Plugin) gen() {
 		case *schema.Enum:
 			data := gen.BaseTemplateData()
 			data["Enum"] = t
-			p.EnumTemplates.Execute(data, t.Name+".go")
+			p.EnumTemplates.Execute(data, t.Name+".gen.go")
 		case *schema.Struct:
 			data := gen.BaseTemplateData()
 			data["Struct"] = t
-			p.StructTemplates.Execute(data, t.Name+".go")
+			p.StructTemplates.Execute(data, t.Name+".gen.go")
 		}
 	}
 
@@ -80,6 +80,6 @@ func (p *Plugin) gen() {
 		data := gen.BaseTemplateData()
 		data["Model"] = model
 		data["Models"] = models
-		p.ModelTemplates.Execute(data, model.Name+".go")
+		p.ModelTemplates.Execute(data, model.Name+".gen.go")
 	}
 }

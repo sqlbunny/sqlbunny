@@ -54,7 +54,7 @@ func (t *TemplateList) ExecuteSingleton(data map[string]interface{}) {
 		WritePackageName(out, Config.ModelsPackageName)
 
 		executeTemplate(out, t.Template, tplName, data)
-		WriteFile(Config.ModelsOutputPath(), fName+".go", out.Bytes())
+		WriteFile(Config.ModelsOutputPath(), fName+".gen.go", out.Bytes())
 	}
 }
 
