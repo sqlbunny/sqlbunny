@@ -106,9 +106,14 @@ func (p *Plugin) cmdGen(cmd *cobra.Command, args []string) {
 		log.Fatal("No model changes found, doing nothing.")
 	}
 
+	var deps []string
+	if head != "" {
+		deps = []string{head}
+	}
+
 	m := &migration.Migration{
 		Name:         p.genName(),
-		Dependencies: []string{head},
+		Dependencies: deps,
 		Operations:   ops,
 	}
 	p.writeMigration(m)
@@ -236,6 +241,11 @@ func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
 
 func (p *Plugin) applyAll(db *schema.Schema) string {
 	s := p.Store
+
+	if len(s.Migrations) == 0 {
+		return ""
+	}
+
 	heads := s.FindHeads()
 	if len(heads) != 1 {
 		log.Fatal("Found multiple migration heads, you must run 'migration merge' first")
