@@ -1,29 +1,43 @@
 package core
 
 import (
-	"fmt"
 	"strings"
 
+	"github.com/sqlbunny/sqlbunny/gen"
 	"github.com/sqlbunny/sqlbunny/runtime/strmangle"
 	"github.com/sqlbunny/sqlbunny/schema"
 )
 
-type typeEntry struct {
+type TypeContext struct {
+	*gen.Context
+	Name string
+}
+
+type TypeItem interface {
+	TypeItem(ctx *TypeContext) schema.Type
+}
+
+type defType struct {
 	name string
-	info TypeDef
+	item TypeItem
 }
 
-func (typeEntry) IsConfigItem() {}
-
-type TypeDef interface {
-	GetType(name string) schema.Type
-	ResolveTypes(v *Validation, t schema.Type, resolve func(name string, context string) schema.Type)
+func (t defType) ConfigItem(ctx *gen.Context) {
+	if _, ok := ctx.Schema.Types[t.name]; ok {
+		ctx.AddError("Type '%s' is defined multiple times", t.name)
+	}
+	ctx.Schema.Types[t.name] = t.item.TypeItem(&TypeContext{
+		Context: ctx,
+		Name:    t.name,
+	})
 }
 
-func Type(name string, t TypeDef) typeEntry {
-	return typeEntry{
+var _ gen.ConfigItem = defType{}
+
+func Type(name string, t TypeItem) defType {
+	return defType{
 		name: name,
-		info: t,
+		item: t,
 	}
 }
 
@@ -51,10 +65,10 @@ func parseGoType(s string) schema.GoType {
 	}
 }
 
-func (t BaseType) GetType(name string) schema.Type {
+func (t BaseType) TypeItem(ctx *TypeContext) schema.Type {
 	if t.GoNull == "" {
 		return &schema.BaseTypeNotNullable{
-			Name: name,
+			Name: ctx.Name,
 			Postgres: schema.SQLType{
 				Type:      t.Postgres.Type,
 				ZeroValue: t.Postgres.ZeroValue,
@@ -63,7 +77,7 @@ func (t BaseType) GetType(name string) schema.Type {
 		}
 	}
 	return &schema.BaseTypeNullable{
-		Name: name,
+		Name: ctx.Name,
 		Postgres: schema.SQLType{
 			Type:      t.Postgres.Type,
 			ZeroValue: t.Postgres.ZeroValue,
@@ -73,21 +87,15 @@ func (t BaseType) GetType(name string) schema.Type {
 	}
 }
 
-func (t BaseType) ResolveTypes(v *Validation, st schema.Type, resolve func(name string, context string) schema.Type) {
-}
-
 type enum struct {
 	choices []string
 }
 
-func (t enum) GetType(name string) schema.Type {
+func (t enum) TypeItem(ctx *TypeContext) schema.Type {
 	return &schema.Enum{
-		Name:    name,
+		Name:    ctx.Name,
 		Choices: t.choices,
 	}
-}
-
-func (t enum) ResolveTypes(v *Validation, st schema.Type, resolve func(name string, context string) schema.Type) {
 }
 
 func Enum(choices ...string) enum {
@@ -98,53 +106,19 @@ type array struct {
 	element string
 }
 
-func (t array) GetType(name string) schema.Type {
+func (t array) TypeItem(ctx *TypeContext) schema.Type {
 	return &schema.BaseTypeNotNullable{
-		Name: name,
+		Name: ctx.Name,
 		Postgres: schema.SQLType{
 			Type:      "bytea[]",
 			ZeroValue: "'{}'",
 		},
 		Go: schema.GoType{
-			Name: strmangle.TitleCase(name),
+			Name: strmangle.TitleCase(ctx.Name),
 		},
 	}
 }
 
-func (t array) ResolveTypes(v *Validation, st schema.Type, resolve func(name string, context string) schema.Type) {
-}
-
 func Array(element string) array {
 	return array{element}
-}
-
-type structType struct {
-	items []ModelItem
-}
-
-func (t structType) GetType(name string) schema.Type {
-	return &schema.Struct{
-		Name: name,
-	}
-}
-
-func (t structType) ResolveTypes(v *Validation, st schema.Type, resolve func(name string, context string) schema.Type) {
-	struc := st.(*schema.Struct)
-	for _, i := range t.items {
-		switch i := i.(type) {
-		case field:
-			struc.Fields = append(struc.Fields, &schema.Field{
-				Name:     i.name,
-				Type:     resolve(i.typeName, "field "+i.name),
-				Nullable: isNullable(i.flags),
-				Tags:     makeTags(v, i.flags, fmt.Sprintf("Struct '%s' field '%s'", struc.Name, i.name)),
-			})
-		}
-	}
-}
-
-func Struct(items ...ModelItem) structType {
-	return structType{
-		items: expandItems(items),
-	}
 }

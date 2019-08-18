@@ -7,7 +7,7 @@ import (
 )
 
 type Plugin interface {
-	IsConfigItem()
+	ConfigItem
 	BunnyPlugin()
 }
 

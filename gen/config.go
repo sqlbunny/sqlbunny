@@ -8,7 +8,7 @@ import (
 )
 
 type ConfigItem interface {
-	IsConfigItem()
+	ConfigItem(ctx *Context)
 }
 
 type ConfigStruct struct {

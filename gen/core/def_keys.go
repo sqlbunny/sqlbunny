@@ -1,70 +1,144 @@
 package core
 
-type modelPrimaryKey struct {
+import "github.com/sqlbunny/sqlbunny/schema"
+
+type defModelPrimaryKey struct {
 	names []string
 }
 
-func (modelPrimaryKey) isModelItem() {}
+func (d defModelPrimaryKey) ModelItem(ctx *ModelContext) {
+	m := ctx.Model
+	if m.PrimaryKey != nil {
+		ctx.AddError("Model '%s' has multiple primary key definitions", m.Name)
+	}
+	m.PrimaryKey = &schema.PrimaryKey{
+		Columns: undotAll(prefixAll(d.names, ctx.Prefix)),
+	}
+}
+func (d defModelPrimaryKey) StructItem(ctx *StructContext) {}
 
-type fieldPrimaryKey func(...string) modelPrimaryKey
+var _ ModelItem = defModelPrimaryKey{}
+var _ StructItem = defModelPrimaryKey{}
 
-func (fieldPrimaryKey) isFieldItem() {}
+type defFieldPrimaryKey func(...string) defModelPrimaryKey
 
-var PrimaryKey fieldPrimaryKey = func(names ...string) modelPrimaryKey {
-	return modelPrimaryKey{names: names}
+func (d defFieldPrimaryKey) ModelFieldItem(ctx *ModelFieldContext) {
+	m := ctx.Model
+	if m.PrimaryKey != nil {
+		ctx.AddError("Model '%s' has multiple primary key definitions", m.Name)
+	}
+	m.PrimaryKey = &schema.PrimaryKey{
+		Columns: []string{undot(ctx.Prefix + ctx.Field.Name)},
+	}
 }
 
-type modelIndex struct {
+var _ ModelFieldItem = defFieldPrimaryKey(nil)
+
+var PrimaryKey defFieldPrimaryKey = func(names ...string) defModelPrimaryKey {
+	return defModelPrimaryKey{names: names}
+}
+
+type defModelIndex struct {
 	names []string
 }
 
-func (modelIndex) isModelItem() {}
+func (d defModelIndex) ModelItem(ctx *ModelContext) {
+	m := ctx.Model
+	m.Indexes = append(m.Indexes, &schema.Index{
+		Columns: undotAll(prefixAll(d.names, ctx.Prefix)),
+	})
+}
+func (d defModelIndex) StructItem(ctx *StructContext) {}
 
-type fieldIndex func(...string) modelIndex
+var _ ModelItem = defModelIndex{}
+var _ StructItem = defModelIndex{}
 
-func (fieldIndex) isFieldItem() {}
+type defFieldIndex func(...string) defModelIndex
 
-var Index fieldIndex = func(names ...string) modelIndex {
-	return modelIndex{names: names}
+func (d defFieldIndex) ModelFieldItem(ctx *ModelFieldContext) {
+	m := ctx.Model
+	m.Indexes = append(m.Indexes, &schema.Index{
+		Columns: []string{undot(ctx.Prefix + ctx.Field.Name)},
+	})
 }
 
-type modelUnique struct {
+var _ ModelFieldItem = defFieldIndex(nil)
+
+var Index defFieldIndex = func(names ...string) defModelIndex {
+	return defModelIndex{names: names}
+}
+
+type defModelUnique struct {
 	names []string
 }
 
-func (modelUnique) isModelItem() {}
+func (d defModelUnique) ModelItem(ctx *ModelContext) {
+	m := ctx.Model
+	m.Uniques = append(m.Uniques, &schema.Unique{
+		Columns: undotAll(prefixAll(d.names, ctx.Prefix)),
+	})
+}
+func (d defModelUnique) StructItem(ctx *StructContext) {}
 
-type fieldUnique func(...string) modelUnique
+var _ ModelItem = defModelUnique{}
+var _ StructItem = defModelUnique{}
 
-func (fieldUnique) isFieldItem() {}
+type defFieldUnique func(...string) defModelUnique
 
-var Unique fieldUnique = func(names ...string) modelUnique {
-	return modelUnique{names: names}
+func (d defFieldUnique) ModelFieldItem(ctx *ModelFieldContext) {
+	m := ctx.Model
+	m.Uniques = append(m.Uniques, &schema.Unique{
+		Columns: []string{undot(ctx.Prefix + ctx.Field.Name)},
+	})
 }
 
-type modelForeignKey struct {
+var _ ModelFieldItem = defFieldUnique(nil)
+
+var Unique defFieldUnique = func(names ...string) defModelUnique {
+	return defModelUnique{names: names}
+}
+
+type defModelForeignKey struct {
 	foreignModelName   string
 	columnNames        []string
 	foreignColumnNames []string
 }
 
-func (modelForeignKey) isModelItem() {}
-
-type fieldForeignKey struct {
-	foreignModelName string
+func (d defModelForeignKey) ModelItem(ctx *ModelContext) {
+	m := ctx.Model
+	m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
+		Model:        m.Name,
+		Columns:      undotAll(prefixAll(d.columnNames, ctx.Prefix)),
+		ForeignModel: d.foreignModelName,
+	})
 }
 
-func (fieldForeignKey) isFieldItem() {}
+var _ ModelItem = defModelForeignKey{}
 
-func ForeignKey(foreignModelName string) fieldForeignKey {
-	return fieldForeignKey{
+func ModelForeignKey(foreignModelName string, columnNames ...string) defModelForeignKey {
+	return defModelForeignKey{
 		foreignModelName: foreignModelName,
+		columnNames:      columnNames,
 	}
 }
 
-func ModelForeignKey(foreignModelName string, columnNames ...string) modelForeignKey {
-	return modelForeignKey{
+type defFieldForeignKey struct {
+	foreignModelName string
+}
+
+func (d defFieldForeignKey) ModelFieldItem(ctx *ModelFieldContext) {
+	m := ctx.Model
+	m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
+		Model:        m.Name,
+		Columns:      []string{undot(ctx.Prefix + ctx.Field.Name)},
+		ForeignModel: d.foreignModelName,
+	})
+}
+
+var _ ModelFieldItem = defFieldForeignKey{}
+
+func ForeignKey(foreignModelName string) defFieldForeignKey {
+	return defFieldForeignKey{
 		foreignModelName: foreignModelName,
-		columnNames:      columnNames,
 	}
 }

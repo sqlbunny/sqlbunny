@@ -5,6 +5,8 @@ import "github.com/sqlbunny/sqlbunny/runtime/strmangle"
 type Enum struct {
 	Name    string
 	Choices []string
+
+	Extendable
 }
 
 func (e *Enum) GetName() string {

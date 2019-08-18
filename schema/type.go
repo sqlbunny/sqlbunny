@@ -5,17 +5,20 @@ import "strings"
 type Type interface {
 	GetName() string
 	GoType() GoType
+
+	GetExtension(key interface{}) interface{}
+	SetExtension(key interface{}, value interface{})
 }
 
 type BaseType interface {
-	GetName() string
-	GoType() GoType
+	Type
+
 	SQLType() SQLType
 }
 
 type NullableType interface {
-	GetName() string
-	GoType() GoType
+	Type
+
 	GoTypeNull() GoType
 	GoTypeNullField() string
 }
@@ -29,6 +32,8 @@ type BaseTypeNotNullable struct {
 	Name     string
 	Go       GoType
 	Postgres SQLType
+
+	Extendable
 }
 
 type SQLType struct {
@@ -53,6 +58,8 @@ type BaseTypeNullable struct {
 	Go       GoType
 	GoNull   GoType
 	Postgres SQLType
+
+	Extendable
 }
 
 func (t *BaseTypeNullable) GetName() string {

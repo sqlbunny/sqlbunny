@@ -19,6 +19,8 @@ type Model struct {
 
 	ToOneRelationships  []*ToOneRelationship
 	ToManyRelationships []*ToManyRelationship
+
+	Extendable
 }
 
 func (m *Model) SingleColumnForeignKeys() []*ForeignKey {

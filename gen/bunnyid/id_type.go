@@ -6,6 +6,8 @@ import "github.com/sqlbunny/sqlbunny/schema"
 type IDType struct {
 	Name   string
 	Prefix string
+
+	schema.Extendable
 }
 
 func (t *IDType) GetName() string {

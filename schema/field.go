@@ -8,6 +8,8 @@ type Field struct {
 	Nullable bool
 
 	Tags Tags
+
+	Extendable
 }
 
 func (f *Field) GenerateTags() string {

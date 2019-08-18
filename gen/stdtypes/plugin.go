@@ -10,7 +10,7 @@ type Plugin struct {
 
 var _ gen.Plugin = &Plugin{}
 
-func (*Plugin) IsConfigItem() {}
+func (*Plugin) ConfigItem(ctx *gen.Context) {}
 
 func (p *Plugin) BunnyPlugin() {
 }

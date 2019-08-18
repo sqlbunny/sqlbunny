@@ -15,7 +15,7 @@ type Plugin struct {
 
 var _ gen.Plugin = &Plugin{}
 
-func (*Plugin) IsConfigItem() {}
+func (*Plugin) ConfigItem(ctx *gen.Context) {}
 
 func (p *Plugin) BunnyPlugin() {
 	p.idTemplates = gen.MustLoadTemplates(templatesPackage, "templates/id")

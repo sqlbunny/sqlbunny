@@ -3,6 +3,8 @@ package schema
 type Schema struct {
 	Types  map[string]Type
 	Models map[string]*Model
+
+	Extendable
 }
 
 func New() *Schema {
