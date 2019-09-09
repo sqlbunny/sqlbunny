@@ -91,6 +91,10 @@ func (d defModelField) ModelItem(ctx *ModelContext) {
 		}
 
 		if f.Nullable {
+			var def string
+			if !ctx.ForceNullable {
+				def = "false"
+			}
 			m.Columns = append(m.Columns, &schema.Column{
 				Name: undot(ctx.Prefix + d.name),
 				Type: &schema.BaseTypeNullable{
@@ -107,8 +111,9 @@ func (d defModelField) ModelItem(ctx *ModelContext) {
 						ZeroValue: "false",
 					},
 				},
-				SQLType:  "boolean",
-				Nullable: ctx.ForceNullable,
+				SQLType:    "boolean",
+				SQLDefault: def,
+				Nullable:   ctx.ForceNullable,
 			})
 		}
 	case schema.BaseType:
