@@ -69,7 +69,7 @@ func (u Null{{$modelName}}) MarshalJSON() ([]byte, error) {
 // MarshalText implements encoding.TextMarshaler.
 func (u Null{{$modelName}}) MarshalText() ([]byte, error) {
 	if !u.Valid {
-		return []byte{}, nil
+		return nil, nil
 	}
 	return u.ID.MarshalText()
 }

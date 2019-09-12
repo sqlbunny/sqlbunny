@@ -62,7 +62,7 @@ func (s String) MarshalJSON() ([]byte, error) {
 // MarshalText implements encoding.TextMarshaler.
 func (s String) MarshalText() ([]byte, error) {
 	if !s.Valid {
-		return []byte{}, nil
+		return nil, nil
 	}
 	return []byte(s.String), nil
 }

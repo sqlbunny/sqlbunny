@@ -86,7 +86,7 @@ func (u Uint16) MarshalJSON() ([]byte, error) {
 // MarshalText implements encoding.TextMarshaler.
 func (u Uint16) MarshalText() ([]byte, error) {
 	if !u.Valid {
-		return []byte{}, nil
+		return nil, nil
 	}
 	return []byte(strconv.FormatUint(uint64(u.Uint16), 10)), nil
 }

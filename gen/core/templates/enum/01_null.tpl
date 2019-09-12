@@ -73,7 +73,7 @@ func (u Null{{$enumName}}) MarshalJSON() ([]byte, error) {
 // MarshalText implements encoding.TextMarshaler.
 func (u Null{{$enumName}}) MarshalText() ([]byte, error) {
 	if !u.Valid {
-		return []byte{}, nil
+		return nil, nil
 	}
 	return u.{{$enumName}}.MarshalText()
 }

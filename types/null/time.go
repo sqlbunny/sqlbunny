@@ -61,7 +61,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 // MarshalText implements encoding.TextMarshaler.
 func (t Time) MarshalText() ([]byte, error) {
 	if !t.Valid {
-		return NullBytes, nil
+		return nil, nil
 	}
 	return t.Time.MarshalText()
 }
