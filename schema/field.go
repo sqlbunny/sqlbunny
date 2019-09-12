@@ -24,9 +24,6 @@ func (f *Field) GenerateTags() string {
 	}
 	if _, ok := f.Tags["json"]; !ok {
 		f.Tags["json"] = f.Name
-		if f.Nullable {
-			f.Tags["json"] += ",omitempty"
-		}
 	}
 	return f.Tags.String()
 }
