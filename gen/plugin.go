@@ -11,6 +11,11 @@ type Plugin interface {
 	BunnyPlugin()
 }
 
+type Configer interface {
+	ConfigItem
+	BunnyConfig(c *ConfigStruct)
+}
+
 type HookFunc func(buf *bytes.Buffer, data map[string]interface{}, args ...interface{})
 
 var (

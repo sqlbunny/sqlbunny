@@ -3,8 +3,8 @@ package gen
 import (
 	"os"
 
-	"github.com/sqlbunny/sqlbunny/runtime/queries"
 	"github.com/spf13/cobra"
+	"github.com/sqlbunny/sqlbunny/runtime/queries"
 )
 
 var rootCmd *cobra.Command
@@ -44,7 +44,7 @@ func Run(items []ConfigItem) {
 			UseTopClause:      false,
 		},
 
-		OutputPath:        ".",
+		ModelsPackagePath: "./models",
 		ModelsPackageName: "models",
 	}
 
@@ -52,6 +52,12 @@ func Run(items []ConfigItem) {
 		Use: "gen",
 		Run: gen,
 	})
+
+	for _, i := range items {
+		if p, ok := i.(Configer); ok {
+			p.BunnyConfig(Config)
+		}
+	}
 
 	for _, i := range items {
 		if p, ok := i.(Plugin); ok {

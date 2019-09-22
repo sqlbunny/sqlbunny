@@ -38,7 +38,7 @@ func (t *TemplateList) Execute(data map[string]interface{}, filename string) {
 	WriteImports(out, imports)
 	out.Write(innerOut.Bytes())
 
-	WriteFile(Config.ModelsOutputPath(), filename, out.Bytes())
+	WriteFile(Config.ModelsPackagePath, filename, out.Bytes())
 }
 
 func (t *TemplateList) ExecuteSingleton(data map[string]interface{}) {
@@ -54,7 +54,7 @@ func (t *TemplateList) ExecuteSingleton(data map[string]interface{}) {
 		WritePackageName(out, Config.ModelsPackageName)
 
 		executeTemplate(out, t.Template, tplName, data)
-		WriteFile(Config.ModelsOutputPath(), fName+".gen.go", out.Bytes())
+		WriteFile(Config.ModelsPackagePath, fName+".gen.go", out.Bytes())
 	}
 }
 

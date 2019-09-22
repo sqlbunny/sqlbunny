@@ -1,8 +1,6 @@
 package gen
 
 import (
-	"path/filepath"
-
 	"github.com/sqlbunny/sqlbunny/runtime/queries"
 	"github.com/sqlbunny/sqlbunny/schema"
 )
@@ -17,12 +15,8 @@ type ConfigStruct struct {
 
 	Dialect queries.Dialect
 
-	OutputPath        string
+	ModelsPackagePath string
 	ModelsPackageName string
-}
-
-func (c *ConfigStruct) ModelsOutputPath() string {
-	return filepath.Join(c.OutputPath, c.ModelsPackageName)
 }
 
 var Config *ConfigStruct

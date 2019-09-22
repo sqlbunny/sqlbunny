@@ -22,8 +22,9 @@ import (
 )
 
 type Plugin struct {
-	Store                 *migration.Store
-	MigrationsPackageName string
+	Store       *migration.Store
+	PackageName string
+	PackagePath string
 }
 
 var _ gen.Plugin = &Plugin{}
@@ -31,9 +32,13 @@ var _ gen.Plugin = &Plugin{}
 func (*Plugin) ConfigItem(ctx *gen.Context) {}
 
 func (p *Plugin) BunnyPlugin() {
-	if p.MigrationsPackageName == "" {
-		p.MigrationsPackageName = "migrations"
+	if p.PackageName == "" {
+		p.PackageName = "migrations"
 	}
+	if p.PackagePath == "" {
+		p.PackagePath = "./migrations"
+	}
+
 	cmd := &cobra.Command{
 		Use: "migration",
 	}
@@ -55,10 +60,6 @@ func (p *Plugin) BunnyPlugin() {
 		Use: "gensql",
 		Run: p.cmdGenSQL,
 	})
-}
-
-func (p *Plugin) migrationsOutputPath() string {
-	return filepath.Join(gen.Config.OutputPath, p.MigrationsPackageName)
 }
 
 func (p *Plugin) cmdCheck(cmd *cobra.Command, args []string) {
@@ -150,19 +151,19 @@ func (p *Plugin) genName() string {
 }
 
 func (p *Plugin) ensureStore() {
-	if err := os.MkdirAll(p.migrationsOutputPath(), os.ModePerm); err != nil {
-		log.Fatalf("Error creating output directory %s: %v", p.migrationsOutputPath(), err)
+	if err := os.MkdirAll(p.PackagePath, os.ModePerm); err != nil {
+		log.Fatalf("Error creating output directory %s: %v", p.PackagePath, err)
 	}
 
-	if _, err := os.Stat(filepath.Join(p.migrationsOutputPath(), "store.go")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(p.PackagePath, "store.go")); os.IsNotExist(err) {
 		var buf bytes.Buffer
-		gen.WritePackageName(&buf, p.MigrationsPackageName)
+		gen.WritePackageName(&buf, p.PackageName)
 		buf.WriteString("import \"github.com/sqlbunny/sqlbunny/runtime/migration\"\n")
 		buf.WriteString("\n")
 		buf.WriteString("// Store contains the migrations for this project\n")
 		buf.WriteString("var Store migration.Store\n")
 
-		gen.WriteFile(p.migrationsOutputPath(), "store.go", buf.Bytes())
+		gen.WriteFile(p.PackagePath, "store.go", buf.Bytes())
 
 		if p.Store == nil {
 			log.Println("Initial migrations package created.")
@@ -193,13 +194,13 @@ func (p *Plugin) ensureStore() {
 func (p *Plugin) writeMigration(m *migration.Migration) {
 	migrationFile := fmt.Sprintf("migration_%s.go", m.Name)
 	var buf bytes.Buffer
-	gen.WritePackageName(&buf, p.MigrationsPackageName)
+	gen.WritePackageName(&buf, p.PackageName)
 	buf.WriteString("import \"github.com/sqlbunny/sqlbunny/runtime/migration\"\n")
 	buf.WriteString(fmt.Sprintf("func init() {\nStore.Register("))
 	m.Dump(&buf)
 	buf.WriteString(")\n}")
 
-	gen.WriteFile(p.migrationsOutputPath(), migrationFile, buf.Bytes())
+	gen.WriteFile(p.PackagePath, migrationFile, buf.Bytes())
 }
 
 type fakeDB struct {
