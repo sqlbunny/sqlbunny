@@ -1,7 +1,7 @@
 package migration
 
 import (
-	"github.com/pkg/errors"
+	"github.com/sqlbunny/errors"
 	"github.com/sqlbunny/sqlbunny/runtime/migration"
 	"github.com/sqlbunny/sqlbunny/schema"
 )

@@ -7,7 +7,7 @@ func (q {{$varNameSingular}}Query) One(ctx context.Context) (*{{$modelNameSingul
 
 	err := q.Bind(ctx, o)
 	if err != nil {
-		return nil, errors.Wrap(err, "{{.PkgName}}: failed to execute a one query for {{.Model.Name}}")
+		return nil, errors.Errorf("{{.PkgName}}: failed to execute a one query for {{.Model.Name}}: %w", err)
 	}
 
 	{{ hook . "after_select" "o" .Model }}
@@ -24,7 +24,7 @@ func (q {{$varNameSingular}}Query) First(ctx context.Context) (*{{$modelNameSing
 
 	err := q.Bind(ctx, o)
 	if err != nil {
-		return nil, errors.Wrap(err, "{{.PkgName}}: failed to execute a one query for {{.Model.Name}}")
+		return nil, errors.Errorf("{{.PkgName}}: failed to execute a one query for {{.Model.Name}}: %w", err)
 	}
 
 	{{ hook . "after_select" "o" .Model }}
@@ -38,7 +38,7 @@ func (q {{$varNameSingular}}Query) All(ctx context.Context) ({{$modelNameSingula
 
 	err := q.Bind(ctx, &o)
 	if err != nil {
-		return nil, errors.Wrap(err, "{{.PkgName}}: failed to assign all query results to {{$modelNameSingular}} slice")
+		return nil, errors.Errorf("{{.PkgName}}: failed to assign all query results to {{$modelNameSingular}} slice: %w", err)
 	}
 
 	{{ hook . "after_select_slice" "o" .Model }}
@@ -55,7 +55,7 @@ func (q {{$varNameSingular}}Query) Count(ctx context.Context) (int64, error) {
 
 	err := q.Query.QueryRow(ctx).Scan(&count)
 	if err != nil {
-		return 0, errors.Wrap(err, "{{.PkgName}}: failed to count {{.Model.Name}} rows")
+		return 0, errors.Errorf("{{.PkgName}}: failed to count {{.Model.Name}} rows: %w", err)
 	}
 
 	return count, nil
@@ -70,7 +70,7 @@ func (q {{$varNameSingular}}Query) Exists(ctx context.Context) (bool, error) {
 
 	err := q.Query.QueryRow(ctx).Scan(&count)
 	if err != nil {
-		return false, errors.Wrap(err, "{{.PkgName}}: failed to check if {{.Model.Name}} exists")
+		return false, errors.Errorf("{{.PkgName}}: failed to check if {{.Model.Name}} exists: %w", err)
 	}
 
 	return count > 0, nil

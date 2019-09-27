@@ -10,9 +10,9 @@ import (
 
 	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 
+	"github.com/sqlbunny/errors"
 	"github.com/sqlbunny/sqlbunny/runtime/strmangle"
 	"github.com/sqlbunny/sqlbunny/types/null/convert"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -76,7 +76,7 @@ func (q *Query) Bind(ctx context.Context, obj interface{}) error {
 
 	rows, err := q.Query(ctx)
 	if err != nil {
-		return errors.Wrap(err, "bind failed to execute query")
+		return errors.Errorf("bind failed to execute query: %w", err)
 	}
 	defer rows.Close()
 	if res := bind(rows, obj, structType, sliceType, bkind); res != nil {
@@ -148,7 +148,7 @@ func bindChecks(obj interface{}) (structType reflect.Type, sliceType reflect.Typ
 func bind(rows *sql.Rows, obj interface{}, structType, sliceType reflect.Type, bkind bindKind) error {
 	cols, err := rows.Columns()
 	if err != nil {
-		return errors.Wrap(err, "bind failed to get field names")
+		return errors.Errorf("bind failed to get field names: %w", err)
 	}
 
 	var ptrSlice reflect.Value
@@ -217,7 +217,7 @@ func bind(rows *sql.Rows, obj interface{}, structType, sliceType reflect.Type, b
 		}
 
 		if err := rows.Scan(pointers...); err != nil {
-			return errors.Wrap(err, "failed to bind pointers to obj")
+			return errors.Errorf("failed to bind pointers to obj: %w", err)
 		}
 
 		switch bkind {

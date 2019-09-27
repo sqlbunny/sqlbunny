@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"github.com/pkg/errors"
+	"github.com/sqlbunny/errors"
 )
 
 // DB can perform SQL queries.
@@ -115,7 +115,7 @@ func doAtomic(ctx context.Context, fn func(ctx context.Context) error, readOnly 
 }
 
 func shouldRetryTransaction(err error) bool {
-	err2 := errors.Cause(err)
+	err2 := errors.Unwrap(err)
 	if err2, ok := err2.(*pq.Error); ok {
 		n := err2.Code.Name()
 		if n == "serialization_failure" || n == "deadlock_detected" {
@@ -208,7 +208,7 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 			ReadOnly:  readOnly,
 		})
 		if err != nil {
-			retErr := errors.Wrap(err, "BeginTx failed")
+			retErr := errors.Errorf("BeginTx failed: %w", err)
 			if logger != nil {
 				logger.LogRollback(ctx, RollbackLogInfo{
 					Duration: time.Since(begin),
@@ -244,7 +244,7 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 
 	err := fn(ctx2)
 	if err != nil {
-		retErr := errors.Wrap(err, "tx function returned error")
+		retErr := errors.Errorf("tx function returned error: %w", err)
 		if logger != nil {
 			logger.LogRollback(ctx, RollbackLogInfo{
 				Duration: time.Since(begin),
@@ -260,7 +260,7 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 
 	err = node.Commit()
 	if err != nil {
-		retErr := errors.Wrap(err, "commit")
+		retErr := errors.Errorf("commit: %w", err)
 		if logger != nil {
 			logger.LogRollback(ctx, RollbackLogInfo{
 				Duration: time.Since(begin),

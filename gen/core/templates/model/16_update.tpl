@@ -42,7 +42,7 @@ func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... strin
 
 	_, err = bunny.Exec(ctx, cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "{{.PkgName}}: unable to update {{.Model.Name}} row")
+		return errors.Errorf("{{.PkgName}}: unable to update {{.Model.Name}} row: %w", err)
 	}
 
 	if !cached {
@@ -62,7 +62,7 @@ func (q {{$varNameSingular}}Query) UpdateMapAll(ctx context.Context, cols M) err
 
 	_, err := q.Query.Exec(ctx)
 	if err != nil {
-		return errors.Wrap(err, "{{.PkgName}}: unable to update all for {{.Model.Name}}")
+		return errors.Errorf("{{.PkgName}}: unable to update all for {{.Model.Name}}: %w", err)
 	}
 
 	return nil

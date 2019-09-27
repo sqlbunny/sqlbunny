@@ -1,7 +1,7 @@
 import (
+	"github.com/sqlbunny/errors"
     "github.com/sqlbunny/sqlbunny/runtime/strmangle"
 	"github.com/sqlbunny/sqlbunny/runtime/queries"
-	"github.com/pkg/errors"
 )
 
 // M type is for providing fields and field values to UpdateAll.

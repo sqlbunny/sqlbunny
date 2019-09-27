@@ -11,7 +11,7 @@
 {{ import "queries" "github.com/sqlbunny/sqlbunny/runtime/queries" }}
 {{ import "qm" "github.com/sqlbunny/sqlbunny/runtime/qm" }}
 {{ import "strmangle" "github.com/sqlbunny/sqlbunny/runtime/strmangle" }}
-{{ import "errors" "github.com/pkg/errors" }}
+{{ import "errors" "github.com/sqlbunny/errors" }}
 
 {{- $dot := . -}}
 {{- $modelNameSingular := .Model.Name | singular -}}

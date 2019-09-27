@@ -15,7 +15,7 @@ func (o *{{$modelNameSingular}}) Delete(ctx context.Context) error {
 
 	_, err := bunny.Exec(ctx, sql, args...)
 	if err != nil {
-	return errors.Wrap(err, "{{.PkgName}}: unable to delete from {{.Model.Name}}")
+	return errors.Errorf("{{.PkgName}}: unable to delete from {{.Model.Name}}: %w", err)
 	}
 
 	{{ hook . "after_delete" "o" .Model }}
@@ -33,7 +33,7 @@ func (q {{$varNameSingular}}Query) DeleteAll(ctx context.Context) error {
 
 	_, err := q.Query.Exec(ctx)
 	if err != nil {
-	return errors.Wrap(err, "{{.PkgName}}: unable to delete all from {{.Model.Name}}")
+	return errors.Errorf("{{.PkgName}}: unable to delete all from {{.Model.Name}}: %w", err)
 	}
 
 	return nil
@@ -62,7 +62,7 @@ func (o {{$modelNameSingular}}Slice) DeleteAll(ctx context.Context) error {
 
 	_, err := bunny.Exec(ctx, sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "{{.PkgName}}: unable to delete all from {{$varNameSingular}} slice")
+		return errors.Errorf("{{.PkgName}}: unable to delete all from {{$varNameSingular}} slice: %w", err)
 	}
 
 	{{ hook . "after_delete_slice" "o" .Model }}

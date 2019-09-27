@@ -20,7 +20,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Set{{$txt.Function.NameGo}}(ctx context.Con
 		{{- end}}
 
 		if err = related.Insert(ctx); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign model")
+			return errors.Errorf("failed to insert into foreign model: %w", err)
 		}
 	} else {
 		updateQuery := fmt.Sprintf(
@@ -31,7 +31,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Set{{$txt.Function.NameGo}}(ctx context.Con
 		values := []interface{}{o.{{$txt.LocalModel.ColumnNameGo}}, related.{{$foreignPrimaryKeyCols | stringMap $dot.StringFuncs.titleCaseIdentifier | join ", related."}}{{"}"}}
 
 		if _, err = bunny.Exec(ctx, updateQuery, values...); err != nil {
-			return errors.Wrap(err, "failed to update foreign model")
+			return errors.Errorf("failed to update foreign model: %w", err)
 		}
 
 		related.{{$txt.Function.ForeignAssignment}} = o.{{$txt.Function.LocalAssignment}}
@@ -69,7 +69,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Remove{{$txt.Function.NameGo}}(ctx context.
 	related.{{$txt.ForeignModel.ColumnNameGo}}.Valid = false
 	if err = related.Update(ctx, "{{.ForeignColumn}}"); err != nil {
 		related.{{$txt.ForeignModel.ColumnNameGo}}.Valid = true
-		return errors.Wrap(err, "failed to update local model")
+		return errors.Errorf("failed to update local model: %w", err)
 	}
 
 	o.R.{{$txt.Function.NameGo}} = nil

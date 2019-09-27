@@ -41,13 +41,13 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 
 	results, err := bunny.Query(ctx, query, args...)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load {{$txt.ForeignModel.NameGo}}")
+		return errors.Errorf("failed to eager load {{$txt.ForeignModel.NameGo}}: %w", err)
 	}
 	defer results.Close()
 
 	var resultSlice []*{{$txt.ForeignModel.NameGo}}
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice {{$txt.ForeignModel.NameGo}}")
+		return errors.Errorf("failed to bind eager loaded slice {{$txt.ForeignModel.NameGo}}: %w", err)
 	}
 
 	{{ $foreignModel := getModel $dot.Models .ForeignModel }}

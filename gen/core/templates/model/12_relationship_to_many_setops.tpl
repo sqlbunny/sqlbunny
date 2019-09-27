@@ -24,7 +24,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Add{{$txt.Function.NameGo}}(ctx context.Con
 			{{end -}}
 
 			if err = rel.Insert(ctx); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign model")
+				return errors.Errorf("failed to insert into foreign model: %w", err)
 			}
 		}{{if not .ToJoinModel}} else {
 			updateQuery := fmt.Sprintf(
@@ -35,7 +35,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Add{{$txt.Function.NameGo}}(ctx context.Con
 			values := []interface{}{o.{{$txt.LocalModel.ColumnNameGo}}, rel.{{$foreignPrimaryKeyCols | stringMap $dot.StringFuncs.titleCaseIdentifier | join ", rel."}}{{"}"}}
 
 			if _, err = bunny.Exec(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign model")
+				return errors.Errorf("failed to update foreign model: %w", err)
 			}
 
 			rel.{{$txt.Function.ForeignAssignment}} = o.{{$txt.Function.LocalAssignment}}
@@ -52,7 +52,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Add{{$txt.Function.NameGo}}(ctx context.Con
 
 		_, err = bunny.Exec(ctx, query, values...)
 		if err != nil {
-			return errors.Wrap(err, "failed to insert into join model")
+			return errors.Errorf("failed to insert into join model: %w", err)
 		}
 	}
 	{{end -}}
@@ -107,7 +107,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Set{{$txt.Function.NameGo}}(ctx context.Con
 	{{end -}}
 	_, err := bunny.Exec(ctx, query, values...)
 	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
+		return errors.Errorf("failed to remove relationships before set: %w", err)
 	}
 
 	{{if .ToJoinModel -}}
@@ -150,7 +150,7 @@ func (o *{{$txt.LocalModel.NameGo}}) Remove{{$txt.Function.NameGo}}(ctx context.
 
 	_, err = bunny.Exec(ctx, query, values...)
 	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
+		return errors.Errorf("failed to remove relationships before set: %w", err)
 	}
 	{{else -}}
 	for _, rel := range related {

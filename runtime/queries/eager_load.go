@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/sqlbunny/errors"
 	"github.com/sqlbunny/sqlbunny/runtime/strmangle"
-	"github.com/pkg/errors"
 )
 
 type loadRelationshipState struct {
@@ -179,7 +179,7 @@ func (l loadRelationshipState) callLoadFunction(depth int, loadingFrom reflect.V
 
 	ret := loadMethod.Func.Call(methodArgs)
 	if intf := ret[0].Interface(); intf != nil {
-		return errors.Wrapf(intf.(error), "failed to eager load %s", current)
+		return errors.Errorf("failed to eager load %s: %w", current, intf.(error))
 	}
 
 	l.setLoaded(depth)
@@ -193,7 +193,7 @@ func (l loadRelationshipState) loadRelationshipsRecurse(depth int, obj reflect.V
 	key := l.toLoad[depth]
 	r, err := findRelationshipStruct(obj)
 	if err != nil {
-		return errors.Wrapf(err, "failed to append loaded %s", key)
+		return errors.Errorf("failed to append loaded %s: %w", key, err)
 	}
 
 	loadedObject := reflect.Indirect(r).FieldByName(key)
@@ -234,7 +234,7 @@ func collectLoaded(key string, loadingFrom reflect.Value) (reflect.Value, bindKi
 
 	r, err := findRelationshipStruct(current)
 	if err != nil {
-		return reflect.Value{}, 0, errors.Wrapf(err, "failed to collect loaded %s", key)
+		return reflect.Value{}, 0, errors.Errorf("failed to collect loaded %s: %w", key, err)
 	}
 
 	loadedObject := reflect.Indirect(r).FieldByName(key)
@@ -270,7 +270,7 @@ func collectLoaded(key string, loadingFrom reflect.Value) (reflect.Value, bindKi
 		current = reflect.Indirect(loadingFrom.Index(i))
 		r, err = findRelationshipStruct(current)
 		if err != nil {
-			return reflect.Value{}, 0, errors.Wrapf(err, "failed to collect loaded %s", key)
+			return reflect.Value{}, 0, errors.Errorf("failed to collect loaded %s: %w", key, err)
 		}
 
 		loadedObject = reflect.Indirect(r).FieldByName(key)

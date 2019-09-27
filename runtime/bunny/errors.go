@@ -4,17 +4,19 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/pkg/errors"
+	"github.com/sqlbunny/errors"
 )
 
+var ErrNoRows = sql.ErrNoRows
+
 func IsErrNoRows(err error) bool {
-	return errors.Cause(err) == sql.ErrNoRows
+	return errors.Is(err, ErrNoRows)
 }
 
 var ErrMultipleRows = errors.New("sqlbunny: multiple rows in result set")
 
 func IsErrMultipleRows(err error) bool {
-	return errors.Cause(err) == ErrMultipleRows
+	return errors.Is(err, ErrMultipleRows)
 }
 
 type InvalidEnumError struct {

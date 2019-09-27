@@ -35,7 +35,7 @@ func (o *{{$modelNameSingular}}Slice) ReloadAll(ctx context.Context) error {
 
 	err := q.Bind(ctx, &{{$varNamePlural}})
 	if err != nil {
-		return errors.Wrap(err, "{{.PkgName}}: unable to reload all in {{$modelNameSingular}}Slice")
+		return errors.Errorf("{{.PkgName}}: unable to reload all in {{$modelNameSingular}}Slice: %w", err)
 	}
 
 	*o = {{$varNamePlural}}

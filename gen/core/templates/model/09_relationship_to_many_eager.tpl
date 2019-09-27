@@ -50,7 +50,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 
 	results, err := bunny.Query(ctx, query, args...)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load {{.ForeignModel}}")
+		return errors.Errorf("failed to eager load {{.ForeignModel}}: %w", err)
 	}
 	defer results.Close()
 
@@ -66,7 +66,7 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 
 		err = results.Scan({{$foreignModel.Columns | columnNames | stringMap $dot.StringFuncs.titleCaseIdentifier | prefixStringSlice "&one." | join ", "}}, &localJoinCol)
 		if err = results.Err(); err != nil {
-			return errors.Wrap(err, "failed to plebian-bind eager loaded slice {{.ForeignModel}}")
+			return errors.Errorf("failed to plebian-bind eager loaded slice {{.ForeignModel}}: %w", err)
 		}
 
 		resultSlice = append(resultSlice, one)
@@ -74,11 +74,11 @@ func ({{$varNameSingular}}L) Load{{$txt.Function.NameGo}}(ctx context.Context, s
 	}
 
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "failed to plebian-bind eager loaded slice {{.ForeignModel}}")
+		return errors.Errorf("failed to plebian-bind eager loaded slice {{.ForeignModel}}: %w", err)
 	}
 	{{else -}}
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice {{.ForeignModel}}")
+		return errors.Errorf("failed to bind eager loaded slice {{.ForeignModel}}: %w", err)
 	}
 	{{end}}
 

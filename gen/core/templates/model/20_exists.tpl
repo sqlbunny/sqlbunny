@@ -13,7 +13,7 @@ func {{$modelNameSingular}}Exists(ctx context.Context, {{$pkArgs}}) (bool, error
 
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, errors.Wrap(err, "{{.PkgName}}: unable to check if {{.Model.Name}} exists")
+		return false, errors.Errorf("{{.PkgName}}: unable to check if {{.Model.Name}} exists: %w", err)
 	}
 
 	return exists, nil

@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/sqlbunny/errors"
 	"golang.org/x/tools/go/ast/astutil"
 )
 
@@ -90,7 +90,7 @@ func processAstError(err error, src []byte) error {
 
 	matches := rgxSyntaxError.FindStringSubmatch(err.Error())
 	if matches == nil {
-		return errors.Wrap(err, "failed to format template")
+		return errors.Errorf("failed to format template: %w", err)
 	}
 
 	lineNum, _ := strconv.Atoi(matches[1])
@@ -111,7 +111,7 @@ func processAstError(err error, src []byte) error {
 		errBuf.WriteByte('\n')
 	}
 
-	return errors.Wrapf(err, "failed to format template\n\n%s\n", errBuf.Bytes())
+	return errors.Errorf("failed to format template: %w\n\n%s\n", err, errBuf.Bytes())
 }
 
 func removeUnusedImports(src []byte) ([]byte, error) {

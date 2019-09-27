@@ -3,7 +3,7 @@ package migration
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
+	"github.com/sqlbunny/errors"
 )
 
 type Store struct {

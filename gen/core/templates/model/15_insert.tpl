@@ -42,7 +42,7 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 
 	_, err = bunny.Exec(ctx, cache.query, vals...)
 	if err != nil {
-		return errors.Wrap(err, "{{.PkgName}}: unable to insert into {{.Model.Name}}")
+		return errors.Errorf("{{.PkgName}}: unable to insert into {{.Model.Name}}: %w", err)
 	}
 
 	if !cached {
