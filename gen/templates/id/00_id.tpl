@@ -12,7 +12,7 @@ import (
     "bytes"
     "strings"
 
-    "github.com/pkg/errors"
+    "github.com/sqlbunny/errors"
     "github.com/sqlbunny/sqlbunny/runtime/bunny"
     "github.com/sqlbunny/bunnyid"
 )
