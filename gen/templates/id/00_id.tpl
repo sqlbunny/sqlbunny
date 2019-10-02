@@ -1,21 +1,18 @@
+{{ import "rand" "crypto/rand" }}
+{{ import "driver" "database/sql/driver" }}
+{{ import "binary" "encoding/binary" }}
+{{ import "json" "encoding/json" }}
+{{ import "hex" "encoding/hex" }}
+{{ import "fmt" "fmt" }}
+{{ import "time" "time" }}
+{{ import "bytes" "bytes" }}
+{{ import "strings" "strings" }}
+{{ import "errors" "github.com/sqlbunny/errors" }}
+{{ import "bunny" "github.com/sqlbunny/sqlbunny/runtime/bunny" }}
+{{ import "bunnyid" "github.com/sqlbunny/bunnyid" }}
+
 {{- $modelName := .IDType.Name | titleCase -}}
 {{- $modelNameCamel := .IDType.Name | camelCase -}}
-
-import (
-	"crypto/rand"
-	"database/sql/driver"
-    "encoding/binary"
-    "encoding/json"
-	"encoding/hex"
-	"fmt"
-	"time"
-    "bytes"
-    "strings"
-
-    "github.com/sqlbunny/errors"
-    "github.com/sqlbunny/sqlbunny/runtime/bunny"
-    "github.com/sqlbunny/bunnyid"
-)
 
 const {{$modelNameCamel}}PrefixLength = {{ len .IDType.Prefix }} + 1
 var {{$modelNameCamel}}Prefix = []byte("{{.IDType.Prefix}}_")
