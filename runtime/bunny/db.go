@@ -146,10 +146,11 @@ func rollbackOnPanic(ctx context.Context, tx *txNode, begin time.Time) {
 }
 
 type txNode struct {
-	dbTx   *sql.Tx
-	parent *txNode
-	child  *txNode
-	depth  int
+	dbTx     *sql.Tx
+	parent   *txNode
+	child    *txNode
+	depth    int
+	onCommit []func(context.Context) error
 }
 
 func (t *txNode) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
@@ -187,6 +188,26 @@ func (t *txNode) Rollback() error {
 	_, err := t.dbTx.Exec(fmt.Sprintf("ROLLBACK TO SAVEPOINT savepoint_%d", t.depth))
 	t.parent.child = nil
 	return err
+}
+
+func (t *txNode) runOnCommit(ctx context.Context) error {
+	if t.parent != nil {
+		// If we're in a subtransaction, we don't want to execute the onCommits yet.
+		// We append them to the parent transaction, so they'll run when the topmost transaction commits.
+		t.parent.onCommit = append(t.parent.onCommit, t.onCommit...)
+		return nil
+	}
+
+	// We are the top most transaction.
+	// Just run the onCommit hooks.
+	for _, fn := range t.onCommit {
+		err := fn(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type beginTxer interface {
@@ -280,6 +301,11 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 		})
 	}
 
+	err = node.runOnCommit(ctx)
+	if err != nil {
+		return errors.Errorf("OnCommit returned error: %w", err)
+	}
+
 	return nil
 }
 
@@ -298,4 +324,14 @@ func AssertNotAtomic(ctx context.Context) {
 	if IsAtomic(ctx) {
 		panic("AssertNotAtomic failed")
 	}
+}
+
+func OnCommit(ctx context.Context, fn func(context.Context) error) {
+	db := DBFromContext(ctx)
+	tx, ok := db.(*txNode)
+	if !ok {
+		panic("OnCommit called while not in atomic")
+	}
+
+	tx.onCommit = append(tx.onCommit, fn)
 }
