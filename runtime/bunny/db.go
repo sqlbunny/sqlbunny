@@ -282,3 +282,20 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 
 	return nil
 }
+
+func IsAtomic(ctx context.Context) bool {
+	_, ok := DBFromContext(ctx).(*txNode)
+	return ok
+}
+
+func AssertAtomic(ctx context.Context) {
+	if !IsAtomic(ctx) {
+		panic("AssertAtomic failed")
+	}
+}
+
+func AssertNotAtomic(ctx context.Context) {
+	if IsAtomic(ctx) {
+		panic("AssertNotAtomic failed")
+	}
+}
