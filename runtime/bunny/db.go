@@ -189,6 +189,10 @@ func (t *txNode) Rollback() error {
 	return err
 }
 
+type beginTxer interface {
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+}
+
 // Transaction invokes the passed function in the context of a managed SQL
 // transaction.  Any errors returned from
 // the user-supplied function are returned from this function.
@@ -202,7 +206,7 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 
 	var node *txNode
 	switch db := DBFromContext(ctx).(type) {
-	case *sql.DB:
+	case beginTxer:
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{
 			Isolation: sql.LevelSerializable,
 			ReadOnly:  readOnly,
