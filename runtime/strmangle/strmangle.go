@@ -6,7 +6,6 @@ package strmangle
 
 import (
 	"fmt"
-	"math"
 	"regexp"
 	"sort"
 	"strings"
@@ -130,32 +129,6 @@ func IdentQuoteSlice(lq byte, rq byte, s []string) []string {
 	}
 
 	return strs
-}
-
-// Identifier is a base conversion from Base 10 integers to Base 26
-// integers that are represented by an alphabet from a-z
-// See tests for example outputs.
-func Identifier(in int) string {
-	ln := len(idAlphabet)
-	var n int
-	if in == 0 {
-		n = 1
-	} else {
-		n = 1 + int(math.Log(float64(in))/math.Log(float64(ln)))
-	}
-
-	cols := GetBuffer()
-	defer PutBuffer(cols)
-
-	for i := 0; i < n; i++ {
-		divisor := int(math.Pow(float64(ln), float64(n-i-1)))
-		rem := in / divisor
-		cols.WriteByte(idAlphabet[rem])
-
-		in -= rem * divisor
-	}
-
-	return cols.String()
 }
 
 // QuoteCharacter returns a string that allows the quote character

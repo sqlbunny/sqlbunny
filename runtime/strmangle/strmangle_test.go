@@ -47,28 +47,6 @@ func TestIdentQuoteSlice(t *testing.T) {
 	}
 }
 
-func TestIdentifier(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		In  int
-		Out string
-	}{
-		{In: 0, Out: "a"},
-		{In: 25, Out: "z"},
-		{In: 26, Out: "ba"},
-		{In: 52, Out: "ca"},
-		{In: 675, Out: "zz"},
-		{In: 676, Out: "baa"},
-	}
-
-	for _, test := range tests {
-		if got := Identifier(test.In); got != test.Out {
-			t.Errorf("[%d] want: %q, got: %q", test.In, test.Out, got)
-		}
-	}
-}
-
 func TestQuoteCharacter(t *testing.T) {
 	t.Parallel()
 

@@ -115,7 +115,6 @@ var templateStringMappers = map[string]func(string) string{
 var TemplateFunctions = template.FuncMap{
 	// String ops
 	"quoteWrap": func(s string) string { return fmt.Sprintf(`"%s"`, s) },
-	"id":        strmangle.Identifier,
 
 	// Pluralization
 	"singular": strmangle.Singular,
