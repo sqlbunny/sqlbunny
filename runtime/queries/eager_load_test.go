@@ -62,15 +62,8 @@ type testEagerZeroR struct {
 type testEagerZeroL struct {
 }
 
-func (testEagerL) LoadChildOne(_ context.Context, singular bool, obj interface{}) error {
-	var toSetOn []*testEager
-	if singular {
-		toSetOn = []*testEager{obj.(*testEager)}
-	} else {
-		toSetOn = *obj.(*[]*testEager)
-	}
-
-	for _, o := range toSetOn {
+func (testEagerL) LoadChildOne(_ context.Context, slice []*testEager) error {
+	for _, o := range slice {
 		if o.R == nil {
 			o.R = &testEagerR{}
 		}
@@ -82,15 +75,8 @@ func (testEagerL) LoadChildOne(_ context.Context, singular bool, obj interface{}
 	return nil
 }
 
-func (testEagerL) LoadChildMany(_ context.Context, singular bool, obj interface{}) error {
-	var toSetOn []*testEager
-	if singular {
-		toSetOn = []*testEager{obj.(*testEager)}
-	} else {
-		toSetOn = *obj.(*[]*testEager)
-	}
-
-	for _, o := range toSetOn {
+func (testEagerL) LoadChildMany(_ context.Context, slice []*testEager) error {
+	for _, o := range slice {
 		if o.R == nil {
 			o.R = &testEagerR{}
 		}
@@ -105,15 +91,8 @@ func (testEagerL) LoadChildMany(_ context.Context, singular bool, obj interface{
 	return nil
 }
 
-func (testEagerChildL) LoadNestedOne(_ context.Context, singular bool, obj interface{}) error {
-	var toSetOn []*testEagerChild
-	if singular {
-		toSetOn = []*testEagerChild{obj.(*testEagerChild)}
-	} else {
-		toSetOn = *obj.(*[]*testEagerChild)
-	}
-
-	for _, o := range toSetOn {
+func (testEagerChildL) LoadNestedOne(_ context.Context, slice []*testEagerChild) error {
+	for _, o := range slice {
 		if o.R == nil {
 			o.R = &testEagerChildR{}
 		}
@@ -125,15 +104,8 @@ func (testEagerChildL) LoadNestedOne(_ context.Context, singular bool, obj inter
 	return nil
 }
 
-func (testEagerChildL) LoadNestedMany(_ context.Context, singular bool, obj interface{}) error {
-	var toSetOn []*testEagerChild
-	if singular {
-		toSetOn = []*testEagerChild{obj.(*testEagerChild)}
-	} else {
-		toSetOn = *obj.(*[]*testEagerChild)
-	}
-
-	for _, o := range toSetOn {
+func (testEagerChildL) LoadNestedMany(_ context.Context, slice []*testEagerChild) error {
+	for _, o := range slice {
 		if o.R == nil {
 			o.R = &testEagerChildR{}
 		}
@@ -148,15 +120,8 @@ func (testEagerChildL) LoadNestedMany(_ context.Context, singular bool, obj inte
 	return nil
 }
 
-func (testEagerL) LoadZeroOne(_ context.Context, singular bool, obj interface{}) error {
-	var toSetOn []*testEager
-	if singular {
-		toSetOn = []*testEager{obj.(*testEager)}
-	} else {
-		toSetOn = *obj.(*[]*testEager)
-	}
-
-	for _, o := range toSetOn {
+func (testEagerL) LoadZeroOne(_ context.Context, slice []*testEager) error {
+	for _, o := range slice {
 		if o.R == nil {
 			o.R = &testEagerR{}
 		}
@@ -165,15 +130,8 @@ func (testEagerL) LoadZeroOne(_ context.Context, singular bool, obj interface{})
 	return nil
 }
 
-func (testEagerL) LoadZeroMany(_ context.Context, singular bool, obj interface{}) error {
-	var toSetOn []*testEager
-	if singular {
-		toSetOn = []*testEager{obj.(*testEager)}
-	} else {
-		toSetOn = *obj.(*[]*testEager)
-	}
-
-	for _, o := range toSetOn {
+func (testEagerL) LoadZeroMany(_ context.Context, slice []*testEager) error {
+	for _, o := range slice {
 		if o.R == nil {
 			o.R = &testEagerR{}
 		}
@@ -182,11 +140,11 @@ func (testEagerL) LoadZeroMany(_ context.Context, singular bool, obj interface{}
 	return nil
 }
 
-func (testEagerZeroL) LoadNestedOne(_ context.Context, singular bool, obj interface{}) error {
+func (testEagerZeroL) LoadNestedOne(_ context.Context, slice []*testEagerZero) error {
 	return nil
 }
 
-func (testEagerZeroL) LoadNestedMany(_ context.Context, singular bool, obj interface{}) error {
+func (testEagerZeroL) LoadNestedMany(_ context.Context, slice []*testEagerZero) error {
 	return nil
 }
 

@@ -73,10 +73,6 @@ func (p *Plugin) gen() {
 	}
 
 	for _, model := range gen.Config.Schema.Models {
-		if model.IsJoinModel {
-			continue
-		}
-
 		data := gen.BaseTemplateData()
 		data["Model"] = model
 		data["Models"] = models

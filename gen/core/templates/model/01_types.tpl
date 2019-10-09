@@ -1,5 +1,3 @@
-{{if .Model.IsJoinModel -}}
-{{else -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
 {{- $cols := .Model.Columns | columnNames -}}
@@ -29,5 +27,3 @@ var (
 	{{$varNameSingular}}UpdateCacheMut sync.RWMutex
 	{{$varNameSingular}}UpdateCache = make(map[string]updateCache)
 )
-
-{{end -}}

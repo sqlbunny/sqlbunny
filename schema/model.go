@@ -17,20 +17,9 @@ type Model struct {
 
 	IsJoinModel bool
 
-	ToOneRelationships  []*ToOneRelationship
-	ToManyRelationships []*ToManyRelationship
+	Relationships []*Relationship
 
 	Extendable
-}
-
-func (m *Model) SingleColumnForeignKeys() []*ForeignKey {
-	var res []*ForeignKey
-	for _, f := range m.ForeignKeys {
-		if len(f.Columns) == 1 {
-			res = append(res, f)
-		}
-	}
-	return res
 }
 
 // GetModel by name. Panics if not found (for use in templates mostly).
@@ -155,11 +144,30 @@ func (t *Model) DeleteForeignKey(name string) {
 	}
 }
 
-func (t *Model) IsUniqueColumn(name string) bool {
+func (t *Model) IsUniqueColumns(cols []string) bool {
+	if t.PrimaryKey != nil && isSubset(t.PrimaryKey.Columns, cols) {
+		return true
+	}
 	for _, c := range t.Uniques {
-		if len(c.Columns) == 1 && c.Columns[0] == name {
+		if isSubset(c.Columns, cols) {
 			return true
 		}
 	}
 	return false
+}
+
+func isSubset(a, b []string) bool {
+	for _, ca := range a {
+		found := false
+		for _, cb := range b {
+			if ca == cb {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }

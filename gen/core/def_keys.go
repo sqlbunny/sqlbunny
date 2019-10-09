@@ -107,8 +107,7 @@ type defModelForeignKey struct {
 func (d defModelForeignKey) ModelItem(ctx *ModelContext) {
 	m := ctx.Model
 	m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
-		Model:        m.Name,
-		Columns:      undotAll(prefixAll(d.columnNames, ctx.Prefix)),
+		LocalColumns: undotAll(prefixAll(d.columnNames, ctx.Prefix)),
 		ForeignModel: d.foreignModelName,
 	})
 }
@@ -129,8 +128,7 @@ type defFieldForeignKey struct {
 func (d defFieldForeignKey) ModelFieldItem(ctx *ModelFieldContext) {
 	m := ctx.Model
 	m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
-		Model:        m.Name,
-		Columns:      []string{undot(ctx.Prefix + ctx.Field.Name)},
+		LocalColumns: []string{undot(ctx.Prefix + ctx.Field.Name)},
 		ForeignModel: d.foreignModelName,
 	})
 }

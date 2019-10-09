@@ -130,9 +130,9 @@ func ApplyOperation(o migration.Operation, d *schema.Schema) error {
 		}
 
 		for _, fk := range m.ForeignKeys {
-			for i := range fk.Columns {
-				if fk.Columns[i] == o.OldColumnName {
-					fk.Columns[i] = o.NewColumnName
+			for i := range fk.LocalColumns {
+				if fk.LocalColumns[i] == o.OldColumnName {
+					fk.LocalColumns[i] = o.NewColumnName
 				}
 			}
 		}
@@ -220,8 +220,7 @@ func ApplyAlterTableOperation(o migration.AlterTableSuboperation, d *schema.Sche
 		}
 		m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
 			Name:           o.Name,
-			Model:          m.Name,
-			Columns:        o.Columns,
+			LocalColumns:   o.Columns,
 			ForeignModel:   o.ForeignTable,
 			ForeignColumns: o.ForeignColumns,
 		})

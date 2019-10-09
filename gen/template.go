@@ -147,7 +147,10 @@ var TemplateFunctions = template.FuncMap{
 	"setComplement": strmangle.SetComplement,
 
 	// Database related mangling
-	"whereClause": strmangle.WhereClause,
+	"whereClause":     strmangle.WhereClause,
+	"whereInClause":   strmangle.WhereInClause,
+	"joinOnClause":    strmangle.JoinOnClause,
+	"joinWhereClause": strmangle.JoinWhereClause,
 
 	// dbdrivers ops
 	"sqlColDefinitions": schema.SQLColDefinitions,
@@ -168,4 +171,22 @@ var TemplateFunctions = template.FuncMap{
 		return strmangle.SchemaModel(lq, rq, model)
 	},
 	"hook": hook,
+
+	"doCompare": func(a, b string, ca, cb *schema.Column) string {
+		if ca.Type.GoType().Name == "[]byte" && cb.Type.GoType().Name == "[]byte" {
+			return "0 == bytes.Compare(" + a + ", " + b + ")"
+		}
+
+		if ca.Nullable == cb.Nullable {
+			return a + " == " + b
+		}
+
+		if cb.Nullable {
+			a, b = b, a
+			ca, cb = cb, ca
+		}
+
+		f := ca.Type.(schema.NullableType).GoTypeNullField()
+		return a + ".Valid && " + a + "." + f + " == " + b
+	},
 }

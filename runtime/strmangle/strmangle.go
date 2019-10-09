@@ -511,6 +511,71 @@ func WhereClauseRepeated(lq, rq string, start int, cols []string, count int) str
 	return buf.String()
 }
 
+// JoinOnClause returns a join on clause
+func JoinOnClause(lq, rq string, table1 string, cols1 []string, table2 string, cols2 []string) string {
+	buf := GetBuffer()
+	defer PutBuffer(buf)
+
+	for i := range cols1 {
+		c1 := cols1[i]
+		c2 := cols2[i]
+		buf.WriteString(fmt.Sprintf(
+			`%s%s%s.%s%s%s=%s%s%s.%s%s%s`,
+			lq, table1, rq, lq, c1, rq,
+			lq, table2, rq, lq, c2, rq,
+		))
+
+		if i < len(cols1)-1 {
+			buf.WriteString(" AND ")
+		}
+	}
+
+	return buf.String()
+}
+
+// JoinWhereClause returns a where clause explicitly specifying the table name
+func JoinWhereClause(lq, rq string, start int, table string, cols []string) string {
+	buf := GetBuffer()
+	defer PutBuffer(buf)
+
+	for i, c := range cols {
+		if start != 0 {
+			buf.WriteString(fmt.Sprintf(`%s%s%s.%s%s%s=$%d`, lq, table, rq, lq, c, rq, start+i))
+		} else {
+			buf.WriteString(fmt.Sprintf(`%s%s%s.%s%s%s=?`, lq, table, rq, lq, c, rq))
+		}
+
+		if i < len(cols)-1 {
+			buf.WriteString(" AND ")
+		}
+	}
+
+	return buf.String()
+}
+
+// WhereClause returns the where clause using start as the $ flag index
+// For example, if start was 2 output would be: "colthing=$2 AND colstuff=$3"
+func WhereInClause(lq, rq string, table string, cols []string) string {
+	buf := GetBuffer()
+	defer PutBuffer(buf)
+
+	if len(cols) != 1 {
+		buf.WriteString("(")
+	}
+	for i, c := range cols {
+		buf.WriteString(fmt.Sprintf(`%s%s%s.%s%s%s`, lq, table, rq, lq, c, rq))
+
+		if i < len(cols)-1 {
+			buf.WriteString(",")
+		}
+	}
+	if len(cols) != 1 {
+		buf.WriteString(")")
+	}
+
+	return buf.String()
+}
+
 // JoinSlices merges two string slices of equal length
 func JoinSlices(sep string, a, b []string) []string {
 	lna, lnb := len(a), len(b)

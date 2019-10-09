@@ -14,20 +14,16 @@
 {{ import "errors" "github.com/sqlbunny/errors" }}
 
 {{- $dot := . -}}
-{{- $modelNameSingular := .Model.Name | singular -}}
-{{- $modelName := $modelNameSingular | titleCase -}}
-{{- $modelNameCamel := $modelNameSingular | camelCase -}}
+{{- $modelName := .Model.Name | titleCase -}}
+{{- $modelNameCamel := .Model.Name | camelCase -}}
 
 // {{$modelName}} is an object representing the database model.
 type {{$modelName}} struct {
 	{{range $field := .Model.Fields }}
     {{titleCase $field.Name}} {{goType $field.GoType}} `{{$field.GenerateTags}}`
-	{{- end -}}
-	{{- if .Model.IsJoinModel -}}
-	{{- else}}
+	{{- end }}
 	R *{{$modelNameCamel}}R `json:"-" toml:"-" yaml:"-"`
 	L {{$modelNameCamel}}L `json:"-" toml:"-" yaml:"-"`
-	{{end -}}
 }
 
 var {{$modelName}}Columns = struct {
@@ -40,26 +36,16 @@ var {{$modelName}}Columns = struct {
 	{{end -}}
 }
 
-{{- if .Model.IsJoinModel -}}
-{{- else}}
 // {{$modelNameCamel}}R is where relationships are stored.
 type {{$modelNameCamel}}R struct {
-	{{range .Model.SingleColumnForeignKeys -}}
-	{{- $txt := txtsFromFKey $dot.Models $dot.Model . -}}
-	{{$txt.Function.NameGo}} *{{$txt.ForeignModel.NameGo}}
+	{{range .Model.Relationships -}}
+	{{- if .ToMany -}}
+	{{ .Name | titleCase }} {{ .ForeignModel | titleCase}}Slice
+	{{ else -}}
+	{{ .Name | titleCase }} *{{ .ForeignModel | titleCase}}
+	{{ end -}}
 	{{end -}}
-
-	{{range .Model.ToOneRelationships -}}
-	{{- $txt := txtsFromOneToOne $dot.Models $dot.Model . -}}
-	{{$txt.Function.NameGo}} *{{$txt.ForeignModel.NameGo}}
-	{{end -}}
-
-	{{range .Model.ToManyRelationships -}}
-	{{- $txt := txtsFromToMany $dot.Models $dot.Model . -}}
-	{{$txt.Function.NameGo}} {{$txt.ForeignModel.Slice}}
-	{{end -}}{{/* range tomany */}}
 }
 
 // {{$modelNameCamel}}L is where Load methods for each relationship are stored.
 type {{$modelNameCamel}}L struct{}
-{{end -}}
