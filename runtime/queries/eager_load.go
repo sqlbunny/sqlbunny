@@ -200,6 +200,9 @@ func collectLoaded(key string, loadingFrom reflect.Value) (reflect.Value, error)
 	lnFrom := loadingFrom.Len()
 	for i := 0; i < lnFrom; i++ {
 		o := loadingFrom.Index(i).Elem().FieldByIndex(relFieldIndex).Elem().FieldByIndex(keyFieldIndex)
+		if o.IsNil() {
+			continue
+		}
 		if toMany {
 			collection = reflect.AppendSlice(collection, o)
 		} else {
