@@ -75,6 +75,16 @@ func {{$modelName}}FromString(id string) ({{$modelName}}, error) {
 	return *i, err
 }
 
+// Must{{$modelName}}FromString reads an ID from its string representation and panics if an error occurs. 
+func Must{{$modelName}}FromString(id string) {{$modelName}} {
+	i := &{{$modelName}}{}
+	err := i.UnmarshalText([]byte(id))
+	if err != nil {
+		panic(err)
+	}
+	return *i
+}
+
 // {{$modelName}}FromTime creates an ID from the given time.
 func {{$modelName}}FromTime(t time.Time) {{$modelName}} {
     var id {{$modelName}}
