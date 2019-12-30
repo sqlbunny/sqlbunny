@@ -131,7 +131,6 @@ var TemplateFunctions = template.FuncMap{
 	"stringMap":          strmangle.StringMap,
 	"prefixStringSlice":  strmangle.PrefixStringSlice,
 	"containsAny":        strmangle.ContainsAny,
-	"generateTags":       strmangle.GenerateTags,
 	"generateIgnoreTags": strmangle.GenerateIgnoreTags,
 
 	// String Map ops

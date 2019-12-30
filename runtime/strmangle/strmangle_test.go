@@ -456,25 +456,6 @@ func TestContainsAny(t *testing.T) {
 	}
 }
 
-func TestGenerateTags(t *testing.T) {
-	tags := GenerateTags([]string{}, "col_name")
-	if tags != "" {
-		t.Errorf("Expected empty string, got %s", tags)
-	}
-
-	tags = GenerateTags([]string{"xml"}, "col_name")
-	exp := `xml:"col_name" `
-	if tags != exp {
-		t.Errorf("expected %s, got %s", exp, tags)
-	}
-
-	tags = GenerateTags([]string{"xml", "db"}, "col_name")
-	exp = `xml:"col_name" db:"col_name" `
-	if tags != exp {
-		t.Errorf("expected %s, got %s", exp, tags)
-	}
-}
-
 func TestGenerateIgnoreTags(t *testing.T) {
 	tags := GenerateIgnoreTags([]string{})
 	if tags != "" {
