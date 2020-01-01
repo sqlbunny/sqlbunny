@@ -20,6 +20,10 @@ func buildSchema(items []gen.ConfigItem) (*schema.Schema, error) {
 	ctx.Run()
 
 	for _, m := range ctx.Schema.Models {
+		calcColumns(ctx, m)
+	}
+
+	for _, m := range ctx.Schema.Models {
 		checkDuplicateFields(ctx, m)
 		checkPrimaryKey(ctx, m)
 		checkIndexes(ctx, m)
@@ -37,6 +41,68 @@ func buildSchema(items []gen.ConfigItem) (*schema.Schema, error) {
 	ctx.Schema.CalculateRelationships()
 
 	return ctx.Schema, nil
+}
+
+func calcColumns(ctx *gen.Context, m *schema.Model) {
+	for _, f := range m.Fields {
+		doCalcColumns(ctx, m, f, false, "")
+	}
+}
+
+func doCalcColumns(ctx *gen.Context, m *schema.Model, f *schema.Field, forceNullable bool, prefix string) {
+	switch t := f.Type.(type) {
+	case *schema.Struct:
+		forceNullable2 := forceNullable || f.Nullable
+		prefix2 := prefix + f.Name + "."
+
+		for _, f2 := range t.Fields {
+			doCalcColumns(ctx, m, f2, forceNullable2, prefix2)
+		}
+
+		if f.Nullable {
+			var def string
+			if !forceNullable {
+				def = "false"
+			}
+			m.Columns = append(m.Columns, &schema.Column{
+				Name: undot(prefix + f.Name),
+				Type: &schema.BaseTypeNullable{
+					Name: "bool",
+					Go: schema.GoType{
+						Name: "bool",
+					},
+					GoNull: schema.GoType{
+						Pkg:  "github.com/sqlbunny/sqlbunny/types/null",
+						Name: "Bool",
+					},
+					Postgres: schema.SQLType{
+						Type:      "boolean",
+						ZeroValue: "false",
+					},
+				},
+				SQLType:    "boolean",
+				SQLDefault: def,
+				Nullable:   forceNullable,
+			})
+		}
+	case schema.BaseType:
+		nullable := f.Nullable || forceNullable
+		var def string
+		if !nullable {
+			def = t.SQLType().ZeroValue
+		}
+		m.Columns = append(m.Columns, &schema.Column{
+			Name:       undot(prefix + f.Name),
+			Type:       t,
+			SQLType:    t.SQLType().Type,
+			SQLDefault: def,
+			Nullable:   nullable,
+		})
+	default:
+		// Should never happen, because all types except Struct
+		// implement schema.BaseType.
+		panic("unknown type")
+	}
 }
 
 func undot(s string) string {
@@ -146,7 +212,7 @@ func checkForeignKeys(ctx *gen.Context, m *schema.Model) {
 		for _, n := range f.LocalColumns {
 			c := m.FindColumn(n)
 			if c == nil {
-				ctx.AddError("Model '%s' foreign key '%s': field '%s' does not exist", m.Name, desc, n)
+				ctx.AddError("Model '%s' foreign key '%s': local column '%s' does not exist", m.Name, desc, n)
 			}
 		}
 
@@ -165,7 +231,7 @@ func checkForeignKeys(ctx *gen.Context, m *schema.Model) {
 		for _, n := range f.ForeignColumns {
 			fc := m2.FindColumn(n)
 			if fc == nil {
-				ctx.AddError("Model '%s' foreign key '%s': foreign model field '%s' does not exist", m.Name, desc, n)
+				ctx.AddError("Model '%s' foreign key '%s': foreign column '%s' does not exist", m.Name, desc, n)
 			}
 		}
 

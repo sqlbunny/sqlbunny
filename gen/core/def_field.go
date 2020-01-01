@@ -24,13 +24,28 @@ type ModelFieldItem interface {
 	ModelFieldItem(ctx *ModelFieldContext)
 }
 
-type defModelField struct {
-	name     string
-	typeName string
-	items    []ModelFieldItem
+type ModelRecursiveFieldContext struct {
+	*ModelRecursiveContext
+	Field *schema.Field
 }
 
-func (d defModelField) StructItem(ctx *StructContext) {
+type ModelRecursiveFieldItem interface {
+	ModelRecursiveFieldItem(ctx *ModelRecursiveFieldContext)
+}
+
+type FieldItem interface {
+	FieldItem()
+}
+
+type defField struct {
+	name     string
+	typeName string
+	items    []FieldItem
+
+	field *schema.Field // Filled on the ModelItem pass, used in the ModelRecursiveItem pass
+}
+
+func (d *defField) StructItem(ctx *StructContext) {
 	f := &schema.Field{
 		Name: d.name,
 		Type: ctx.GetType(d.typeName, fmt.Sprintf("Struct %s, field %s", ctx.Struct.Name, d.name)),
@@ -38,6 +53,7 @@ func (d defModelField) StructItem(ctx *StructContext) {
 	}
 
 	ctx.Struct.Fields = append(ctx.Struct.Fields, f)
+	d.field = f
 
 	for _, i := range d.items {
 		if i, ok := i.(StructFieldItem); ok {
@@ -49,10 +65,10 @@ func (d defModelField) StructItem(ctx *StructContext) {
 	}
 }
 
-func (d defModelField) ModelItem(ctx *ModelContext) {
+func (d *defField) ModelItem(ctx *ModelContext) {
 	m := ctx.Model
 
-	t := ctx.GetType(d.typeName, fmt.Sprintf("Model '%s' field '%s'", ctx.Model.Name, ctx.Prefix+d.name))
+	t := ctx.GetType(d.typeName, fmt.Sprintf("Model '%s' field '%s'", ctx.Model.Name, d.name))
 	if t == nil {
 		return
 	}
@@ -63,81 +79,55 @@ func (d defModelField) ModelItem(ctx *ModelContext) {
 		Nullable: false,
 		Tags:     schema.Tags{},
 	}
+	m.Fields = append(m.Fields, f)
+	d.field = f
+
 	for _, i := range d.items {
-		i.ModelFieldItem(&ModelFieldContext{
-			ModelContext: ctx,
-			Field:        f,
-		})
+		if i, ok := i.(ModelFieldItem); ok {
+			i.ModelFieldItem(&ModelFieldContext{
+				ModelContext: ctx,
+				Field:        f,
+			})
+		}
+	}
+}
+
+func (d *defField) ModelRecursiveItem(ctx *ModelRecursiveContext) {
+	f := d.field
+
+	for _, i := range d.items {
+		if i, ok := i.(ModelRecursiveFieldItem); ok {
+			i.ModelRecursiveFieldItem(&ModelRecursiveFieldContext{
+				ModelRecursiveContext: ctx,
+				Field:                 f,
+			})
+		}
 	}
 
-	if ctx.Prefix == "" {
-		m.Fields = append(m.Fields, f)
+	t := ctx.GetType(d.typeName, fmt.Sprintf("Model '%s' field '%s'", ctx.Model.Name, ctx.Prefix+d.name))
+	if t == nil {
+		return
 	}
 
-	switch t := t.(type) {
-	case *schema.Struct:
+	if t, ok := t.(*schema.Struct); ok {
 		defStruct := t.GetExtension(defStructExt{}).(*structType)
 
-		ctx2 := &ModelContext{
+		ctx2 := &ModelRecursiveContext{
 			Context:       ctx.Context,
 			Model:         ctx.Model,
 			Prefix:        ctx.Prefix + d.name + ".",
 			ForceNullable: ctx.ForceNullable || f.Nullable,
 		}
 		for _, i := range defStruct.items {
-			if i, ok := i.(ModelItem); ok {
-				i.ModelItem(ctx2)
+			if i, ok := i.(ModelRecursiveItem); ok {
+				i.ModelRecursiveItem(ctx2)
 			}
 		}
-
-		if f.Nullable {
-			var def string
-			if !ctx.ForceNullable {
-				def = "false"
-			}
-			m.Columns = append(m.Columns, &schema.Column{
-				Name: undot(ctx.Prefix + d.name),
-				Type: &schema.BaseTypeNullable{
-					Name: "bool",
-					Go: schema.GoType{
-						Name: "bool",
-					},
-					GoNull: schema.GoType{
-						Pkg:  "github.com/sqlbunny/sqlbunny/types/null",
-						Name: "Bool",
-					},
-					Postgres: schema.SQLType{
-						Type:      "boolean",
-						ZeroValue: "false",
-					},
-				},
-				SQLType:    "boolean",
-				SQLDefault: def,
-				Nullable:   ctx.ForceNullable,
-			})
-		}
-	case schema.BaseType:
-		nullable := f.Nullable || ctx.ForceNullable
-		var def string
-		if !nullable {
-			def = t.SQLType().ZeroValue
-		}
-		m.Columns = append(m.Columns, &schema.Column{
-			Name:       undot(ctx.Prefix + d.name),
-			Type:       t,
-			SQLType:    t.SQLType().Type,
-			SQLDefault: def,
-			Nullable:   nullable,
-		})
-	default:
-		// Should never happen, because all types except Struct
-		// implement schema.BaseType.
-		panic("unknown type")
 	}
 }
 
-func Field(name string, typeName string, items ...ModelFieldItem) defModelField {
-	return defModelField{
+func Field(name string, typeName string, items ...FieldItem) *defField {
+	return &defField{
 		name:     name,
 		typeName: typeName,
 		items:    items,

@@ -8,6 +8,12 @@ import (
 type ModelContext struct {
 	*gen.Context
 
+	Model *schema.Model
+}
+
+type ModelRecursiveContext struct {
+	*gen.Context
+
 	Model         *schema.Model
 	Prefix        string
 	ForceNullable bool
@@ -15,6 +21,10 @@ type ModelContext struct {
 
 type ModelItem interface {
 	ModelItem(ctx *ModelContext)
+}
+
+type ModelRecursiveItem interface {
+	ModelRecursiveItem(ctx *ModelRecursiveContext)
 }
 
 type defModel struct {
@@ -38,6 +48,17 @@ func (d defModel) ConfigItem(ctx *gen.Context) {
 				Model:   model,
 			})
 		}
+
+		ctx.Enqueue(300, func() {
+			for _, i := range d.items {
+				if i, ok := i.(ModelRecursiveItem); ok {
+					i.ModelRecursiveItem(&ModelRecursiveContext{
+						Context: ctx,
+						Model:   model,
+					})
+				}
+			}
+		})
 	})
 }
 

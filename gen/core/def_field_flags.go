@@ -4,17 +4,18 @@ import "fmt"
 
 type defFieldNull struct{}
 
+func (d defFieldNull) FieldItem() {}
 func (d defFieldNull) ModelFieldItem(ctx *ModelFieldContext) {
 	ctx.Field.Nullable = true
 }
-
-var _ ModelFieldItem = defFieldNull{}
 
 func (d defFieldNull) StructFieldItem(ctx *StructFieldContext) {
 	ctx.Field.Nullable = true
 }
 
+var _ FieldItem = defFieldNull{}
 var _ StructFieldItem = defFieldNull{}
+var _ ModelFieldItem = defFieldNull{}
 
 var Null defFieldNull
 
@@ -22,6 +23,8 @@ type defFieldTag struct {
 	key   string
 	value string
 }
+
+func (d defFieldTag) FieldItem() {}
 
 func (d defFieldTag) ModelFieldItem(ctx *ModelFieldContext) {
 	if _, ok := ctx.Field.Tags[d.key]; ok {
@@ -39,6 +42,8 @@ func (d defFieldTag) StructFieldItem(ctx *StructFieldContext) {
 	ctx.Field.Tags[d.key] = d.value
 }
 
+var _ FieldItem = defFieldTag{}
+var _ ModelFieldItem = defFieldTag{}
 var _ StructFieldItem = defFieldTag{}
 
 func Tag(key string, value string) defFieldTag {
