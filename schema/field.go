@@ -41,9 +41,8 @@ func (f *Field) IsStruct() bool {
 func (f *Field) GoType() GoType {
 	if f.Nullable {
 		return f.Type.(NullableType).GoTypeNull()
-	} else {
-		return f.Type.GoType()
 	}
+	return f.Type.GoType()
 }
 
 // FieldNames of the fields.

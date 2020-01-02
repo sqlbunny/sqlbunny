@@ -157,15 +157,9 @@ var TemplateFunctions = template.FuncMap{
 		}
 		return res
 	},
-	"modelColumns":   modelColumns,
-	"modelPKColumns": modelPKColumns,
-	"modelNonPKColumns": func(m *schema.Model) []string {
-		var res []string
-		for _, path := range m.PrimaryKey.Fields {
-			res = append(res, path.SQLName())
-		}
-		return res
-	},
+	"modelColumns":      modelColumns,
+	"modelPKColumns":    modelPKColumns,
+	"modelNonPKColumns": modelNonPKColumns,
 
 	"quotes": func(s string) string {
 		d := Config.Dialect

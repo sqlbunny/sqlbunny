@@ -40,7 +40,7 @@ func SetMerge(a []string, b []string) []string {
 
 	check := map[string]bool{}
 	for _, v := range x {
-		if check[v] == true {
+		if check[v] {
 			continue
 		}
 

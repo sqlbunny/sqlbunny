@@ -19,10 +19,10 @@ import (
 
 var errNilPtr = errors.New("destination pointer is nil") // embedded in descriptive error
 
-// ConvertAssign copies to dest the value in src, converting it if possible.
+// Assign copies to dest the value in src, converting it if possible.
 // An error is returned if the copy would result in loss of information.
 // dest should be a pointer type.
-func ConvertAssign(dest, src interface{}) error {
+func Assign(dest, src interface{}) error {
 	// Common cases, without reflect.
 	switch s := src.(type) {
 	case string:
@@ -197,7 +197,7 @@ func ConvertAssign(dest, src interface{}) error {
 			return nil
 		}
 		dv.Set(reflect.New(dv.Type().Elem()))
-		return ConvertAssign(dv.Interface(), src)
+		return Assign(dv.Interface(), src)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		s := asString(src)
 		i64, err := strconv.ParseInt(s, 10, dv.Type().Bits())
@@ -239,9 +239,9 @@ func ConvertAssign(dest, src interface{}) error {
 	return fmt.Errorf("unsupported Scan, storing driver.Value type %T into type %T", src, dest)
 }
 
-// ConvertAssignNil tries to assign the nil or zero value to dest.
+// AssignNil tries to assign the nil or zero value to dest.
 // dest should be a pointer type.
-func ConvertAssignNil(dest interface{}) error {
+func AssignNil(dest interface{}) error {
 	if scanner, ok := dest.(sql.Scanner); ok {
 		return scanner.Scan(nil)
 	}
@@ -269,11 +269,10 @@ func strconvErr(err error) error {
 func cloneBytes(b []byte) []byte {
 	if b == nil {
 		return nil
-	} else {
-		c := make([]byte, len(b))
-		copy(c, b)
-		return c
 	}
+	c := make([]byte, len(b))
+	copy(c, b)
+	return c
 }
 
 func asString(src interface{}) string {

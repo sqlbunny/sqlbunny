@@ -62,11 +62,11 @@ func (j JSON) Value() (driver.Value, error) {
 func (j *JSON) Scan(src interface{}) error {
 	var source []byte
 
-	switch src.(type) {
+	switch src := src.(type) {
 	case string:
-		source = []byte(src.(string))
+		source = []byte(src)
 	case []byte:
-		source = src.([]byte)
+		source = src
 	default:
 		return errors.New("incompatible type for json")
 	}

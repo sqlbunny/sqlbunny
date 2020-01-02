@@ -60,16 +60,10 @@ func parseIdentifier(ctx Context, s string) {
 	}
 }
 
-func parsePath(ctx Context, s string) schema.Path {
-	res := schema.Path(strings.Split(s, "."))
-	if len(res) == 0 {
-		ctx.AddError("Invalid identifier '%s': cannot be empty")
-	}
-
-	for _, p := range res {
-		parseIdentifier(ctx, p)
-	}
-
+func appendPath(path schema.Path, s string) schema.Path {
+	var res schema.Path
+	res = append(res, path...)
+	res = append(res, s)
 	return res
 }
 
@@ -89,21 +83,6 @@ func parsePathPrefix(ctx Context, prefix schema.Path, s string) schema.Path {
 	return res
 }
 
-func appendPath(path schema.Path, s string) schema.Path {
-	var res schema.Path
-	res = append(res, path...)
-	res = append(res, s)
-	return res
-}
-
-func parsePaths(ctx Context, s []string) []schema.Path {
-	res := make([]schema.Path, len(s))
-	for i := range s {
-		res[i] = parsePath(ctx, s[i])
-	}
-	return res
-}
-
 func parsePathsPrefix(ctx Context, prefix schema.Path, s []string) []schema.Path {
 	res := make([]schema.Path, len(s))
 	for i := range s {
@@ -112,26 +91,10 @@ func parsePathsPrefix(ctx Context, prefix schema.Path, s []string) []schema.Path
 	return res
 }
 
-func sqlNameAll(paths []schema.Path) []string {
-	res := make([]string, len(paths))
-	for i := range paths {
-		res[i] = paths[i].SQLName()
-	}
-	return res
-}
-
 func dotNameAll(paths []schema.Path) []string {
 	res := make([]string, len(paths))
 	for i := range paths {
 		res[i] = paths[i].DotName()
-	}
-	return res
-}
-
-func prefixAll(s []string, prefix string) []string {
-	res := make([]string, len(s))
-	for i := range s {
-		res[i] = prefix + s[i]
 	}
 	return res
 }

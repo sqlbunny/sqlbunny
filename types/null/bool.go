@@ -54,7 +54,7 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (b *Bool) UnmarshalText(text []byte) error {
-	if text == nil || len(text) == 0 {
+	if len(text) == 0 {
 		b.Valid = false
 		return nil
 	}
@@ -121,7 +121,7 @@ func (b *Bool) Scan(value interface{}) error {
 		return nil
 	}
 	b.Valid = true
-	return convert.ConvertAssign(&b.Bool, value)
+	return convert.Assign(&b.Bool, value)
 }
 
 // Value implements the driver Valuer interface.

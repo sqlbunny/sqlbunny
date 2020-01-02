@@ -75,7 +75,7 @@ func TestAppendWhere(t *testing.T) {
 		t.Errorf("Expected %s, got %#v", expect, q.where)
 	}
 
-	if len(q.where[0].args) != 2 || len(q.where[0].args) != 2 {
+	if len(q.where[0].args) != 2 {
 		t.Errorf("arg length wrong: %#v", q.where)
 	}
 
@@ -116,7 +116,7 @@ func TestAppendIn(t *testing.T) {
 		t.Errorf("Expected %s, got %#v", expect, q.in)
 	}
 
-	if len(q.in[0].args) != 2 || len(q.in[0].args) != 2 {
+	if len(q.in[0].args) != 2 {
 		t.Errorf("arg length wrong: %#v", q.in)
 	}
 

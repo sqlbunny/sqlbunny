@@ -105,7 +105,7 @@ func (u *Null{{$enumName}}) Scan(value interface{}) error {
 		return nil
 	}
 	u.Valid = true
-    return convert.ConvertAssign(&u.{{$enumName}}, value)
+    return convert.Assign(&u.{{$enumName}}, value)
 }
 
 // Value implements the driver Valuer interface.

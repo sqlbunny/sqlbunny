@@ -16,8 +16,6 @@ import (
 )
 
 var (
-	bindAccepts = []reflect.Kind{reflect.Ptr, reflect.Slice, reflect.Ptr, reflect.Struct}
-
 	mut         sync.RWMutex
 	bindingMaps = make(map[string][]MappedField)
 	structMaps  = make(map[string]map[string]MappedField)
@@ -289,9 +287,9 @@ type ignoreNullScan struct {
 // Scan implements the Scanner interface.
 func (v *ignoreNullScan) Scan(value interface{}) error {
 	if value == nil {
-		return convert.ConvertAssignNil(v.dest)
+		return convert.AssignNil(v.dest)
 	}
-	return convert.ConvertAssign(v.dest, value)
+	return convert.Assign(v.dest, value)
 }
 
 // ptrFromMapping expects to be passed an addressable struct that it's looking

@@ -56,7 +56,7 @@ func (f *Float32) UnmarshalJSON(data []byte) error {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (f *Float32) UnmarshalText(text []byte) error {
-	if text == nil || len(text) == 0 {
+	if len(text) == 0 {
 		f.Valid = false
 		return nil
 	}
@@ -111,7 +111,7 @@ func (f *Float32) Scan(value interface{}) error {
 		return nil
 	}
 	f.Valid = true
-	return convert.ConvertAssign(&f.Float32, value)
+	return convert.Assign(&f.Float32, value)
 }
 
 // Value implements the driver Valuer interface.

@@ -48,6 +48,14 @@ func (s *Store) Run(ctx context.Context) error {
 	}
 
 	applied, err := getApplied(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = s.validateApplied(applied)
+	if err != nil {
+		return err
+	}
 
 	rows, err := bunny.Query(ctx, selectMigrationsSQL)
 	if err != nil {

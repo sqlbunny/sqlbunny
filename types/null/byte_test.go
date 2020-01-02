@@ -5,10 +5,6 @@ import (
 	"testing"
 )
 
-var (
-	byteJSON = []byte(`"b"`)
-)
-
 func TestByteFrom(t *testing.T) {
 	i := ByteFrom('b')
 	assertByte(t, i, "ByteFrom()")

@@ -6,8 +6,7 @@ import (
 )
 
 var (
-	boolJSON  = []byte(`true`)
-	falseJSON = []byte(`false`)
+	boolJSON = []byte(`true`)
 )
 
 func TestBoolFrom(t *testing.T) {

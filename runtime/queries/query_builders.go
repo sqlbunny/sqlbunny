@@ -94,7 +94,7 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
 		} else {
 			resp = joinBuf.String()
 		}
-		fmt.Fprintf(buf, resp)
+		buf.WriteString(resp)
 		strmangle.PutBuffer(joinBuf)
 	}
 
@@ -348,7 +348,7 @@ func writeModifiers(q *Query, buf *bytes.Buffer, args *[]interface{}) {
 		} else {
 			resp = havingBuf.String()
 		}
-		fmt.Fprintf(buf, resp)
+		buf.WriteString(resp)
 		strmangle.PutBuffer(havingBuf)
 	}
 

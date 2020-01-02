@@ -7,6 +7,7 @@
 package convert
 
 import (
+	"bytes"
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
@@ -49,9 +50,6 @@ var (
 	scanbytes  []byte
 	scanraw    sql.RawBytes
 	scanint    int
-	scanint8   int8
-	scanint16  int16
-	scanint32  int32
 	scanuint8  uint8
 	scanuint16 uint16
 	scanbool   bool
@@ -204,13 +202,13 @@ func getTimeValue(ptr interface{}) time.Time {
 
 func TestConversions(t *testing.T) {
 	for n, ct := range conversionTests {
-		err := ConvertAssign(ct.d, ct.s)
+		err := Assign(ct.d, ct.s)
 		errstr := ""
 		if err != nil {
 			errstr = err.Error()
 		}
 		errf := func(format string, args ...interface{}) {
-			base := fmt.Sprintf("ConvertAssign #%d: for %v (%T) -> %T, ", n, ct.s, ct.s, ct.d)
+			base := fmt.Sprintf("Assign #%d: for %v (%T) -> %T, ", n, ct.s, ct.s, ct.d)
 			t.Errorf(base+format, args...)
 		}
 		if errstr != ct.wanterr {
@@ -262,19 +260,31 @@ func TestConversions(t *testing.T) {
 		if ct.wantusrdef != 0 && ct.wantusrdef != *ct.d.(*userDefined) {
 			errf("want userDefined %f, got %f", ct.wantusrdef, *ct.d.(*userDefined))
 		}
+		if ct.wantbytes != nil && !bytes.Equal(ct.wantbytes, *(ct.d).(*[]byte)) {
+			errf("want bytes %v, got %v", ct.wantf32, float32Value(ct.d))
+		}
+		if ct.wantraw != nil && !bytes.Equal(ct.wantraw, *(ct.d).(*sql.RawBytes)) {
+			errf("want raw %v, got %v", ct.wantf32, float32Value(ct.d))
+		}
 	}
 }
 
 func TestNullString(t *testing.T) {
 	var ns sql.NullString
-	ConvertAssign(&ns, []byte("foo"))
+	err := Assign(&ns, []byte("foo"))
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 	if !ns.Valid {
 		t.Errorf("expecting not null")
 	}
 	if ns.String != "foo" {
 		t.Errorf("expecting foo; got %q", ns.String)
 	}
-	ConvertAssign(&ns, nil)
+	err = Assign(&ns, nil)
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 	if ns.Valid {
 		t.Errorf("expecting null on nil")
 	}
@@ -290,8 +300,8 @@ type valueConverterTest struct {
 }
 
 var valueConverterTests = []valueConverterTest{
-	{driver.DefaultParameterConverter, sql.NullString{"hi", true}, "hi", ""},
-	{driver.DefaultParameterConverter, sql.NullString{"", false}, nil, ""},
+	{driver.DefaultParameterConverter, sql.NullString{String: "hi", Valid: true}, "hi", ""},
+	{driver.DefaultParameterConverter, sql.NullString{String: "", Valid: false}, nil, ""},
 }
 
 func TestValueConverters(t *testing.T) {
@@ -339,8 +349,8 @@ func TestRawBytesAllocs(t *testing.T) {
 
 	buf := make(sql.RawBytes, 10)
 	test := func(name string, in interface{}, want string) {
-		if err := ConvertAssign(&buf, in); err != nil {
-			t.Fatalf("%s: ConvertAssign = %v", name, err)
+		if err := Assign(&buf, in); err != nil {
+			t.Fatalf("%s: Assign = %v", name, err)
 		}
 		match := len(buf) == len(want)
 		if match {

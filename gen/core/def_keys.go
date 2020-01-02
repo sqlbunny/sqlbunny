@@ -132,8 +132,9 @@ var _ ModelRecursiveItem = defModelForeignKey{}
 
 func ModelForeignKey(foreignModelName string, columnNames ...string) defModelForeignKey {
 	return defModelForeignKey{
-		foreignModelName: foreignModelName,
-		columnNames:      columnNames,
+		foreignModelName:   foreignModelName,
+		columnNames:        columnNames,
+		foreignColumnNames: nil, // Autofill with the foreign model's primary key
 	}
 }
 

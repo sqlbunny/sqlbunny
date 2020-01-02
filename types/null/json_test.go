@@ -111,6 +111,9 @@ func TestUnmarshalJSON(t *testing.T) {
 
 	var ni JSON
 	err = ni.UnmarshalJSON([]byte{})
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 	if ni.Valid == false {
 		t.Errorf("expected Valid to be true, got false")
 	}
@@ -120,6 +123,9 @@ func TestUnmarshalJSON(t *testing.T) {
 
 	var null JSON
 	err = null.UnmarshalJSON(nil)
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 	if ni.Valid == false {
 		t.Errorf("expected Valid to be true, got false")
 	}

@@ -37,11 +37,6 @@ func stringifyPath(x uint64) string {
 	return res + ")"
 }
 
-type mockRowMaker struct {
-	int
-	rows []driver.Value
-}
-
 func TestBindStruct(t *testing.T) {
 	t.Parallel()
 

@@ -13,10 +13,6 @@ var (
 	invalidJSON = []byte(`:)`)
 )
 
-type stringInStruct struct {
-	Test String `json:"test,omitempty"`
-}
-
 func TestStringFrom(t *testing.T) {
 	str := StringFrom("test")
 	assertStr(t, str, "StringFrom() string")

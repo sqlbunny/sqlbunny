@@ -40,10 +40,7 @@ func equalUnsorted(x, y []string) bool {
 			delete(diff, sy)
 		}
 	}
-	if len(diff) == 0 {
-		return true
-	}
-	return false
+	return len(diff) == 0
 }
 
 func checkEqualUnsorted(t *testing.T, what string, got, expected []string) {
@@ -172,7 +169,10 @@ func TestRun(t *testing.T) {
 		},
 	}
 	r, f := makeCallback()
-	s.RunMigration("a", map[string]struct{}{}, f)
+	err := s.RunMigration("a", map[string]struct{}{}, f)
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 	checkEqual(t, "no deps", *r, []string{"a"})
 
 	s = Store{
@@ -191,7 +191,10 @@ func TestRun(t *testing.T) {
 		},
 	}
 	r, f = makeCallback()
-	s.RunMigration("a", map[string]struct{}{}, f)
+	err = s.RunMigration("a", map[string]struct{}{}, f)
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 	checkEqual(t, "chain", *r, []string{"c", "b", "a"})
 
 	s = Store{
@@ -210,7 +213,10 @@ func TestRun(t *testing.T) {
 		},
 	}
 	r, f = makeCallback()
-	s.RunMigration("b", map[string]struct{}{}, f)
+	err = s.RunMigration("b", map[string]struct{}{}, f)
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 	checkEqual(t, "half chain", *r, []string{"c", "b"})
 
 	s = Store{
@@ -231,7 +237,10 @@ func TestRun(t *testing.T) {
 		},
 	}
 	r, f = makeCallback()
-	s.RunMigration("a", map[string]struct{}{}, f)
+	err = s.RunMigration("a", map[string]struct{}{}, f)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
 	checkEqualUnsorted(t, "tree", (*r)[0:3], []string{"d", "c", "b"})
 	checkEqualUnsorted(t, "tree", (*r)[3:], []string{"a"})
 
@@ -253,10 +262,13 @@ func TestRun(t *testing.T) {
 		},
 	}
 	r, f = makeCallback()
-	s.RunMigration("a", map[string]struct{}{
+	err = s.RunMigration("a", map[string]struct{}{
 		"b": {},
 		"c": {},
 	}, f)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
 	checkEqualUnsorted(t, "tree2", (*r)[0:1], []string{"d"})
 	checkEqualUnsorted(t, "tree2", (*r)[1:], []string{"a"})
 
@@ -278,11 +290,14 @@ func TestRun(t *testing.T) {
 		},
 	}
 	r, f = makeCallback()
-	s.RunMigration("a", map[string]struct{}{
+	err = s.RunMigration("a", map[string]struct{}{
 		"a": {},
 		"b": {},
 		"c": {},
 		"d": {},
 	}, f)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
 	checkEqualUnsorted(t, "tree3", *r, []string{})
 }

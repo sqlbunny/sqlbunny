@@ -13,7 +13,6 @@ import (
 )
 
 var (
-	idAlphabet    = []byte("abcdefghijklmnopqrstuvwxyz")
 	smartQuoteRgx = regexp.MustCompile(`^(?i)"?[a-z_][_a-z0-9]*"?(\."?[_a-z][_a-z0-9]*"?)*(\.\*)?$`)
 )
 
@@ -91,7 +90,7 @@ func IdentQuote(lq byte, rq byte, s string) string {
 		return s
 	}
 
-	if m := smartQuoteRgx.MatchString(s); m != true {
+	if !smartQuoteRgx.MatchString(s) {
 		return s
 	}
 

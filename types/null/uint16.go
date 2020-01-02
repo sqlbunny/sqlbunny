@@ -62,7 +62,7 @@ func (u *Uint16) UnmarshalJSON(data []byte) error {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (u *Uint16) UnmarshalText(text []byte) error {
-	if text == nil || len(text) == 0 {
+	if len(text) == 0 {
 		u.Valid = false
 		return nil
 	}
@@ -117,7 +117,7 @@ func (u *Uint16) Scan(value interface{}) error {
 		return nil
 	}
 	u.Valid = true
-	return convert.ConvertAssign(&u.Uint16, value)
+	return convert.Assign(&u.Uint16, value)
 }
 
 // Value implements the driver Valuer interface.

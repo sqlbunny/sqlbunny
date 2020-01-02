@@ -212,14 +212,3 @@ func collectLoaded(key string, loadingFrom reflect.Value) (reflect.Value, error)
 
 	return collection, nil
 }
-
-func findRelationshipStruct(obj reflect.Value) (reflect.Value, error) {
-	relationshipStruct := obj.FieldByName(relationshipStructName)
-	if !relationshipStruct.IsValid() {
-		return reflect.Value{}, errors.New("relationship struct was invalid")
-	} else if relationshipStruct.IsNil() {
-		return reflect.Value{}, errors.New("relationship struct was nil")
-	}
-
-	return relationshipStruct, nil
-}

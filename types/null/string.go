@@ -69,7 +69,7 @@ func (s String) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (s *String) UnmarshalText(text []byte) error {
-	if text == nil || len(text) == 0 {
+	if len(text) == 0 {
 		s.Valid = false
 		return nil
 	}
@@ -105,7 +105,7 @@ func (s *String) Scan(value interface{}) error {
 		return nil
 	}
 	s.Valid = true
-	return convert.ConvertAssign(&s.String, value)
+	return convert.Assign(&s.String, value)
 }
 
 // Value implements the driver Valuer interface.

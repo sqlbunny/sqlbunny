@@ -119,16 +119,16 @@ func TestTimeScanValue(t *testing.T) {
 	err := ti.Scan(timeValue)
 	maybePanic(err)
 	assertTime(t, ti, "scanned time")
-	if v, err := ti.Value(); v != timeValue || err != nil {
-		t.Error("bad value or err:", v, err)
+	if v, err2 := ti.Value(); v != timeValue || err2 != nil {
+		t.Error("bad value or err:", v, err2)
 	}
 
 	var null Time
 	err = null.Scan(nil)
 	maybePanic(err)
 	assertNullTime(t, null, "scanned null")
-	if v, err := null.Value(); v != nil || err != nil {
-		t.Error("bad value or err:", v, err)
+	if v, err2 := null.Value(); v != nil || err2 != nil {
+		t.Error("bad value or err:", v, err2)
 	}
 
 	var wrong Time
