@@ -1,8 +1,8 @@
 package operations
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
@@ -16,11 +16,11 @@ func (o RenameTable) GetSQL() string {
 	return fmt.Sprintf("ALTER TABLE \"%s\" RENAME TO \"%s\"", o.OldName, o.NewName)
 }
 
-func (o RenameTable) Dump(buf *bytes.Buffer) {
-	buf.WriteString("operations.RenameTable {\n")
-	buf.WriteString("OldName: " + esc(o.OldName) + ",\n")
-	buf.WriteString("NewName: " + esc(o.NewName) + ",\n")
-	buf.WriteString("}")
+func (o RenameTable) Dump(w io.Writer) {
+	fmt.Fprint(w, "operations.RenameTable {\n")
+	fmt.Fprint(w, "OldName: "+esc(o.OldName)+",\n")
+	fmt.Fprint(w, "NewName: "+esc(o.NewName)+",\n")
+	fmt.Fprint(w, "}")
 }
 
 func (o RenameTable) Apply(s *schema.Schema) error {

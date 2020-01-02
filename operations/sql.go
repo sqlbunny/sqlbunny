@@ -1,7 +1,8 @@
 package operations
 
 import (
-	"bytes"
+	"fmt"
+	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
@@ -14,10 +15,10 @@ func (o SQL) GetSQL() string {
 	return o.SQL
 }
 
-func (o SQL) Dump(buf *bytes.Buffer) {
-	buf.WriteString("operations.SQL {\n")
-	buf.WriteString("SQL: " + esc(o.SQL) + ",\n")
-	buf.WriteString("}")
+func (o SQL) Dump(w io.Writer) {
+	fmt.Fprint(w, "operations.SQL {\n")
+	fmt.Fprint(w, "SQL: "+esc(o.SQL)+",\n")
+	fmt.Fprint(w, "}")
 }
 
 func (o SQL) Apply(s *schema.Schema) error {

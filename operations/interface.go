@@ -1,13 +1,13 @@
 package operations
 
 import (
-	"bytes"
+	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
 
 type Operation interface {
 	GetSQL() string
-	Dump(buf *bytes.Buffer)
+	Dump(w io.Writer)
 	Apply(s *schema.Schema) error
 }

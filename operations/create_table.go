@@ -1,8 +1,8 @@
 package operations
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/sqlbunny/sqlschema/schema"
@@ -15,8 +15,8 @@ type Column struct {
 	Nullable bool
 }
 
-func (o Column) Dump(buf *bytes.Buffer) {
-	buf.WriteString(fmt.Sprintf("operations.Column{Name: %s, Type: %s, Default: %s, Nullable: %s}", esc(o.Name), esc(o.Type), esc(o.Default), dumpBool(o.Nullable)))
+func (o Column) Dump(w io.Writer) {
+	fmt.Fprintf(w, "operations.Column{Name: %s, Type: %s, Default: %s, Nullable: %s}", esc(o.Name), esc(o.Type), esc(o.Default), dumpBool(o.Nullable))
 }
 
 type CreateTable struct {
@@ -40,16 +40,16 @@ func (o CreateTable) GetSQL() string {
 	return fmt.Sprintf("CREATE TABLE \"%s\" (\n%s\n)", o.Name, strings.Join(x, ",\n"))
 }
 
-func (o CreateTable) Dump(buf *bytes.Buffer) {
-	buf.WriteString("operations.CreateTable {\n")
-	buf.WriteString("Name: " + esc(o.Name) + ",\n")
-	buf.WriteString("Columns: []operations.Column{\n")
+func (o CreateTable) Dump(w io.Writer) {
+	fmt.Fprint(w, "operations.CreateTable {\n")
+	fmt.Fprint(w, "Name: "+esc(o.Name)+",\n")
+	fmt.Fprint(w, "Columns: []operations.Column{\n")
 	for _, c := range o.Columns {
-		c.Dump(buf)
-		buf.WriteString(",\n")
+		c.Dump(w)
+		fmt.Fprint(w, ",\n")
 	}
-	buf.WriteString("},\n")
-	buf.WriteString("}")
+	fmt.Fprint(w, "},\n")
+	fmt.Fprint(w, "}")
 }
 
 func (o CreateTable) Apply(s *schema.Schema) error {

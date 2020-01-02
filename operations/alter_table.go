@@ -3,6 +3,7 @@ package operations
 import (
 	"bytes"
 	"fmt"
+	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
@@ -27,16 +28,16 @@ func (o AlterTable) GetSQL() string {
 	return buf.String()
 }
 
-func (o AlterTable) Dump(buf *bytes.Buffer) {
-	buf.WriteString("operations.AlterTable {\n")
-	buf.WriteString("Name: " + esc(o.Name) + ",\n")
-	buf.WriteString("Ops: []operations.AlterTableSuboperation{\n")
+func (o AlterTable) Dump(w io.Writer) {
+	fmt.Fprint(w, "operations.AlterTable {\n")
+	fmt.Fprint(w, "Name: "+esc(o.Name)+",\n")
+	fmt.Fprint(w, "Ops: []operations.AlterTableSuboperation{\n")
 	for _, op := range o.Ops {
-		op.Dump(buf)
-		buf.WriteString(",\n")
+		op.Dump(w)
+		fmt.Fprint(w, ",\n")
 	}
-	buf.WriteString("},\n")
-	buf.WriteString("}")
+	fmt.Fprint(w, "},\n")
+	fmt.Fprint(w, "}")
 }
 
 func (o AlterTable) Apply(s *schema.Schema) error {

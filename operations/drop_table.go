@@ -1,8 +1,8 @@
 package operations
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
@@ -15,10 +15,10 @@ func (o DropTable) GetSQL() string {
 	return fmt.Sprintf("DROP TABLE \"%s\"", o.Name)
 }
 
-func (o DropTable) Dump(buf *bytes.Buffer) {
-	buf.WriteString("operations.DropTable {\n")
-	buf.WriteString("Name: " + esc(o.Name) + ",\n")
-	buf.WriteString("}")
+func (o DropTable) Dump(w io.Writer) {
+	fmt.Fprint(w, "operations.DropTable {\n")
+	fmt.Fprint(w, "Name: "+esc(o.Name)+",\n")
+	fmt.Fprint(w, "}")
 }
 
 func (o DropTable) Apply(s *schema.Schema) error {

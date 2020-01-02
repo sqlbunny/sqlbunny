@@ -1,8 +1,8 @@
 package operations
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
@@ -17,12 +17,12 @@ func (o CreateIndex) GetSQL() string {
 	return fmt.Sprintf("CREATE INDEX CONCURRENTLY \"%s\" ON \"%s\" (%s)", o.IndexName, o.Name, columnList(o.Columns))
 }
 
-func (o CreateIndex) Dump(buf *bytes.Buffer) {
-	buf.WriteString("operations.CreateIndex {\n")
-	buf.WriteString("Name: " + esc(o.Name) + ",\n")
-	buf.WriteString("IndexName: " + esc(o.IndexName) + ",\n")
-	buf.WriteString("Columns: []string{" + columnList(o.Columns) + "},\n")
-	buf.WriteString("}")
+func (o CreateIndex) Dump(w io.Writer) {
+	fmt.Fprint(w, "operations.CreateIndex {\n")
+	fmt.Fprint(w, "Name: "+esc(o.Name)+",\n")
+	fmt.Fprint(w, "IndexName: "+esc(o.IndexName)+",\n")
+	fmt.Fprint(w, "Columns: []string{"+columnList(o.Columns)+"},\n")
+	fmt.Fprint(w, "}")
 }
 
 func (o CreateIndex) Apply(s *schema.Schema) error {

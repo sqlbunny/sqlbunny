@@ -1,8 +1,8 @@
 package operations
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
@@ -16,11 +16,11 @@ func (o DropIndex) GetSQL() string {
 	return fmt.Sprintf("DROP INDEX \"%s\"", o.IndexName)
 }
 
-func (o DropIndex) Dump(buf *bytes.Buffer) {
-	buf.WriteString("operations.DropIndex {\n")
-	buf.WriteString("Name: " + esc(o.Name) + ",\n")
-	buf.WriteString("IndexName: " + esc(o.IndexName) + ",\n")
-	buf.WriteString("}")
+func (o DropIndex) Dump(w io.Writer) {
+	fmt.Fprint(w, "operations.DropIndex {\n")
+	fmt.Fprint(w, "Name: "+esc(o.Name)+",\n")
+	fmt.Fprint(w, "IndexName: "+esc(o.IndexName)+",\n")
+	fmt.Fprint(w, "}")
 }
 
 func (o DropIndex) Apply(s *schema.Schema) error {
