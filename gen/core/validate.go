@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/sqlbunny/sqlbunny/gen"
@@ -20,10 +19,6 @@ func buildSchema(items []gen.ConfigItem) (*schema.Schema, error) {
 	ctx.Run()
 
 	for _, m := range ctx.Schema.Models {
-		calcColumns(ctx, m)
-	}
-
-	for _, m := range ctx.Schema.Models {
 		checkDuplicateFields(ctx, m)
 		checkPrimaryKey(ctx, m)
 		checkIndexes(ctx, m)
@@ -32,7 +27,7 @@ func buildSchema(items []gen.ConfigItem) (*schema.Schema, error) {
 	}
 
 	// TODO disallow double underscore.
-	// TODO check FK columns match type (Go type? or just Postgres type?)
+	// TODO check FK fields match type (Go type? or just Postgres type?)
 
 	if err := ctx.Error(); err != nil {
 		return nil, err
@@ -40,79 +35,95 @@ func buildSchema(items []gen.ConfigItem) (*schema.Schema, error) {
 
 	ctx.Schema.CalculateRelationships()
 
+	// TODO remove this
+	ctx.Schema.SQLSchema()
+
 	return ctx.Schema, nil
 }
 
-func calcColumns(ctx *gen.Context, m *schema.Model) {
-	for _, f := range m.Fields {
-		doCalcColumns(ctx, m, f, false, "")
+type Context interface {
+	AddError(message string, args ...interface{})
+}
+
+func parseIdentifier(ctx Context, s string) {
+	if s == "" {
+		ctx.AddError("Invalid identifier '%s': cannot be empty")
+	}
+	if strings.Contains(s, "__") {
+		ctx.AddError("Invalid identifier '%s': cannot contain double underscores '__'")
+	}
+	if strings.HasPrefix(s, "_") {
+		ctx.AddError("Invalid identifier '%s': cannot start with underscore '_'")
+	}
+	if strings.HasSuffix(s, "_") {
+		ctx.AddError("Invalid identifier '%s': cannot end with underscore '_'")
 	}
 }
 
-func doCalcColumns(ctx *gen.Context, m *schema.Model, f *schema.Field, forceNullable bool, prefix string) {
-	switch t := f.Type.(type) {
-	case *schema.Struct:
-		forceNullable2 := forceNullable || f.Nullable
-		prefix2 := prefix + f.Name + "."
-
-		for _, f2 := range t.Fields {
-			doCalcColumns(ctx, m, f2, forceNullable2, prefix2)
-		}
-
-		if f.Nullable {
-			var def string
-			if !forceNullable {
-				def = "false"
-			}
-			m.Columns = append(m.Columns, &schema.Column{
-				Name: undot(prefix + f.Name),
-				Type: &schema.BaseTypeNullable{
-					Name: "bool",
-					Go: schema.GoType{
-						Name: "bool",
-					},
-					GoNull: schema.GoType{
-						Pkg:  "github.com/sqlbunny/sqlbunny/types/null",
-						Name: "Bool",
-					},
-					Postgres: schema.SQLType{
-						Type:      "boolean",
-						ZeroValue: "false",
-					},
-				},
-				SQLType:    "boolean",
-				SQLDefault: def,
-				Nullable:   forceNullable,
-			})
-		}
-	case schema.BaseType:
-		nullable := f.Nullable || forceNullable
-		var def string
-		if !nullable {
-			def = t.SQLType().ZeroValue
-		}
-		m.Columns = append(m.Columns, &schema.Column{
-			Name:       undot(prefix + f.Name),
-			Type:       t,
-			SQLType:    t.SQLType().Type,
-			SQLDefault: def,
-			Nullable:   nullable,
-		})
-	default:
-		// Should never happen, because all types except Struct
-		// implement schema.BaseType.
-		panic("unknown type")
+func parsePath(ctx Context, s string) schema.Path {
+	res := schema.Path(strings.Split(s, "."))
+	if len(res) == 0 {
+		ctx.AddError("Invalid identifier '%s': cannot be empty")
 	}
+
+	for _, p := range res {
+		parseIdentifier(ctx, p)
+	}
+
+	return res
 }
 
-func undot(s string) string {
-	return strings.Replace(s, ".", "__", -1)
+func parsePathPrefix(ctx Context, prefix schema.Path, s string) schema.Path {
+	var res schema.Path
+	res = append(res, prefix...)
+	res = append(res, strings.Split(s, ".")...)
+
+	if len(res) == 0 {
+		ctx.AddError("Invalid identifier '%s': cannot be empty")
+	}
+
+	for _, p := range res {
+		parseIdentifier(ctx, p)
+	}
+
+	return res
 }
 
-func undotAll(s []string) []string {
-	res := make([]string, len(s))
+func appendPath(path schema.Path, s string) schema.Path {
+	var res schema.Path
+	res = append(res, path...)
+	res = append(res, s)
+	return res
+}
+
+func parsePaths(ctx Context, s []string) []schema.Path {
+	res := make([]schema.Path, len(s))
 	for i := range s {
-		res[i] = undot(s[i])
+		res[i] = parsePath(ctx, s[i])
+	}
+	return res
+}
+
+func parsePathsPrefix(ctx Context, prefix schema.Path, s []string) []schema.Path {
+	res := make([]schema.Path, len(s))
+	for i := range s {
+		res[i] = parsePathPrefix(ctx, prefix, s[i])
+	}
+	return res
+}
+
+func sqlNameAll(paths []schema.Path) []string {
+	res := make([]string, len(paths))
+	for i := range paths {
+		res[i] = paths[i].SQLName()
+	}
+	return res
+}
+
+func dotNameAll(paths []schema.Path) []string {
+	res := make([]string, len(paths))
+	for i := range paths {
+		res[i] = paths[i].DotName()
 	}
 	return res
 }
@@ -125,12 +136,6 @@ func prefixAll(s []string, prefix string) []string {
 	return res
 }
 
-func makeName(model string, columns []string, suffix string) string {
-	// Triple underscore because column names can have double underscores
-	// if they belong to a struct.
-	return fmt.Sprintf("%s___%s___%s", model, strings.Join(columns, "___"), suffix)
-}
-
 func checkDuplicateFields(ctx *gen.Context, m *schema.Model) {
 	seen := make(map[string]struct{})
 	for _, f := range m.Fields {
@@ -141,23 +146,22 @@ func checkDuplicateFields(ctx *gen.Context, m *schema.Model) {
 	}
 }
 
-func describeIndex(columns []string) string {
-	return strings.Join(columns, ", ")
+func describeIndex(fields []schema.Path) string {
+	return strings.Join(dotNameAll(fields), ", ")
 }
 
 func checkPrimaryKey(ctx *gen.Context, m *schema.Model) {
-	pk := m.PrimaryKey
-
-	if pk == nil {
+	if m.PrimaryKey == nil {
 		ctx.AddError("Model '%s' is missing a primary key", m.Name)
-	} else {
-		for _, name := range pk.Columns {
-			c := m.FindColumn(name)
-			if c == nil {
-				ctx.AddError("Model '%s' primary key references unknown column '%s'", m.Name, name)
-			} else if c.Nullable {
-				ctx.AddError("Model '%s' primary key references nullable column '%s'", m.Name, name)
-			}
+		return
+	}
+
+	for _, p := range m.PrimaryKey.Fields {
+		f := m.FindField(p)
+		if f == nil {
+			ctx.AddError("Model '%s' primary key references unknown field '%s'", m.Name, p.DotName())
+		} else if f.Nullable {
+			ctx.AddError("Model '%s' primary key references nullable field '%s'", m.Name, p.DotName())
 		}
 	}
 }
@@ -165,17 +169,17 @@ func checkPrimaryKey(ctx *gen.Context, m *schema.Model) {
 func checkIndexes(ctx *gen.Context, m *schema.Model) {
 	seen := make(map[string]struct{})
 	for _, f := range m.Indexes {
-		f.Name = makeName(m.Name, f.Columns, "idx")
+		desc := describeIndex(f.Fields)
 
-		if _, ok := seen[f.Name]; ok {
-			ctx.AddError("Model '%s' index '%s' is defined multiple times.", m.Name, describeIndex(f.Columns))
+		if _, ok := seen[desc]; ok {
+			ctx.AddError("Model '%s' index '%s' is defined multiple times.", m.Name, desc)
 		}
-		seen[f.Name] = struct{}{}
+		seen[desc] = struct{}{}
 
-		for _, name := range f.Columns {
-			c := m.FindColumn(name)
+		for _, path := range f.Fields {
+			c := m.FindField(path)
 			if c == nil {
-				ctx.AddError("Model '%s' index '%s' references unknown column '%s'", m.Name, describeIndex(f.Columns), name)
+				ctx.AddError("Model '%s' index '%s' references unknown field '%s'", m.Name, desc, path.DotName())
 			}
 		}
 	}
@@ -184,35 +188,33 @@ func checkIndexes(ctx *gen.Context, m *schema.Model) {
 func checkUniques(ctx *gen.Context, m *schema.Model) {
 	seen := make(map[string]struct{})
 	for _, f := range m.Uniques {
-		f.Name = makeName(m.Name, f.Columns, "key")
+		desc := describeIndex(f.Fields)
 
-		if _, ok := seen[f.Name]; ok {
-			ctx.AddError("Model '%s' unique '%s' is defined multiple times.", m.Name, describeIndex(f.Columns))
+		if _, ok := seen[desc]; ok {
+			ctx.AddError("Model '%s' unique '%s' is defined multiple times.", m.Name, desc)
 		}
-		seen[f.Name] = struct{}{}
+		seen[desc] = struct{}{}
 
-		for _, name := range f.Columns {
-			c := m.FindColumn(name)
+		for _, path := range f.Fields {
+			c := m.FindField(path)
 			if c == nil {
-				ctx.AddError("Model '%s' unique '%s' references unknown column '%s'", m.Name, describeIndex(f.Columns), name)
+				ctx.AddError("Model '%s' unique '%s' references unknown field '%s'", m.Name, desc, path.DotName())
 			}
 		}
 	}
 }
 
 func checkForeignKeys(ctx *gen.Context, m *schema.Model) {
+	seen := make(map[string]struct{})
 	for _, f := range m.ForeignKeys {
-		f.Name = makeName(m.Name, f.LocalColumns, "fkey")
+		desc := strings.Join(dotNameAll(f.LocalFields), ", ")
 
-		desc := strings.Join(f.LocalColumns, ",")
-
-		if len(f.LocalColumns) == 0 {
-			ctx.AddError("Model '%s' foreign key '%s': local column list is empty", m.Name, desc)
+		if len(f.LocalFields) == 0 {
+			ctx.AddError("Model '%s' foreign key '%s': local field list is empty", m.Name, desc)
 		}
-		for _, n := range f.LocalColumns {
-			c := m.FindColumn(n)
-			if c == nil {
-				ctx.AddError("Model '%s' foreign key '%s': local column '%s' does not exist", m.Name, desc, n)
+		for _, p := range f.LocalFields {
+			if f := m.FindField(p); f == nil {
+				ctx.AddError("Model '%s' foreign key '%s': local field '%s' does not exist", m.Name, desc, p.DotName())
 			}
 		}
 
@@ -221,34 +223,38 @@ func checkForeignKeys(ctx *gen.Context, m *schema.Model) {
 			ctx.AddError("Model '%s' foreign key '%s': foreign model '%s' does not exist", m.Name, desc, f.ForeignModel)
 			continue
 		}
-		if f.ForeignColumns == nil && m2.PrimaryKey != nil {
-			f.ForeignColumns = m2.PrimaryKey.Columns
+		if f.ForeignFields == nil && m2.PrimaryKey != nil {
+			f.ForeignFields = m2.PrimaryKey.Fields
 		}
 
-		if len(f.ForeignColumns) == 0 {
-			ctx.AddError("Model '%s' foreign key '%s': foreign column list is empty", m.Name, desc)
+		if len(f.ForeignFields) == 0 {
+			ctx.AddError("Model '%s' foreign key '%s': foreign field list is empty", m.Name, desc)
 		}
-		for _, n := range f.ForeignColumns {
-			fc := m2.FindColumn(n)
-			if fc == nil {
-				ctx.AddError("Model '%s' foreign key '%s': foreign column '%s' does not exist", m.Name, desc, n)
+		for _, p := range f.ForeignFields {
+			if f := m2.FindField(p); f == nil {
+				ctx.AddError("Model '%s' foreign key '%s': foreign field '%s' does not exist", m.Name, desc, p.DotName())
 			}
 		}
 
-		if len(f.LocalColumns) != len(f.ForeignColumns) {
-			ctx.AddError("Model '%s' foreign key '%s': local (%d) and foreign (%d) column count doesn't match", m.Name, desc, len(f.LocalColumns), len(f.ForeignColumns))
+		if len(f.LocalFields) != len(f.ForeignFields) {
+			ctx.AddError("Model '%s' foreign key '%s': local (%d) and foreign (%d) field count doesn't match", m.Name, desc, len(f.LocalFields), len(f.ForeignFields))
 			continue // Do not compare types if count doesn't match
 		}
 
-		for i := range f.ForeignColumns {
-			fc := m2.FindColumn(f.ForeignColumns[i])
-			lc := m.FindColumn(f.LocalColumns[i])
-			if fc == nil || lc == nil {
+		for i := range f.ForeignFields {
+			ff := m2.FindField(f.ForeignFields[i])
+			lf := m.FindField(f.LocalFields[i])
+			if ff == nil || lf == nil {
 				continue // Ignore these errors, they've already been reported before.
 			}
-			if fc.Type != lc.Type {
-				ctx.AddError("Model '%s' foreign key '%s': local field '%s' and foreign field '%s' have different types: %+v %+v", m.Name, desc, f.LocalColumns[i], f.ForeignColumns[i], lc.Type, fc.Type)
+			if ff.Type != lf.Type {
+				ctx.AddError("Model '%s' foreign key '%s': local field '%s' and foreign field '%s' have different types: %+v %+v", m.Name, desc, f.LocalFields[i], f.ForeignFields[i], lf.Type, ff.Type)
 			}
 		}
+
+		if _, ok := seen[desc]; ok {
+			ctx.AddError("Model '%s' foreign key '%s' is defined multiple times.", m.Name, describeIndex(f.LocalFields))
+		}
+		seen[desc] = struct{}{}
 	}
 }

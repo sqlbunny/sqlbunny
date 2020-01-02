@@ -2,9 +2,7 @@ package migration
 
 import (
 	"bytes"
-	"context"
 	"crypto/rand"
-	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -13,12 +11,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sqlbunny/sqlbunny/runtime/bunny"
-
 	"github.com/spf13/cobra"
 	"github.com/sqlbunny/sqlbunny/gen"
 	"github.com/sqlbunny/sqlbunny/runtime/migration"
-	"github.com/sqlbunny/sqlbunny/schema"
+	"github.com/sqlbunny/sqlschema/diff"
+	"github.com/sqlbunny/sqlschema/schema"
 )
 
 type Plugin struct {
@@ -69,8 +66,8 @@ func (p *Plugin) cmdCheck(cmd *cobra.Command, args []string) {
 
 	s1 := schema.New()
 	p.applyAll(s1)
-	s2 := gen.Config.Schema
-	ops := diff(nil, s1, s2)
+	s2 := gen.Config.Schema.SQLSchema()
+	ops := diff.Diff(s1, s2)
 
 	if len(ops) != 0 {
 		log.Fatal("Migrations are not up to date with the defined models. You need to run 'migration gen'.")
@@ -101,8 +98,8 @@ func (p *Plugin) cmdGen(cmd *cobra.Command, args []string) {
 
 	s1 := schema.New()
 	head := p.applyAll(s1)
-	s2 := gen.Config.Schema
-	ops := diff(nil, s1, s2)
+	s2 := gen.Config.Schema.SQLSchema()
+	ops := diff.Diff(s1, s2)
 	if len(ops) == 0 {
 		log.Fatal("No model changes found, doing nothing.")
 	}
@@ -195,7 +192,10 @@ func (p *Plugin) writeMigration(m *migration.Migration) {
 	migrationFile := fmt.Sprintf("migration_%s.go", m.Name)
 	var buf bytes.Buffer
 	gen.WritePackageName(&buf, p.PackageName)
-	buf.WriteString("import \"github.com/sqlbunny/sqlbunny/runtime/migration\"\n")
+	buf.WriteString("import (\n")
+	buf.WriteString("    \"github.com/sqlbunny/sqlbunny/runtime/migration\"\n")
+	buf.WriteString("    \"github.com/sqlbunny/sqlschema/operations\"\n")
+	buf.WriteString(")\n")
 	buf.WriteString(fmt.Sprintf("func init() {\nStore.Register("))
 	m.Dump(&buf)
 	buf.WriteString(")\n}")
@@ -203,39 +203,16 @@ func (p *Plugin) writeMigration(m *migration.Migration) {
 	gen.WriteFile(p.PackagePath, migrationFile, buf.Bytes())
 }
 
-type fakeDB struct {
-	queries []string
-}
-
-func (e *fakeDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	e.queries = append(e.queries, query)
-	return nil, nil
-}
-func (e *fakeDB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	e.queries = append(e.queries, query)
-	return nil, nil
-}
-func (e *fakeDB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	e.queries = append(e.queries, query)
-	return nil
-}
-
 func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
-	s2 := gen.Config.Schema
-
 	s1 := schema.New()
-	ops := diff(nil, s1, s2)
+	s2 := gen.Config.Schema.SQLSchema()
+	ops := diff.Diff(s1, s2)
 	if len(ops) == 0 {
 		log.Fatal("No models found, doing nothing.")
 	}
 
-	db := &fakeDB{}
-	ctx := bunny.ContextWithDB(context.Background(), db)
 	for _, op := range ops {
-		op.Run(ctx)
-	}
-
-	for _, q := range db.queries {
+		q := op.GetSQL()
 		fmt.Println(q + ";\n")
 	}
 }

@@ -15,7 +15,7 @@ type ModelRecursiveContext struct {
 	*gen.Context
 
 	Model         *schema.Model
-	Prefix        string
+	Prefix        schema.Path
 	ForceNullable bool
 }
 

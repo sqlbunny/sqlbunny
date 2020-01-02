@@ -11,6 +11,7 @@ func BaseTemplateData() map[string]interface{} {
 
 	return map[string]interface{}{
 		"PkgName":     Config.ModelsPackageName,
+		"Schema":      Config.Schema,
 		"Dialect":     d,
 		"LQ":          lq,
 		"RQ":          rq,

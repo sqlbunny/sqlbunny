@@ -235,25 +235,6 @@ func TestCamelCase(t *testing.T) {
 	}
 }
 
-func TestTitleCaseIdentifier(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		In  string
-		Out string
-	}{
-		{"hello", "Hello"},
-		{"hello__world", "Hello.World"},
-		{"hey__id__world", "Hey.ID.World"},
-	}
-
-	for i, test := range tests {
-		if out := TitleCaseIdentifier(test.In); out != test.Out {
-			t.Errorf("[%d] (%s) Out was wrong: %q, want: %q", i, test.In, out, test.Out)
-		}
-	}
-}
-
 func TestMakeStringMap(t *testing.T) {
 	t.Parallel()
 

@@ -14,7 +14,7 @@ func (d defModelPrimaryKey) ModelRecursiveItem(ctx *ModelRecursiveContext) {
 		ctx.AddError("Model '%s' has multiple primary key definitions", m.Name)
 	}
 	m.PrimaryKey = &schema.PrimaryKey{
-		Columns: undotAll(prefixAll(d.names, ctx.Prefix)),
+		Fields: parsePathsPrefix(ctx, ctx.Prefix, d.names),
 	}
 }
 
@@ -31,7 +31,7 @@ func (d defFieldPrimaryKey) ModelRecursiveFieldItem(ctx *ModelRecursiveFieldCont
 		ctx.AddError("Model '%s' has multiple primary key definitions", m.Name)
 	}
 	m.PrimaryKey = &schema.PrimaryKey{
-		Columns: []string{undot(ctx.Prefix + ctx.Field.Name)},
+		Fields: []schema.Path{parsePathPrefix(ctx, ctx.Prefix, ctx.Field.Name)},
 	}
 }
 
@@ -52,7 +52,7 @@ func (d defModelIndex) StructItem(ctx *StructContext) {}
 func (d defModelIndex) ModelRecursiveItem(ctx *ModelRecursiveContext) {
 	m := ctx.Model
 	m.Indexes = append(m.Indexes, &schema.Index{
-		Columns: undotAll(prefixAll(d.names, ctx.Prefix)),
+		Fields: parsePathsPrefix(ctx, ctx.Prefix, d.names),
 	})
 }
 
@@ -67,7 +67,7 @@ func (d defFieldIndex) FieldItem() {}
 func (d defFieldIndex) ModelRecursiveFieldItem(ctx *ModelRecursiveFieldContext) {
 	m := ctx.Model
 	m.Indexes = append(m.Indexes, &schema.Index{
-		Columns: []string{undot(ctx.Prefix + ctx.Field.Name)},
+		Fields: []schema.Path{parsePathPrefix(ctx, ctx.Prefix, ctx.Field.Name)},
 	})
 }
 
@@ -87,7 +87,7 @@ func (d defModelUnique) StructItem(ctx *StructContext) {}
 func (d defModelUnique) ModelRecursiveItem(ctx *ModelRecursiveContext) {
 	m := ctx.Model
 	m.Uniques = append(m.Uniques, &schema.Unique{
-		Columns: undotAll(prefixAll(d.names, ctx.Prefix)),
+		Fields: parsePathsPrefix(ctx, ctx.Prefix, d.names),
 	})
 }
 
@@ -101,7 +101,7 @@ func (d defFieldUnique) FieldItem() {}
 func (d defFieldUnique) ModelRecursiveFieldItem(ctx *ModelRecursiveFieldContext) {
 	m := ctx.Model
 	m.Uniques = append(m.Uniques, &schema.Unique{
-		Columns: []string{undot(ctx.Prefix + ctx.Field.Name)},
+		Fields: []schema.Path{parsePathPrefix(ctx, ctx.Prefix, ctx.Field.Name)},
 	})
 }
 
@@ -122,7 +122,7 @@ func (d defModelForeignKey) ModelItem(ctx *ModelContext) {}
 func (d defModelForeignKey) ModelRecursiveItem(ctx *ModelRecursiveContext) {
 	m := ctx.Model
 	m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
-		LocalColumns: undotAll(prefixAll(d.columnNames, ctx.Prefix)),
+		LocalFields:  parsePathsPrefix(ctx, ctx.Prefix, d.columnNames),
 		ForeignModel: d.foreignModelName,
 	})
 }
@@ -145,7 +145,7 @@ func (d defFieldForeignKey) FieldItem() {}
 func (d defFieldForeignKey) ModelRecursiveFieldItem(ctx *ModelRecursiveFieldContext) {
 	m := ctx.Model
 	m.ForeignKeys = append(m.ForeignKeys, &schema.ForeignKey{
-		LocalColumns: []string{undot(ctx.Prefix + ctx.Field.Name)},
+		LocalFields:  []schema.Path{parsePathPrefix(ctx, ctx.Prefix, ctx.Field.Name)},
 		ForeignModel: d.foreignModelName,
 	})
 }

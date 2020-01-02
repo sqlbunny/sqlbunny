@@ -40,22 +40,22 @@ func (s *Schema) CalculateRelationships() {
 			}
 
 			m1.Relationships = append(m1.Relationships, &Relationship{
-				Name:           localRelationshipName(f, m1, m2),
-				ToMany:         false,
-				IsJoinModel:    false,
-				ForeignModel:   m2.Name,
-				LocalColumns:   f.LocalColumns,
-				ForeignColumns: f.ForeignColumns,
+				Name:          localRelationshipName(f, m1, m2),
+				ToMany:        false,
+				IsJoinModel:   false,
+				ForeignModel:  m2.Name,
+				LocalFields:   f.LocalFields,
+				ForeignFields: f.ForeignFields,
 			})
 
-			toMany := !m1.IsUniqueColumns(f.LocalColumns)
+			toMany := !m1.IsFieldsUnique(f.LocalFields)
 			m2.Relationships = append(m2.Relationships, &Relationship{
-				Name:           pluralIf(foreignRelationshipName(f, m1, m2), toMany),
-				ToMany:         toMany,
-				IsJoinModel:    false,
-				ForeignModel:   m1.Name,
-				LocalColumns:   f.ForeignColumns,
-				ForeignColumns: f.LocalColumns,
+				Name:          pluralIf(foreignRelationshipName(f, m1, m2), toMany),
+				ToMany:        toMany,
+				IsJoinModel:   false,
+				ForeignModel:  m1.Name,
+				LocalFields:   f.ForeignFields,
+				ForeignFields: f.LocalFields,
 			})
 		}
 	}
@@ -89,15 +89,15 @@ func (s *Schema) CalculateRelationships() {
 // - There are exactly 2 foreign keys
 // - The 2 foreign keys fully cover the primary key (every column belongs to one, or the other, or both)
 func (s *Schema) isJoinModel(t *Model) bool {
-	if t.PrimaryKey == nil || len(t.PrimaryKey.Columns) != len(t.Fields) || len(t.ForeignKeys) != 2 {
+	if t.PrimaryKey == nil || len(t.PrimaryKey.Fields) != len(t.Fields) || len(t.ForeignKeys) != 2 {
 		return false
 	}
 
-	for _, c := range t.PrimaryKey.Columns {
+	for _, c := range t.PrimaryKey.Fields {
 		found := false
 		for _, f := range t.ForeignKeys {
-			for _, fc := range f.LocalColumns {
-				if c == fc {
+			for _, fc := range f.LocalFields {
+				if c.Equals(fc) {
 					found = true
 				}
 			}
@@ -124,15 +124,15 @@ func (s *Schema) calculateJoinModelRelationships(mj *Model) {
 
 func addJoinModelRelationship(mj, m1, m2 *Model, f1, f2 *ForeignKey) {
 	m1.Relationships = append(m1.Relationships, &Relationship{
-		Name:               strmangle.Plural(m2.Name),
-		ToMany:             true,
-		IsJoinModel:        true,
-		JoinModel:          mj.Name,
-		ForeignModel:       m2.Name,
-		LocalColumns:       f1.ForeignColumns,
-		JoinLocalColumns:   f1.LocalColumns,
-		ForeignColumns:     f2.ForeignColumns,
-		JoinForeignColumns: f2.LocalColumns,
+		Name:              strmangle.Plural(m2.Name),
+		ToMany:            true,
+		IsJoinModel:       true,
+		JoinModel:         mj.Name,
+		ForeignModel:      m2.Name,
+		LocalFields:       f1.ForeignFields,
+		JoinLocalFields:   f1.LocalFields,
+		ForeignFields:     f2.ForeignFields,
+		JoinForeignFields: f2.LocalFields,
 	})
 }
 
@@ -144,8 +144,8 @@ func pluralIf(s string, plural bool) string {
 }
 
 func localRelationshipName(f *ForeignKey, m1, m2 *Model) string {
-	if len(f.LocalColumns) == 1 {
-		c := f.LocalColumns[0]
+	if len(f.LocalFields) == 1 {
+		c := strings.Join(f.LocalFields[0], "_")
 		c = trimSuffixes(c)
 		return clean(c)
 	}
@@ -153,8 +153,8 @@ func localRelationshipName(f *ForeignKey, m1, m2 *Model) string {
 }
 
 func foreignRelationshipName(f *ForeignKey, m1, m2 *Model) string {
-	if len(f.LocalColumns) == 1 {
-		c := f.LocalColumns[0]
+	if len(f.LocalFields) == 1 {
+		c := strings.Join(f.LocalFields[0], "_")
 		c = trimSuffixes(c)
 		if strings.HasPrefix(m1.Name, m2.Name+"_") {
 			return clean(strings.TrimPrefix(m1.Name, m2.Name+"_"))

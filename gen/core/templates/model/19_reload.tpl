@@ -5,7 +5,7 @@
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *{{$modelNameSingular}}) Reload(ctx context.Context) error {
-	ret, err := Find{{$modelNameSingular}}(ctx, {{.Model.PrimaryKey.Columns | stringMap .StringFuncs.titleCaseIdentifier | prefixStringSlice "o." | join ", "}})
+	ret, err := Find{{$modelNameSingular}}(ctx {{range .Model.PrimaryKey.Fields}}, o.{{. | titleCasePath}}{{end}})
 	if err != nil {
 		return err
 	}

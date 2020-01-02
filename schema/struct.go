@@ -29,3 +29,12 @@ func (s *Struct) GoTypeNullField() string {
 }
 
 var _ Type = &Struct{}
+
+func (s *Struct) fieldByName(name string) (col *Field) {
+	for _, f := range s.Fields {
+		if f.Name == name {
+			return f
+		}
+	}
+	return nil
+}

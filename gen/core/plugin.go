@@ -50,13 +50,7 @@ func (p *Plugin) gen() {
 		log.Fatalf("Error creating output directory %s: %v", gen.Config.ModelsPackagePath, err)
 	}
 
-	var models []*schema.Model
-	for _, m := range gen.Config.Schema.Models {
-		models = append(models, m)
-	}
-
 	data := gen.BaseTemplateData()
-	data["Models"] = models
 	p.SingletonTemplates.ExecuteSingleton(data)
 
 	for _, t := range gen.Config.Schema.Types {
@@ -75,7 +69,6 @@ func (p *Plugin) gen() {
 	for _, model := range gen.Config.Schema.Models {
 		data := gen.BaseTemplateData()
 		data["Model"] = model
-		data["Models"] = models
 		p.ModelTemplates.Execute(data, model.Name+".gen.go")
 	}
 }

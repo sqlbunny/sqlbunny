@@ -104,7 +104,7 @@ func (d *defField) ModelRecursiveItem(ctx *ModelRecursiveContext) {
 		}
 	}
 
-	t := ctx.GetType(d.typeName, fmt.Sprintf("Model '%s' field '%s'", ctx.Model.Name, ctx.Prefix+d.name))
+	t := ctx.GetType(d.typeName, fmt.Sprintf("Model '%s' field '%s'", ctx.Model.Name, appendPath(ctx.Prefix, d.name).SQLName()))
 	if t == nil {
 		return
 	}
@@ -115,7 +115,7 @@ func (d *defField) ModelRecursiveItem(ctx *ModelRecursiveContext) {
 		ctx2 := &ModelRecursiveContext{
 			Context:       ctx.Context,
 			Model:         ctx.Model,
-			Prefix:        ctx.Prefix + d.name + ".",
+			Prefix:        appendPath(ctx.Prefix, d.name),
 			ForceNullable: ctx.ForceNullable || f.Nullable,
 		}
 		for _, i := range defStruct.items {

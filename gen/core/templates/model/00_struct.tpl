@@ -27,12 +27,12 @@ type {{$modelName}} struct {
 }
 
 var {{$modelName}}Columns = struct {
-	{{range $column := .Model.Columns -}}
-	{{titleCase $column.Name}} string
+	{{range $name, $column := .Model.Table.Columns -}}
+	{{titleCase $name}} string
 	{{end -}}
 }{
-	{{range $column := .Model.Columns -}}
-	{{titleCase $column.Name | }}: "{{$column.Name}}",
+	{{range $name, $column := .Model.Table.Columns -}}
+	{{titleCase $name | }}: "{{$name}}",
 	{{end -}}
 }
 

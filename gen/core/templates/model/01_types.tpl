@@ -1,10 +1,9 @@
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
-{{- $cols := .Model.Columns | columnNames -}}
 var (
-	{{$varNameSingular}}Columns               = []string{{"{"}}{{.Model.Columns | columnNames | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
-	{{$varNameSingular}}PrimaryKeyColumns     = []string{{"{"}}{{.Model.PrimaryKey.Columns | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
-	{{$varNameSingular}}NonPrimaryKeyColumns     = []string{{"{"}}{{.Model.PrimaryKey.Columns | setComplement $cols | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
+	{{$varNameSingular}}Columns               = []string{{"{"}}{{modelColumns      .Model | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
+	{{$varNameSingular}}PrimaryKeyColumns     = []string{{"{"}}{{modelPKColumns    .Model | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
+	{{$varNameSingular}}NonPrimaryKeyColumns  = []string{{"{"}}{{modelNonPKColumns .Model | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
 )
 
 type (

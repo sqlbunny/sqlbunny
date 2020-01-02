@@ -320,46 +320,6 @@ func CamelCase(name string) string {
 	return buf.String()
 }
 
-// TitleCaseIdentifier splits on dots and then titlecases each fragment.
-// map titleCase (split c ".")
-func TitleCaseIdentifier(id string) string {
-	nextDot := strings.Index(id, "__")
-	if nextDot < 0 {
-		return TitleCase(id)
-	}
-
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-	lastDot := 0
-	ln := len(id)
-	addDots := false
-
-	for i := 0; nextDot >= 0; i++ {
-		fragment := id[lastDot:nextDot]
-
-		titled := TitleCase(fragment)
-
-		if addDots {
-			buf.WriteByte('.')
-		}
-		buf.WriteString(titled)
-		addDots = true
-
-		if nextDot == ln {
-			break
-		}
-
-		lastDot = nextDot + 2
-		if nextDot = strings.Index(id[lastDot:], "__"); nextDot >= 0 {
-			nextDot += lastDot
-		} else {
-			nextDot = ln
-		}
-	}
-
-	return buf.String()
-}
-
 // MakeStringMap converts a map[string]string into the format:
 // "key": "value", "key": "value"
 func MakeStringMap(types map[string]string) string {
@@ -507,71 +467,6 @@ func WhereClauseRepeated(lq, rq string, start int, cols []string, count int) str
 		buf.WriteString(WhereClause(lq, rq, startIndex, cols))
 	}
 	buf.WriteByte(')')
-
-	return buf.String()
-}
-
-// JoinOnClause returns a join on clause
-func JoinOnClause(lq, rq string, table1 string, cols1 []string, table2 string, cols2 []string) string {
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-
-	for i := range cols1 {
-		c1 := cols1[i]
-		c2 := cols2[i]
-		buf.WriteString(fmt.Sprintf(
-			`%s%s%s.%s%s%s=%s%s%s.%s%s%s`,
-			lq, table1, rq, lq, c1, rq,
-			lq, table2, rq, lq, c2, rq,
-		))
-
-		if i < len(cols1)-1 {
-			buf.WriteString(" AND ")
-		}
-	}
-
-	return buf.String()
-}
-
-// JoinWhereClause returns a where clause explicitly specifying the table name
-func JoinWhereClause(lq, rq string, start int, table string, cols []string) string {
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-
-	for i, c := range cols {
-		if start != 0 {
-			buf.WriteString(fmt.Sprintf(`%s%s%s.%s%s%s=$%d`, lq, table, rq, lq, c, rq, start+i))
-		} else {
-			buf.WriteString(fmt.Sprintf(`%s%s%s.%s%s%s=?`, lq, table, rq, lq, c, rq))
-		}
-
-		if i < len(cols)-1 {
-			buf.WriteString(" AND ")
-		}
-	}
-
-	return buf.String()
-}
-
-// WhereClause returns the where clause using start as the $ flag index
-// For example, if start was 2 output would be: "colthing=$2 AND colstuff=$3"
-func WhereInClause(lq, rq string, table string, cols []string) string {
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-
-	if len(cols) != 1 {
-		buf.WriteString("(")
-	}
-	for i, c := range cols {
-		buf.WriteString(fmt.Sprintf(`%s%s%s.%s%s%s`, lq, table, rq, lq, c, rq))
-
-		if i < len(cols)-1 {
-			buf.WriteString(",")
-		}
-	}
-	if len(cols) != 1 {
-		buf.WriteString(")")
-	}
 
 	return buf.String()
 }

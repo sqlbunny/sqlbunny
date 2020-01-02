@@ -11,7 +11,7 @@ func (o *{{$modelNameSingular}}) Delete(ctx context.Context) error {
 	{{ hook . "before_delete" "o" .Model }}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), {{$varNameSingular}}PrimaryKeyMapping)
-	sql := "DELETE FROM {{$schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Columns}}{{end}}"
+	sql := "DELETE FROM {{$schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Fields}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Fields}}{{end}}"
 
 	_, err := bunny.Exec(ctx, sql, args...)
 	if err != nil {

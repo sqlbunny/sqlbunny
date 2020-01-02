@@ -10,7 +10,7 @@
 {{- $relationshipName := .Name | titleCase}}
 
 
-{{ $foreignModel := getModel $dot.Models .ForeignModel }}
+{{ $foreignModel := index $dot.Schema.Models .ForeignModel }}
 {{- $foreignModelName := .ForeignModel | titleCase}}
 {{- $foreignModelNameCamel := .ForeignModel | camelCase}}
 {{- $foreignModelNamePlural := .ForeignModel | plural | titleCase -}}
@@ -18,10 +18,10 @@
 func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignModelNameCamel}}Query) {
 	queryMods := []qm.QueryMod{
 		{{if .IsJoinModel -}}
-		qm.InnerJoin("{{.JoinModel | schemaModel }} ON {{joinOnClause $dot.LQ $dot.RQ .JoinModel .JoinForeignColumns .ForeignModel .ForeignColumns}}"),
-		qm.Where("{{joinWhereClause $dot.LQ $dot.RQ 0 .JoinModel .JoinLocalColumns}}" {{range .LocalColumns}}, o.{{. | titleCaseIdentifier}}{{end}}),
+		qm.InnerJoin("{{.JoinModel | schemaModel }} ON {{joinOnClause $dot.LQ $dot.RQ .JoinModel .JoinForeignFields .ForeignModel .ForeignFields}}"),
+		qm.Where("{{joinWhereClause $dot.LQ $dot.RQ 0 .JoinModel .JoinLocalFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
 		{{ else }}
-		qm.Where("{{whereClause $dot.LQ $dot.RQ 0 .ForeignColumns}}" {{range .LocalColumns}}, o.{{. | titleCaseIdentifier}}{{end}}),
+		qm.Where("{{whereClause $dot.LQ $dot.RQ 0 .ForeignFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
 		{{- end }}
 	}
 
@@ -38,32 +38,32 @@ func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignM
 // Load{{$relationshipName}} allows an eager lookup of values, cached into the
 // loaded structs of the objects.
 func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice []*{{$modelName}}) error {
-	args := make([]interface{}, len(slice)*{{len .LocalColumns}})
+	args := make([]interface{}, len(slice)*{{len .LocalFields}})
 	for i, obj := range slice {
 		if obj.R == nil {
 			obj.R = &{{$modelNameCamel}}R{}
 		}
-		{{ range $i, $c := .LocalColumns }}
-		args[i*{{len $relationship.LocalColumns}} + {{$i}}] = obj.{{$c | titleCaseIdentifier}}
+		{{ range $i, $c := .LocalFields }}
+		args[i*{{len $relationship.LocalFields}} + {{$i}}] = obj.{{$c | titleCasePath}}
 		{{ end }}
 	}
 
 	{{if .IsJoinModel }}
-	{{ $joinModel := getModel $dot.Models .JoinModel }}
+	{{ $joinModel := index $dot.Schema.Models .JoinModel }}
 	{{- $joinModelName := .JoinModel | titleCase}}
 	{{- $joinModelNameCamel := .JoinModel | camelCase}}
 
 	where := fmt.Sprintf(
-		"{{ whereInClause $dot.LQ $dot.RQ "j" .JoinLocalColumns }} in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, len(slice)*{{len .LocalColumns}}, 1, {{len .LocalColumns}}),
+		"{{ whereInClause $dot.LQ $dot.RQ "j" .JoinLocalFields }} in (%s)",
+		strmangle.Placeholders(dialect.IndexPlaceholders, len(slice)*{{len .LocalFields}}, 1, {{len .LocalFields}}),
 	)
 	query := NewQuery(
 		qm.Select(
-			{{ range $i, $c := $foreignModel.Columns -}}{{if $i}},{{end}} "f.{{$c.Name}}"{{end}},
-			{{ range $i, $c := .JoinLocalColumns -}}{{if $i}},{{end}} "j.{{$c}}"{{end}},
+			{{ range $i, $c := $foreignModel.Table.Columns -}}"f.{{$i}}",{{end}}
+			{{ range $i, $c := .JoinLocalFields -}}{{if $i}},{{end}} "j.{{$c}}"{{end}},
 		),
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
-		qm.InnerJoin("{{.JoinModel | schemaModel }} AS j ON {{joinOnClause $dot.LQ $dot.RQ "j" .JoinForeignColumns "f" .ForeignColumns}}"),
+		qm.InnerJoin("{{.JoinModel | schemaModel }} AS j ON {{joinOnClause $dot.LQ $dot.RQ "j" .JoinForeignFields "f" .ForeignFields}}"),
 		qm.Where(where, args...),
 	)
 	type joinStruct struct {
@@ -81,12 +81,12 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 
 	for _, local := range slice {
 		for _, joined := range resultSlice {
-			if {{ range $i, $lc := .LocalColumns -}}
+			if {{ range $i, $lc := .LocalFields -}}
 				{{- if $i}} && {{end}}
-				{{- $jc := index $relationship.JoinLocalColumns $i -}}
-				{{- $lcol := $model.GetColumn $lc -}}
-				{{- $jcol := $joinModel.GetColumn $jc -}}
-				{{doCompare (printf "local.%s" ($lc | titleCaseIdentifier)) (printf "joined.J.%s" ($jc | titleCaseIdentifier)) $lcol $jcol }}
+				{{- $jc := index $relationship.JoinLocalFields $i -}}
+				{{- $lcol := $model.FindField $lc -}}
+				{{- $jcol := $joinModel.FindField $jc -}}
+				{{doCompare (printf "local.%s" ($lc | titleCasePath)) (printf "joined.J.%s" ($jc | titleCasePath)) $lcol $jcol }}
 			{{- end }} {
 				{{if .ToMany}}
 				local.R.{{$relationshipName}} = append(local.R.{{$relationshipName}}, &joined.F)
@@ -98,8 +98,8 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 	}
 	{{else}}
 	where := fmt.Sprintf(
-		"{{ whereInClause $dot.LQ $dot.RQ "f" .ForeignColumns }} in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, len(slice)*{{len .LocalColumns}}, 1, {{len .LocalColumns}}),
+		"{{ whereInClause $dot.LQ $dot.RQ "f" .ForeignFields }} in (%s)",
+		strmangle.Placeholders(dialect.IndexPlaceholders, len(slice)*{{len .LocalFields}}, 1, {{len .LocalFields}}),
 	)
 	query := NewQuery(
 		qm.Select("f.*"),
@@ -120,12 +120,12 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if {{ range $i, $lc := .LocalColumns -}}
+			if {{ range $i, $lc := .LocalFields -}}
 				{{- if $i}} && {{end}}
-				{{- $fc := index $relationship.ForeignColumns $i -}}
-				{{- $lcol := $model.GetColumn $lc -}}
-				{{- $fcol := $foreignModel.GetColumn $fc -}}
-				{{doCompare (printf "local.%s" ($lc | titleCaseIdentifier)) (printf "foreign.%s" ($fc | titleCaseIdentifier)) $lcol $fcol }}
+				{{- $fc := index $relationship.ForeignFields $i -}}
+				{{- $lcol := $model.FindField $lc -}}
+				{{- $fcol := $foreignModel.FindField $fc -}}
+				{{doCompare (printf "local.%s" ($lc | titleCasePath)) (printf "foreign.%s" ($fc | titleCasePath)) $lcol $fcol }}
 			{{- end }} {
 				{{if .ToMany}}
 				local.R.{{$relationshipName}} = append(local.R.{{$relationshipName}}, foreign)

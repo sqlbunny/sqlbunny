@@ -13,12 +13,12 @@ type Relationship struct {
 	ToMany bool
 
 	// IsJoinModel indicates this relationship is through a join model.
-	// If IsJoinModel is true, len(LocalColumns) = len(JoinLocalColumns) and len(JoinForeignColumns) = len(ForeignColumns)
-	// If IsJoinModel is false, len(LocalColumns) = len(ForeignColumns)
-	IsJoinModel        bool
-	JoinModel          string
-	LocalColumns       []string
-	ForeignColumns     []string
-	JoinLocalColumns   []string
-	JoinForeignColumns []string
+	// If IsJoinModel is true, len(LocalFields) = len(JoinLocalFields) and len(JoinForeignFields) = len(ForeignFields)
+	// If IsJoinModel is false, len(LocalFields) = len(ForeignFields)
+	IsJoinModel       bool
+	JoinModel         string
+	LocalFields       []Path
+	ForeignFields     []Path
+	JoinLocalFields   []Path
+	JoinForeignFields []Path
 }
