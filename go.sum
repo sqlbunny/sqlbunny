@@ -28,7 +28,8 @@ github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnIn
 github.com/spf13/viper v1.3.2/go.mod h1:ZiWeW+zYFKm7srdB9IoDzzZXaJaI5eL9QjNiN/DMA2s=
 github.com/sqlbunny/errors v0.0.0-20190927201458-cf9913986328 h1:E5YZCd9IXSq/lM/yqtWs7M0DLkLhKpaB+vOtVDaJsf0=
 github.com/sqlbunny/errors v0.0.0-20190927201458-cf9913986328/go.mod h1:q09kWQOmbbE2SkkN+8K4qW1HCkwPPyakfLnUQGedwWg=
-github.com/sqlbunny/sqlbunny v0.0.0-20191022114851-4eeed22acab6/go.mod h1:VTaxCrj8/5+lqY4kshrcjo9GnxZiZuxhykkFLrfggkQ=
+github.com/sqlbunny/sqlschema v0.0.0-20200102171723-0240ac422151 h1:aUj8+T5fa5BHSUPZ1qiqlV19idoFMRpCKF2PknDxo4k=
+github.com/sqlbunny/sqlschema v0.0.0-20200102171723-0240ac422151/go.mod h1:4GlbxCxpZY/Zjmf/HCxo2cLuUHxY0WK93CQpd5110YY=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/volatiletech/inflect v0.0.0-20170731032912-e7201282ae8d h1:gI4/tqP6lCY5k6Sg+4k9qSoBXmPwG+xXgMpK7jivD4M=

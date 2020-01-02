@@ -1,9 +1,9 @@
 package migration
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 	"github.com/sqlbunny/sqlschema/operations"
@@ -31,22 +31,22 @@ func esc(s string) string {
 	return fmt.Sprintf("%#v", s)
 }
 
-func (m Migration) Dump(buf *bytes.Buffer) {
-	buf.WriteString("&migration.Migration {\n")
-	buf.WriteString(fmt.Sprintf("Name: %s,\n", esc(m.Name)))
-	buf.WriteString("Dependencies: []string{")
+func (m Migration) Dump(w io.Writer) {
+	fmt.Fprint(w, "&migration.Migration {\n")
+	fmt.Fprintf(w, "Name: %s,\n", esc(m.Name))
+	fmt.Fprint(w, "Dependencies: []string{")
 	for i, d := range m.Dependencies {
 		if i != 0 {
-			buf.WriteRune(',')
+			fmt.Fprint(w, ",")
 		}
-		buf.WriteString(esc(d))
+		fmt.Fprint(w, esc(d))
 	}
-	buf.WriteString("},\n")
-	buf.WriteString("Operations: []operations.Operation{\n")
+	fmt.Fprint(w, "},\n")
+	fmt.Fprint(w, "Operations: []operations.Operation{\n")
 	for _, op := range m.Operations {
-		op.Dump(buf)
-		buf.WriteString(",\n")
+		op.Dump(w)
+		fmt.Fprint(w, ",\n")
 	}
-	buf.WriteString("},\n")
-	buf.WriteString("}")
+	fmt.Fprint(w, "},\n")
+	fmt.Fprint(w, "}")
 }
