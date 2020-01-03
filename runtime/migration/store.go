@@ -43,6 +43,9 @@ func (s *Store) calcReverseDeps() map[string][]string {
 func (s *Store) validateApplied(applied map[string]struct{}) error {
 	for mn := range applied {
 		m := s.Migrations[mn]
+		if m == nil {
+			return errors.Errorf("Migration '%s' is applied in the database, but is not in the migration store", mn)
+		}
 		for _, dn := range m.Dependencies {
 			if _, ok := applied[dn]; !ok {
 				return errors.Errorf("Migration '%s' is applied, but its dependency '%s' is not", mn, dn)
