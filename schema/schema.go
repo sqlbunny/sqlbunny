@@ -146,8 +146,11 @@ func pluralIf(s string, plural bool) string {
 func localRelationshipName(f *ForeignKey, m1, m2 *Model) string {
 	if len(f.LocalFields) == 1 {
 		c := strings.Join(f.LocalFields[0], "_")
-		c = trimSuffixes(c)
-		return clean(c)
+		// If the local field is an identifier (like "id", "uuid"...) don't use it as relationship name.
+		if !isIdentifier(c) {
+			c = trimSuffixes(c)
+			return clean(c)
+		}
 	}
 	return clean(m2.Name)
 }
@@ -176,6 +179,7 @@ func clean(s string) string {
 	return strings.ReplaceAll(strings.Trim(s, "_"), "__", "_")
 }
 
+var identifiers = []string{"id", "uuid", "guid", "oid"}
 var identifierSuffixes = []string{"_id", "_uuid", "_guid", "_oid"}
 
 // trimSuffixes from the identifier
@@ -189,4 +193,14 @@ func trimSuffixes(str string) string {
 	}
 
 	return str
+}
+
+func isIdentifier(str string) bool {
+	for _, s := range identifiers {
+		if s == str {
+			return true
+		}
+	}
+
+	return false
 }
