@@ -43,12 +43,12 @@ func (o AlterTable) Dump(w io.Writer) {
 func (o AlterTable) Apply(s *schema.Schema) error {
 	t, ok := s.Tables[o.Name]
 	if !ok {
-		return fmt.Errorf("AlterTable on non-existing table: %s", o.Name)
+		return fmt.Errorf("no such table: %s", o.Name)
 	}
 	for _, op := range o.Ops {
 		err := op.Apply(s, t, o)
 		if err != nil {
-			return fmt.Errorf("AlterTable on table %s: %w", o.Name, err)
+			return fmt.Errorf("%T on table %s: %w", op, o.Name, err)
 		}
 	}
 	return nil

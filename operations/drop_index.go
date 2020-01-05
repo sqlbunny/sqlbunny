@@ -26,10 +26,10 @@ func (o DropIndex) Dump(w io.Writer) {
 func (o DropIndex) Apply(s *schema.Schema) error {
 	t, ok := s.Tables[o.Name]
 	if !ok {
-		return fmt.Errorf("DropIndex on non-existing table: %s", o.Name)
+		return fmt.Errorf("no such table: %s", o.Name)
 	}
 	if _, ok := t.Indexes[o.IndexName]; !ok {
-		return fmt.Errorf("DropIndex index doesn't exist: table %s, index %s ", o.Name, o.IndexName)
+		return fmt.Errorf("no such index: %s", o.IndexName)
 	}
 	delete(t.Indexes, o.IndexName)
 	return nil

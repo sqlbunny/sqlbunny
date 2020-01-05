@@ -28,10 +28,10 @@ func (o CreateIndex) Dump(w io.Writer) {
 func (o CreateIndex) Apply(s *schema.Schema) error {
 	t, ok := s.Tables[o.Name]
 	if !ok {
-		return fmt.Errorf("CreateIndex on non-existing table: %s", o.Name)
+		return fmt.Errorf("no such table: %s", o.Name)
 	}
 	if _, ok := t.Indexes[o.IndexName]; ok {
-		return fmt.Errorf("CreateIndex index already exists: table %s, index %s ", o.Name, o.IndexName)
+		return fmt.Errorf("index already exists: %s ", o.IndexName)
 	}
 	t.Indexes[o.IndexName] = &schema.Index{
 		Columns: o.Columns,

@@ -24,12 +24,12 @@ func (o RenameColumn) Dump(w io.Writer) {
 func (o RenameColumn) Apply(s *schema.Schema) error {
 	t, ok := s.Tables[o.Name]
 	if !ok {
-		return fmt.Errorf("RenameColumn on non-existing table: %s", o.Name)
+		return fmt.Errorf("no such table: %s", o.Name)
 	}
 
 	c, ok := t.Columns[o.OldColumnName]
 	if !ok {
-		return fmt.Errorf("RenameColumn non-existing: table %s, column %s", o.Name, o.OldColumnName)
+		return fmt.Errorf("no such column on table %s: %s", o.Name, o.OldColumnName)
 	}
 
 	delete(t.Columns, o.OldColumnName)

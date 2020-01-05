@@ -44,7 +44,7 @@ func (o AlterTableAddColumn) Dump(w io.Writer) {
 
 func (o AlterTableAddColumn) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.Columns[o.Name]; ok {
-		return fmt.Errorf("AlterTableAddColumn already-existing: column %s", o.Name)
+		return fmt.Errorf("column already exists: %s", o.Name)
 	}
 	t.Columns[o.Name] = &schema.Column{
 		Type:     o.Type,
@@ -68,7 +68,7 @@ func (o AlterTableDropColumn) Dump(w io.Writer) {
 
 func (o AlterTableDropColumn) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.Columns[o.Name]; !ok {
-		return fmt.Errorf("AlterTableDropColumn non-existing: column %s", o.Name)
+		return fmt.Errorf("no such column: %s", o.Name)
 	}
 	delete(t.Columns, o.Name)
 	return nil
@@ -90,7 +90,7 @@ func (o AlterTableCreatePrimaryKey) Dump(w io.Writer) {
 
 func (o AlterTableCreatePrimaryKey) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	if t.PrimaryKey != nil {
-		return fmt.Errorf("AlterTableCreatePrimaryKey on a model already with primary key: %s", ato.Name)
+		return fmt.Errorf("table already has a primary key")
 	}
 	t.PrimaryKey = &schema.PrimaryKey{
 		Columns: o.Columns,
@@ -111,7 +111,7 @@ func (o AlterTableDropPrimaryKey) Dump(w io.Writer) {
 
 func (o AlterTableDropPrimaryKey) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	if t.PrimaryKey == nil {
-		return fmt.Errorf("AlterTableDropPrimaryKey on a model already without primary key: %s", ato.Name)
+		return fmt.Errorf("table does not have a primary key")
 	}
 	t.PrimaryKey = nil
 	return nil
@@ -135,7 +135,7 @@ func (o AlterTableCreateUnique) Dump(w io.Writer) {
 
 func (o AlterTableCreateUnique) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.Uniques[o.Name]; ok {
-		return fmt.Errorf("AlterTableCreateUnique unique already exists: unique %s ", o.Name)
+		return fmt.Errorf("unique already exists: %s ", o.Name)
 	}
 	t.Uniques[o.Name] = &schema.Unique{
 		Columns: o.Columns,
@@ -159,7 +159,7 @@ func (o AlterTableDropUnique) Dump(w io.Writer) {
 
 func (o AlterTableDropUnique) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.Uniques[o.Name]; !ok {
-		return fmt.Errorf("AlterTableDropUnique unique doesn't exist: unique %s ", o.Name)
+		return fmt.Errorf("no such unique: %s ", o.Name)
 	}
 	delete(t.Uniques, o.Name)
 	return nil
@@ -187,10 +187,10 @@ func (o AlterTableCreateForeignKey) Dump(w io.Writer) {
 
 func (o AlterTableCreateForeignKey) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.ForeignKeys[o.Name]; ok {
-		return fmt.Errorf("AlterTableCreateForeignKey ForeignKey already exists: ForeignKey %s ", o.Name)
+		return fmt.Errorf("foreign key already exists: %s ", o.Name)
 	}
 	if len(o.Columns) != len(o.ForeignColumns) {
-		return fmt.Errorf("AlterTableCreateForeignKey lengths of Columns and ForeignColumns must match: ForeignKey %s ", o.Name)
+		return fmt.Errorf("lengths of Columns and ForeignColumns don't match: %s ", o.Name)
 	}
 	t.ForeignKeys[o.Name] = &schema.ForeignKey{
 		LocalColumns:   o.Columns,
@@ -216,7 +216,7 @@ func (o AlterTableDropForeignKey) Dump(w io.Writer) {
 
 func (o AlterTableDropForeignKey) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.ForeignKeys[o.Name]; !ok {
-		return fmt.Errorf("AlterTableDropForeignKey ForeignKey doesn't exist: ForeignKey %s ", o.Name)
+		return fmt.Errorf("no such foreign key: %s", o.Name)
 	}
 	delete(t.ForeignKeys, o.Name)
 	return nil
@@ -237,7 +237,7 @@ func (o AlterTableSetNotNull) Dump(w io.Writer) {
 func (o AlterTableSetNotNull) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
-		return fmt.Errorf("AlterTableSetNotNull column doesn't exist: column %s ", o.Name)
+		return fmt.Errorf("no such column: %s ", o.Name)
 	}
 	c.Nullable = false
 	return nil
@@ -258,7 +258,7 @@ func (o AlterTableSetNull) Dump(w io.Writer) {
 func (o AlterTableSetNull) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
-		return fmt.Errorf("AlterTableSetNull column doesn't exist: column %s ", o.Name)
+		return fmt.Errorf("no such column: %s ", o.Name)
 	}
 	c.Nullable = true
 	return nil
@@ -280,7 +280,7 @@ func (o AlterTableSetDefault) Dump(w io.Writer) {
 func (o AlterTableSetDefault) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
-		return fmt.Errorf("AlterTableSetDefault column doesn't exist: column %s ", o.Name)
+		return fmt.Errorf("no such column: %s ", o.Name)
 	}
 	c.Default = o.Default
 	return nil
@@ -301,7 +301,7 @@ func (o AlterTableDropDefault) Dump(w io.Writer) {
 func (o AlterTableDropDefault) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
-		return fmt.Errorf("AlterTableDropDefault column doesn't exist: column %s ", o.Name)
+		return fmt.Errorf("no such column: %s ", o.Name)
 	}
 	c.Default = ""
 	return nil
@@ -326,7 +326,7 @@ func (o AlterTableSetType) Dump(w io.Writer) {
 func (o AlterTableSetType) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
-		return fmt.Errorf("AlterTableSetType column doesn't exist: column %s ", o.Name)
+		return fmt.Errorf("no such column: %s ", o.Name)
 	}
 	c.Type = o.Type
 	return nil

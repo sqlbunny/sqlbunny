@@ -54,7 +54,7 @@ func (o CreateTable) Dump(w io.Writer) {
 
 func (o CreateTable) Apply(s *schema.Schema) error {
 	if _, ok := s.Tables[o.Name]; ok {
-		return fmt.Errorf("CreateTable on already-existing table: %s", o.Name)
+		return fmt.Errorf("table already exists: %s", o.Name)
 	}
 
 	t := schema.NewTable()

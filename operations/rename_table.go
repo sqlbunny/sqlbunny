@@ -26,10 +26,10 @@ func (o RenameTable) Dump(w io.Writer) {
 func (o RenameTable) Apply(s *schema.Schema) error {
 	t, ok := s.Tables[o.OldName]
 	if !ok {
-		return fmt.Errorf("RenameTable on non-existing table: %s", o.OldName)
+		return fmt.Errorf("no such table: %s", o.OldName)
 	}
 	if _, ok := s.Tables[o.NewName]; ok {
-		return fmt.Errorf("RenameTable new table name already exists: %s", o.NewName)
+		return fmt.Errorf("destination table already exists: %s", o.NewName)
 	}
 
 	delete(s.Tables, o.OldName)

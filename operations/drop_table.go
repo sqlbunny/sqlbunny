@@ -23,7 +23,7 @@ func (o DropTable) Dump(w io.Writer) {
 
 func (o DropTable) Apply(s *schema.Schema) error {
 	if _, ok := s.Tables[o.Name]; !ok {
-		return fmt.Errorf("DropTable on non-existing table: %s", o.Name)
+		return fmt.Errorf("no such table: %s", o.Name)
 	}
 	delete(s.Tables, o.Name)
 	return nil
