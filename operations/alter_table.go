@@ -9,13 +9,13 @@ import (
 )
 
 type AlterTable struct {
-	Name string
-	Ops  []AlterTableSuboperation
+	TableName string
+	Ops       []AlterTableSuboperation
 }
 
 func (o AlterTable) GetSQL() string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("ALTER TABLE \"%s\"\n", o.Name))
+	buf.WriteString(fmt.Sprintf("ALTER TABLE \"%s\"\n", o.TableName))
 	first := true
 	for _, op := range o.Ops {
 		if !first {
@@ -30,7 +30,7 @@ func (o AlterTable) GetSQL() string {
 
 func (o AlterTable) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.AlterTable {\n")
-	fmt.Fprint(w, "Name: "+esc(o.Name)+",\n")
+	fmt.Fprint(w, "TableName: "+esc(o.TableName)+",\n")
 	fmt.Fprint(w, "Ops: []operations.AlterTableSuboperation{\n")
 	for _, op := range o.Ops {
 		op.Dump(w)
@@ -41,14 +41,14 @@ func (o AlterTable) Dump(w io.Writer) {
 }
 
 func (o AlterTable) Apply(s *schema.Schema) error {
-	t, ok := s.Tables[o.Name]
+	t, ok := s.Tables[o.TableName]
 	if !ok {
-		return fmt.Errorf("no such table: %s", o.Name)
+		return fmt.Errorf("no such table: %s", o.TableName)
 	}
 	for _, op := range o.Ops {
 		err := op.Apply(s, t, o)
 		if err != nil {
-			return fmt.Errorf("%T on table %s: %w", op, o.Name, err)
+			return fmt.Errorf("%T on table %s: %w", op, o.TableName, err)
 		}
 	}
 	return nil

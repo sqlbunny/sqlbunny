@@ -78,8 +78,8 @@ func diffDropForeignKeys(ops []operations.Operation, s1, s2 *schema.Schema) []op
 
 		if len(subops) != 0 {
 			ops = append(ops, operations.AlterTable{
-				Name: tableName,
-				Ops:  subops,
+				TableName: tableName,
+				Ops:       subops,
 			})
 		}
 	}
@@ -102,8 +102,8 @@ func diffDropConstraints(ops []operations.Operation, s1, s2 *schema.Schema) []op
 
 		if len(subops) != 0 {
 			ops = append(ops, operations.AlterTable{
-				Name: tableName,
-				Ops:  subops,
+				TableName: tableName,
+				Ops:       subops,
 			})
 		}
 	}
@@ -115,7 +115,7 @@ func diffDropIndexes(ops []operations.Operation, s1, s2 *schema.Schema) []operat
 		for name, k := range t1.Indexes {
 			if !hasIndex(s2, tableName, name, k) {
 				ops = append(ops, operations.DropIndex{
-					Name:      tableName,
+					TableName: tableName,
 					IndexName: name,
 				})
 			}
@@ -128,7 +128,7 @@ func diffDropTables(ops []operations.Operation, s1, s2 *schema.Schema) []operati
 	for name := range s1.Tables {
 		if _, ok := s2.Tables[name]; !ok {
 			ops = append(ops, operations.DropTable{
-				Name: name,
+				TableName: name,
 			})
 		}
 	}
@@ -161,8 +161,8 @@ func diffAlterTables(ops []operations.Operation, s1, s2 *schema.Schema) []operat
 
 			if len(subops) != 0 {
 				ops = append(ops, operations.AlterTable{
-					Name: tableName,
-					Ops:  subops,
+					TableName: tableName,
+					Ops:       subops,
 				})
 			}
 
@@ -185,8 +185,8 @@ func diffCreateTables(ops []operations.Operation, s1, s2 *schema.Schema) []opera
 			}
 
 			ops = append(ops, operations.CreateTable{
-				Name:    tableName,
-				Columns: cols,
+				TableName: tableName,
+				Columns:   cols,
 			})
 		}
 	}
@@ -198,7 +198,7 @@ func diffCreateIndexes(ops []operations.Operation, s1, s2 *schema.Schema) []oper
 		for name, i2 := range t2.Indexes {
 			if !hasIndex(s1, tableName, name, i2) {
 				ops = append(ops, operations.CreateIndex{
-					Name:      tableName,
+					TableName: tableName,
 					IndexName: name,
 					Columns:   i2.Columns,
 				})
@@ -227,8 +227,8 @@ func diffCreateConstraints(ops []operations.Operation, s1, s2 *schema.Schema) []
 
 		if len(subops) != 0 {
 			ops = append(ops, operations.AlterTable{
-				Name: tableName,
-				Ops:  subops,
+				TableName: tableName,
+				Ops:       subops,
 			})
 		}
 	}
@@ -252,8 +252,8 @@ func diffCreateForeignKeys(ops []operations.Operation, s1, s2 *schema.Schema) []
 
 		if len(subops) != 0 {
 			ops = append(ops, operations.AlterTable{
-				Name: tableName,
-				Ops:  subops,
+				TableName: tableName,
+				Ops:       subops,
 			})
 		}
 	}

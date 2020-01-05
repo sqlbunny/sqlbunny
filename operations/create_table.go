@@ -15,13 +15,13 @@ type Column struct {
 	Nullable bool
 }
 
-func (o Column) Dump(w io.Writer) {
-	fmt.Fprintf(w, "operations.Column{Name: %s, Type: %s, Default: %s, Nullable: %s}", esc(o.Name), esc(o.Type), esc(o.Default), dumpBool(o.Nullable))
+func (c Column) Dump(w io.Writer) {
+	fmt.Fprintf(w, "operations.Column{Name: %s, Type: %s, Default: %s, Nullable: %s}", esc(c.Name), esc(c.Type), esc(c.Default), dumpBool(c.Nullable))
 }
 
 type CreateTable struct {
-	Name    string
-	Columns []Column
+	TableName string
+	Columns   []Column
 }
 
 func (o CreateTable) GetSQL() string {
@@ -37,12 +37,12 @@ func (o CreateTable) GetSQL() string {
 		}
 		x = append(x, fmt.Sprintf("    \"%s\" %s%s%s", c.Name, c.Type, n, d))
 	}
-	return fmt.Sprintf("CREATE TABLE \"%s\" (\n%s\n)", o.Name, strings.Join(x, ",\n"))
+	return fmt.Sprintf("CREATE TABLE \"%s\" (\n%s\n)", o.TableName, strings.Join(x, ",\n"))
 }
 
 func (o CreateTable) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.CreateTable {\n")
-	fmt.Fprint(w, "Name: "+esc(o.Name)+",\n")
+	fmt.Fprint(w, "TableName: "+esc(o.TableName)+",\n")
 	fmt.Fprint(w, "Columns: []operations.Column{\n")
 	for _, c := range o.Columns {
 		c.Dump(w)
@@ -53,8 +53,8 @@ func (o CreateTable) Dump(w io.Writer) {
 }
 
 func (o CreateTable) Apply(s *schema.Schema) error {
-	if _, ok := s.Tables[o.Name]; ok {
-		return fmt.Errorf("table already exists: %s", o.Name)
+	if _, ok := s.Tables[o.TableName]; ok {
+		return fmt.Errorf("table already exists: %s", o.TableName)
 	}
 
 	t := schema.NewTable()
@@ -65,7 +65,7 @@ func (o CreateTable) Apply(s *schema.Schema) error {
 			Default:  c.Default,
 		}
 	}
-	s.Tables[o.Name] = t
+	s.Tables[o.TableName] = t
 
 	return nil
 }

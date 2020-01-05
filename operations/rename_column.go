@@ -8,28 +8,28 @@ import (
 )
 
 type RenameColumn struct {
-	Name          string
+	TableName     string
 	OldColumnName string
 	NewColumnName string
 }
 
 func (o RenameColumn) GetSQL() string {
-	return fmt.Sprintf("ALTER TABLE \"%s\" RENAME COLUMN \"%s\" TO \"%s\"", o.Name, o.OldColumnName, o.NewColumnName)
+	return fmt.Sprintf("ALTER TABLE \"%s\" RENAME COLUMN \"%s\" TO \"%s\"", o.TableName, o.OldColumnName, o.NewColumnName)
 }
 
 func (o RenameColumn) Dump(w io.Writer) {
-	fmt.Fprint(w, "operations.RenameColumn {Name: "+esc(o.Name)+" OldColumnName: "+esc(o.OldColumnName)+", NewColumnName: "+esc(o.NewColumnName)+"}")
+	fmt.Fprint(w, "operations.RenameColumn {TableName: "+esc(o.TableName)+" OldColumnName: "+esc(o.OldColumnName)+", NewColumnName: "+esc(o.NewColumnName)+"}")
 }
 
 func (o RenameColumn) Apply(s *schema.Schema) error {
-	t, ok := s.Tables[o.Name]
+	t, ok := s.Tables[o.TableName]
 	if !ok {
-		return fmt.Errorf("no such table: %s", o.Name)
+		return fmt.Errorf("no such table: %s", o.TableName)
 	}
 
 	c, ok := t.Columns[o.OldColumnName]
 	if !ok {
-		return fmt.Errorf("no such column on table %s: %s", o.Name, o.OldColumnName)
+		return fmt.Errorf("no such column on table %s: %s", o.TableName, o.OldColumnName)
 	}
 
 	delete(t.Columns, o.OldColumnName)
@@ -67,7 +67,7 @@ func (o RenameColumn) Apply(s *schema.Schema) error {
 
 	for _, m2 := range s.Tables {
 		for _, fk := range m2.ForeignKeys {
-			if fk.ForeignTable == o.Name {
+			if fk.ForeignTable == o.TableName {
 				for _, fk := range m2.ForeignKeys {
 					for i := range fk.ForeignColumns {
 						if fk.ForeignColumns[i] == o.OldColumnName {

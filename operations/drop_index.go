@@ -8,7 +8,7 @@ import (
 )
 
 type DropIndex struct {
-	Name      string
+	TableName string
 	IndexName string
 }
 
@@ -18,15 +18,15 @@ func (o DropIndex) GetSQL() string {
 
 func (o DropIndex) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.DropIndex {\n")
-	fmt.Fprint(w, "Name: "+esc(o.Name)+",\n")
+	fmt.Fprint(w, "TableName: "+esc(o.TableName)+",\n")
 	fmt.Fprint(w, "IndexName: "+esc(o.IndexName)+",\n")
 	fmt.Fprint(w, "}")
 }
 
 func (o DropIndex) Apply(s *schema.Schema) error {
-	t, ok := s.Tables[o.Name]
+	t, ok := s.Tables[o.TableName]
 	if !ok {
-		return fmt.Errorf("no such table: %s", o.Name)
+		return fmt.Errorf("no such table: %s", o.TableName)
 	}
 	if _, ok := t.Indexes[o.IndexName]; !ok {
 		return fmt.Errorf("no such index: %s", o.IndexName)

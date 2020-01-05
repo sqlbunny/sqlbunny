@@ -79,7 +79,7 @@ type AlterTableCreatePrimaryKey struct {
 }
 
 func (o AlterTableCreatePrimaryKey) GetAlterTableSQL(ato *AlterTable) string {
-	return fmt.Sprintf("ADD CONSTRAINT \"%s_pkey\" PRIMARY KEY (%s)", ato.Name, columnList(o.Columns))
+	return fmt.Sprintf("ADD CONSTRAINT \"%s_pkey\" PRIMARY KEY (%s)", ato.TableName, columnList(o.Columns))
 }
 
 func (o AlterTableCreatePrimaryKey) Dump(w io.Writer) {
@@ -102,7 +102,7 @@ type AlterTableDropPrimaryKey struct {
 }
 
 func (o AlterTableDropPrimaryKey) GetAlterTableSQL(ato *AlterTable) string {
-	return fmt.Sprintf("DROP CONSTRAINT \"%s_pkey\"", ato.Name)
+	return fmt.Sprintf("DROP CONSTRAINT \"%s_pkey\"", ato.TableName)
 }
 
 func (o AlterTableDropPrimaryKey) Dump(w io.Writer) {
