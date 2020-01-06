@@ -5,9 +5,9 @@ import (
 	"github.com/sqlbunny/sqlschema/schema"
 )
 
-func ApplyMigration(m *migration.Migration, s *schema.Schema) error {
+func ApplyMigration(m *migration.Migration, d *schema.Database) error {
 	for _, o := range m.Operations {
-		if err := o.Apply(s); err != nil {
+		if err := o.Apply(d); err != nil {
 			return err
 		}
 	}

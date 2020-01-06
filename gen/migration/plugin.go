@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sanity-io/litter"
 	"github.com/spf13/cobra"
 	"github.com/sqlbunny/sqlbunny/gen"
 	"github.com/sqlbunny/sqlbunny/runtime/migration"
@@ -64,7 +65,7 @@ func (p *Plugin) cmdCheck(cmd *cobra.Command, args []string) {
 		log.Fatal("migrate.Plugin.Store is not set.")
 	}
 
-	s1 := schema.New()
+	s1 := schema.NewDatabase()
 	p.applyAll(s1)
 	s2 := gen.Config.Schema.SQLSchema()
 	ops := diff.Diff(s1, s2)
@@ -96,7 +97,7 @@ func (p *Plugin) cmdMerge(cmd *cobra.Command, args []string) {
 func (p *Plugin) cmdGen(cmd *cobra.Command, args []string) {
 	p.ensureStore()
 
-	s1 := schema.New()
+	s1 := schema.NewDatabase()
 	head := p.applyAll(s1)
 	s2 := gen.Config.Schema.SQLSchema()
 	ops := diff.Diff(s1, s2)
@@ -197,14 +198,14 @@ func (p *Plugin) writeMigration(m *migration.Migration) {
 	buf.WriteString("    \"github.com/sqlbunny/sqlschema/operations\"\n")
 	buf.WriteString(")\n")
 	buf.WriteString(fmt.Sprintf("func init() {\nStore.Register("))
-	m.Dump(&buf)
+	buf.WriteString(litter.Options{}.Sdump(m))
 	buf.WriteString(")\n}")
 
 	gen.WriteFile(p.PackagePath, migrationFile, buf.Bytes())
 }
 
 func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
-	s1 := schema.New()
+	s1 := schema.NewDatabase()
 	s2 := gen.Config.Schema.SQLSchema()
 	ops := diff.Diff(s1, s2)
 	if len(ops) == 0 {
@@ -217,7 +218,7 @@ func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
 	}
 }
 
-func (p *Plugin) applyAll(db *schema.Schema) string {
+func (p *Plugin) applyAll(db *schema.Database) string {
 	s := p.Store
 
 	if len(s.Migrations) == 0 {

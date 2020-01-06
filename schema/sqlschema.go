@@ -28,8 +28,10 @@ func makeName(model string, columns []Path, suffix string) string {
 	return fmt.Sprintf("%s___%s___%s", model, strings.Join(sqlNameAll(columns), "___"), suffix)
 }
 
-func (s *Schema) SQLSchema() *schema.Schema {
-	q := schema.New()
+func (s *Schema) SQLSchema() *schema.Database {
+	d := schema.NewDatabase()
+	q := schema.NewSchema()
+	d.Schemas[""] = q
 
 	for _, m := range s.Models {
 		t := schema.NewTable()
@@ -67,7 +69,7 @@ func (s *Schema) SQLSchema() *schema.Schema {
 		}
 	}
 
-	return q
+	return d
 }
 
 func doCalcFields(m *Model, t *schema.Table, f *Field, forceNullable bool, prefix Path) {
