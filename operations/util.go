@@ -5,6 +5,13 @@ import (
 	"fmt"
 )
 
+func sqlName(schema, name string) string {
+	if schema == "" {
+		return fmt.Sprintf("\"%s\"", name)
+	}
+	return fmt.Sprintf("\"%s\".\"%s\"", schema, name)
+}
+
 func esc(s string) string {
 	return fmt.Sprintf("%#v", s)
 }

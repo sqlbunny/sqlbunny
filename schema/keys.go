@@ -18,6 +18,7 @@ type Unique struct {
 // ForeignKey represents a foreign key constraint in a database
 type ForeignKey struct {
 	LocalColumns   []string
+	ForeignSchema  string
 	ForeignTable   string
 	ForeignColumns []string
 }

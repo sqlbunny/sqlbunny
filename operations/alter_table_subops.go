@@ -10,7 +10,7 @@ import (
 type AlterTableSuboperation interface {
 	GetAlterTableSQL(ato *AlterTable) string
 	Dump(w io.Writer)
-	Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error
+	Apply(d *schema.Database, t *schema.Table, ato AlterTable) error
 }
 
 type AlterTableAddColumn struct {
@@ -42,7 +42,7 @@ func (o AlterTableAddColumn) Dump(w io.Writer) {
 	fmt.Fprint(w, "}")
 }
 
-func (o AlterTableAddColumn) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableAddColumn) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.Columns[o.Name]; ok {
 		return fmt.Errorf("column already exists: %s", o.Name)
 	}
@@ -66,7 +66,7 @@ func (o AlterTableDropColumn) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.AlterTableDropColumn {Name: "+esc(o.Name)+"}")
 }
 
-func (o AlterTableDropColumn) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableDropColumn) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.Columns[o.Name]; !ok {
 		return fmt.Errorf("no such column: %s", o.Name)
 	}
@@ -88,7 +88,7 @@ func (o AlterTableCreatePrimaryKey) Dump(w io.Writer) {
 	fmt.Fprint(w, "}")
 }
 
-func (o AlterTableCreatePrimaryKey) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableCreatePrimaryKey) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	if t.PrimaryKey != nil {
 		return fmt.Errorf("table already has a primary key")
 	}
@@ -109,7 +109,7 @@ func (o AlterTableDropPrimaryKey) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.AlterTableDropPrimaryKey{}")
 }
 
-func (o AlterTableDropPrimaryKey) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableDropPrimaryKey) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	if t.PrimaryKey == nil {
 		return fmt.Errorf("table does not have a primary key")
 	}
@@ -133,7 +133,7 @@ func (o AlterTableCreateUnique) Dump(w io.Writer) {
 	fmt.Fprint(w, "}")
 }
 
-func (o AlterTableCreateUnique) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableCreateUnique) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.Uniques[o.Name]; ok {
 		return fmt.Errorf("unique already exists: %s ", o.Name)
 	}
@@ -157,7 +157,7 @@ func (o AlterTableDropUnique) Dump(w io.Writer) {
 	fmt.Fprint(w, "}")
 }
 
-func (o AlterTableDropUnique) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableDropUnique) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.Uniques[o.Name]; !ok {
 		return fmt.Errorf("no such unique: %s ", o.Name)
 	}
@@ -168,24 +168,26 @@ func (o AlterTableDropUnique) Apply(s *schema.Schema, t *schema.Table, ato Alter
 type AlterTableCreateForeignKey struct {
 	Name           string
 	Columns        []string
+	ForeignSchema  string
 	ForeignTable   string
 	ForeignColumns []string
 }
 
 func (o AlterTableCreateForeignKey) GetAlterTableSQL(ato *AlterTable) string {
-	return fmt.Sprintf("ADD CONSTRAINT \"%s\" FOREIGN KEY (%s) REFERENCES \"%s\" (%s)", o.Name, columnList(o.Columns), o.ForeignTable, columnList(o.ForeignColumns))
+	return fmt.Sprintf("ADD CONSTRAINT \"%s\" FOREIGN KEY (%s) REFERENCES %s (%s)", o.Name, columnList(o.Columns), sqlName(o.ForeignSchema, o.ForeignTable), columnList(o.ForeignColumns))
 }
 
 func (o AlterTableCreateForeignKey) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.AlterTableCreateForeignKey{\n")
 	fmt.Fprint(w, "Name: "+esc(o.Name)+",\n")
 	fmt.Fprint(w, "Columns: []string{"+columnList(o.Columns)+"},\n")
+	fmt.Fprint(w, "ForeignSchema: "+esc(o.ForeignSchema)+",\n")
 	fmt.Fprint(w, "ForeignTable: "+esc(o.ForeignTable)+",\n")
 	fmt.Fprint(w, "ForeignColumns: []string{"+columnList(o.ForeignColumns)+"},\n")
 	fmt.Fprint(w, "}")
 }
 
-func (o AlterTableCreateForeignKey) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableCreateForeignKey) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.ForeignKeys[o.Name]; ok {
 		return fmt.Errorf("foreign key already exists: %s ", o.Name)
 	}
@@ -214,7 +216,7 @@ func (o AlterTableDropForeignKey) Dump(w io.Writer) {
 	fmt.Fprint(w, "}")
 }
 
-func (o AlterTableDropForeignKey) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableDropForeignKey) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	if _, ok := t.ForeignKeys[o.Name]; !ok {
 		return fmt.Errorf("no such foreign key: %s", o.Name)
 	}
@@ -234,7 +236,7 @@ func (o AlterTableSetNotNull) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.AlterTableSetNotNull{Name: "+esc(o.Name)+"}")
 }
 
-func (o AlterTableSetNotNull) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableSetNotNull) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
 		return fmt.Errorf("no such column: %s ", o.Name)
@@ -255,7 +257,7 @@ func (o AlterTableSetNull) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.AlterTableSetNull{Name: "+esc(o.Name)+"}")
 }
 
-func (o AlterTableSetNull) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableSetNull) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
 		return fmt.Errorf("no such column: %s ", o.Name)
@@ -277,7 +279,7 @@ func (o AlterTableSetDefault) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.AlterTableSetDefault{Name: "+esc(o.Name)+", Default: "+esc(o.Default)+"}")
 }
 
-func (o AlterTableSetDefault) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableSetDefault) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
 		return fmt.Errorf("no such column: %s ", o.Name)
@@ -298,7 +300,7 @@ func (o AlterTableDropDefault) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.AlterTableDropDefault{Name: "+esc(o.Name)+"}")
 }
 
-func (o AlterTableDropDefault) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableDropDefault) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
 		return fmt.Errorf("no such column: %s ", o.Name)
@@ -323,7 +325,7 @@ func (o AlterTableSetType) Dump(w io.Writer) {
 	fmt.Fprint(w, "}")
 }
 
-func (o AlterTableSetType) Apply(s *schema.Schema, t *schema.Table, ato AlterTable) error {
+func (o AlterTableSetType) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
 	c, ok := t.Columns[o.Name]
 	if !ok {
 		return fmt.Errorf("no such column: %s ", o.Name)

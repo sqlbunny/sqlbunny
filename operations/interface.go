@@ -9,5 +9,5 @@ import (
 type Operation interface {
 	GetSQL() string
 	Dump(w io.Writer)
-	Apply(s *schema.Schema) error
+	Apply(d *schema.Database) error
 }

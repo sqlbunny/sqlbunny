@@ -21,7 +21,7 @@ func (o SQL) Dump(w io.Writer) {
 	fmt.Fprint(w, "}")
 }
 
-func (o SQL) Apply(s *schema.Schema) error {
+func (o SQL) Apply(d *schema.Database) error {
 	// do nothing.
 	return nil
 }

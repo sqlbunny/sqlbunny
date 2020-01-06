@@ -4,7 +4,7 @@ type Schema struct {
 	Tables map[string]*Table `json:"tables"`
 }
 
-func New() *Schema {
+func NewSchema() *Schema {
 	return &Schema{
 		Tables: make(map[string]*Table),
 	}

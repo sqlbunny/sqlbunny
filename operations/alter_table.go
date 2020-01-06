@@ -9,13 +9,14 @@ import (
 )
 
 type AlterTable struct {
-	TableName string
-	Ops       []AlterTableSuboperation
+	SchemaName string
+	TableName  string
+	Ops        []AlterTableSuboperation
 }
 
 func (o AlterTable) GetSQL() string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("ALTER TABLE \"%s\"\n", o.TableName))
+	buf.WriteString(fmt.Sprintf("ALTER TABLE %s\n", sqlName(o.SchemaName, o.TableName)))
 	first := true
 	for _, op := range o.Ops {
 		if !first {
@@ -30,6 +31,7 @@ func (o AlterTable) GetSQL() string {
 
 func (o AlterTable) Dump(w io.Writer) {
 	fmt.Fprint(w, "operations.AlterTable {\n")
+	fmt.Fprint(w, "SchemaName: "+esc(o.SchemaName)+",\n")
 	fmt.Fprint(w, "TableName: "+esc(o.TableName)+",\n")
 	fmt.Fprint(w, "Ops: []operations.AlterTableSuboperation{\n")
 	for _, op := range o.Ops {
@@ -40,13 +42,17 @@ func (o AlterTable) Dump(w io.Writer) {
 	fmt.Fprint(w, "}")
 }
 
-func (o AlterTable) Apply(s *schema.Schema) error {
+func (o AlterTable) Apply(d *schema.Database) error {
+	s, ok := d.Schemas[o.SchemaName]
+	if !ok {
+		return fmt.Errorf("no such schema: %s", o.SchemaName)
+	}
 	t, ok := s.Tables[o.TableName]
 	if !ok {
 		return fmt.Errorf("no such table: %s", o.TableName)
 	}
 	for _, op := range o.Ops {
-		err := op.Apply(s, t, o)
+		err := op.Apply(d, t, o)
 		if err != nil {
 			return fmt.Errorf("%T on table %s: %w", op, o.TableName, err)
 		}
