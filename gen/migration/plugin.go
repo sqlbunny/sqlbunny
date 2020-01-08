@@ -65,7 +65,7 @@ func (p *Plugin) cmdCheck(cmd *cobra.Command, args []string) {
 		log.Fatal("migrate.Plugin.Store is not set.")
 	}
 
-	s1 := schema.NewDatabase()
+	s1 := newDB()
 	p.applyAll(s1)
 	s2 := gen.Config.Schema.SQLSchema()
 	ops := diff.Diff(s1, s2)
@@ -97,7 +97,7 @@ func (p *Plugin) cmdMerge(cmd *cobra.Command, args []string) {
 func (p *Plugin) cmdGen(cmd *cobra.Command, args []string) {
 	p.ensureStore()
 
-	s1 := schema.NewDatabase()
+	s1 := newDB()
 	head := p.applyAll(s1)
 	s2 := gen.Config.Schema.SQLSchema()
 	ops := diff.Diff(s1, s2)
@@ -205,7 +205,7 @@ func (p *Plugin) writeMigration(m *migration.Migration) {
 }
 
 func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
-	s1 := schema.NewDatabase()
+	s1 := newDB()
 	s2 := gen.Config.Schema.SQLSchema()
 	ops := diff.Diff(s1, s2)
 	if len(ops) == 0 {
@@ -239,4 +239,10 @@ func (p *Plugin) applyAll(db *schema.Database) string {
 	}
 
 	return head
+}
+
+func newDB() *schema.Database {
+	d := schema.NewDatabase()
+	d.Schemas[""] = schema.NewSchema()
+	return d
 }

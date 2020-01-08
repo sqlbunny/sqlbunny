@@ -18,6 +18,7 @@ github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrk
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/sanity-io/litter v1.2.0 h1:DGJO0bxH/+C2EukzOSBmAlxmkhVMGqzvcx/rvySYw9M=
@@ -32,9 +33,10 @@ github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnIn
 github.com/spf13/viper v1.3.2/go.mod h1:ZiWeW+zYFKm7srdB9IoDzzZXaJaI5eL9QjNiN/DMA2s=
 github.com/sqlbunny/errors v0.0.0-20190927201458-cf9913986328 h1:E5YZCd9IXSq/lM/yqtWs7M0DLkLhKpaB+vOtVDaJsf0=
 github.com/sqlbunny/errors v0.0.0-20190927201458-cf9913986328/go.mod h1:q09kWQOmbbE2SkkN+8K4qW1HCkwPPyakfLnUQGedwWg=
-github.com/sqlbunny/sqlschema v0.0.0-20200102171723-0240ac422151 h1:aUj8+T5fa5BHSUPZ1qiqlV19idoFMRpCKF2PknDxo4k=
-github.com/sqlbunny/sqlschema v0.0.0-20200102171723-0240ac422151/go.mod h1:4GlbxCxpZY/Zjmf/HCxo2cLuUHxY0WK93CQpd5110YY=
+github.com/sqlbunny/sqlschema v0.0.0-20200106010312-30ff3295bbdf h1:xzh8U/8t0h++D5pkqAmAteCA9r1UmkSE8oZMxSUg7VA=
+github.com/sqlbunny/sqlschema v0.0.0-20200106010312-30ff3295bbdf/go.mod h1:4GlbxCxpZY/Zjmf/HCxo2cLuUHxY0WK93CQpd5110YY=
 github.com/stretchr/testify v0.0.0-20161117074351-18a02ba4a312/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
+github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/volatiletech/inflect v0.0.0-20170731032912-e7201282ae8d h1:gI4/tqP6lCY5k6Sg+4k9qSoBXmPwG+xXgMpK7jivD4M=
