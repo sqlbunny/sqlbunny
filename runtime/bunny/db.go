@@ -18,16 +18,16 @@ type DB interface {
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
-type key int
+type contextDBKeyType struct{}
 
-const dbKey key = 0
+var ContextDBKey = contextDBKeyType{}
 
 func ContextWithDB(ctx context.Context, db DB) context.Context {
-	return context.WithValue(ctx, dbKey, db)
+	return context.WithValue(ctx, ContextDBKey, db)
 }
 
 func DBFromContext(ctx context.Context) DB {
-	db, ok := ctx.Value(dbKey).(DB)
+	db, ok := ctx.Value(ContextDBKey).(DB)
 	if !ok {
 		panic("No database in the context")
 	}
