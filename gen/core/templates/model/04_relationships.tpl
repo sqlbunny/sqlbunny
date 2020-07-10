@@ -23,6 +23,10 @@ func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignM
 		{{ else }}
 		qm.Where("{{whereClause $dot.LQ $dot.RQ 0 .ForeignFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
 		{{- end }}
+		{{if .ForeignWhere -}}
+		{{- $schemaModel := .ForeignModel | schemaModel }}
+		qm.Where("{{replaceAll .ForeignWhere "$foreign" $schemaModel}}"),
+		{{- end }}
 	}
 
 	queryMods = append(queryMods, mods...)
@@ -65,6 +69,10 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
 		qm.InnerJoin("{{.JoinModel | schemaModel }} AS j ON {{joinOnClause $dot.LQ $dot.RQ "j" .JoinForeignFields "f" .ForeignFields}}"),
 		qm.Where(where, args...),
+		{{if .ForeignWhere -}}
+		{{- $schemaModel := .ForeignModel | schemaModel }}
+		qm.Where("{{replaceAll .ForeignWhere "f" $schemaModel}}"),
+		{{- end }}
 	)
 	type joinStruct struct {
 		F {{ $foreignModelName }} `bunny:"f.,bind"`
@@ -105,6 +113,10 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		qm.Select("f.*"),
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
 		qm.Where(where, args...),
+		{{if .ForeignWhere -}}
+		{{- $schemaModel := .ForeignModel | schemaModel }}
+		qm.Where("{{replaceAll .ForeignWhere "$foreign" "f"}}"),
+		{{- end }}
 	)
 
 	var resultSlice []*{{$foreignModelName}}

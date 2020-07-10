@@ -113,7 +113,8 @@ var templateStringMappers = map[string]func(string) string{
 // add a function pointer here.
 var TemplateFunctions = template.FuncMap{
 	// String ops
-	"quoteWrap": func(s string) string { return fmt.Sprintf(`"%s"`, s) },
+	"quoteWrap":  func(s string) string { return fmt.Sprintf(`"%s"`, s) },
+	"replaceAll": strings.ReplaceAll,
 
 	// Pluralization
 	"singular": strmangle.Singular,
