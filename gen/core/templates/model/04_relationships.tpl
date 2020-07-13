@@ -27,6 +27,9 @@ func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignM
 		{{- $schemaModel := .ForeignModel | schemaModel }}
 		qm.Where("{{replaceAll .ForeignWhere "$foreign" $schemaModel}}"),
 		{{- end }}
+		{{if .ForeignOrderBy -}}
+		qm.OrderBy("{{.ForeignOrderBy}}"),
+		{{- end }}
 	}
 
 	queryMods = append(queryMods, mods...)
@@ -73,6 +76,9 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		{{- $schemaModel := .ForeignModel | schemaModel }}
 		qm.Where("{{replaceAll .ForeignWhere "f" $schemaModel}}"),
 		{{- end }}
+		{{if .ForeignOrderBy -}}
+		qm.OrderBy("{{.ForeignOrderBy}}"),
+		{{- end }}
 	)
 	type joinStruct struct {
 		F {{ $foreignModelName }} `bunny:"f.,bind"`
@@ -116,6 +122,9 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		{{if .ForeignWhere -}}
 		{{- $schemaModel := .ForeignModel | schemaModel }}
 		qm.Where("{{replaceAll .ForeignWhere "$foreign" "f"}}"),
+		{{- end }}
+		{{if .ForeignOrderBy -}}
+		qm.OrderBy("{{.ForeignOrderBy}}"),
 		{{- end }}
 	)
 

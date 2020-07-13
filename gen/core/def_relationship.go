@@ -47,7 +47,8 @@ type DirectRelationship struct {
 	LocalFields   []string
 	ForeignFields []string
 
-	ForeignWhere string
+	ForeignWhere   string
+	ForeignOrderBy string
 }
 
 func (d DirectRelationship) ModelRelationshipItem(ctx *ModelRelationshipContext) {
@@ -56,4 +57,5 @@ func (d DirectRelationship) ModelRelationshipItem(ctx *ModelRelationshipContext)
 	ctx.Relationship.LocalFields = parsePathsPrefix(ctx, nil, d.LocalFields)
 	ctx.Relationship.ToMany = d.ToMany
 	ctx.Relationship.ForeignWhere = d.ForeignWhere
+	ctx.Relationship.ForeignOrderBy = d.ForeignOrderBy
 }
