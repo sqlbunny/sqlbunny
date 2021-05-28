@@ -115,10 +115,12 @@ func doAtomic(ctx context.Context, fn func(ctx context.Context) error, readOnly 
 }
 
 func shouldRetryTransaction(err error) bool {
-	err2 := errors.Unwrap(err)
-	if err2, ok := err2.(*pq.Error); ok {
-		n := err2.Code.Name()
-		if n == "serialization_failure" || n == "deadlock_detected" {
+	var pqerr *pq.Error
+	if errors.As(err, &pqerr) {
+		switch pqerr.Code {
+		case "40001": // serialization_failures
+			return true
+		case "40P01": // deadlock_detected
 			return true
 		}
 	}
