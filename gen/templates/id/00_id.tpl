@@ -68,6 +68,13 @@ func (id {{$modelName}}) Before(other {{$modelName}}) bool {
 	return false
 }
 
+// {{$modelName}}FromRaw creates an ID from its raw representation
+func {{$modelName}}FromRaw(id bunnyid.Raw) {{$modelName}} {
+	return {{$modelName}}{
+		raw: id,
+	}
+}
+
 // {{$modelName}}FromString reads an ID from its string representation
 func {{$modelName}}FromString(id string) ({{$modelName}}, error) {
 	i := &{{$modelName}}{}
