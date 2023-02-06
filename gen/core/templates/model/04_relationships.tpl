@@ -55,6 +55,10 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		{{ end }}
 	}
 
+	if len(args) == 0 {
+		return nil
+	}
+
 	{{if .IsJoinModel }}
 	{{ $joinModel := index $dot.Schema.Models .JoinModel }}
 	{{- $joinModelName := .JoinModel | titleCase}}
