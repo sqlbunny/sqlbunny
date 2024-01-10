@@ -6,7 +6,7 @@
 // No whitelist behavior: Without a whitelist, fields are inferred by the following rules:
 // - All fields without a default value are included (i.e. name, age)
 // - All fields with a default, but non-zero are included (i.e. health = 75)
-func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... string) error {
+func (o *{{$modelNameSingular}}) Insert(ctx context.Context, ignore_conflicts []string, whitelist ... string) error {
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
 	}
@@ -35,6 +35,11 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 		} else {
 			cache.query = "INSERT INTO {{$schemaModel}} DEFAULT VALUES"
 		}
+
+        if len(ignore_conflicts) > 0 {
+           ignored = strings.Join(ignore_conflicts, ",")
+           cache.query += fmt.Sprintf(" ON CONFLICT (%s) DO NOTHING", ignored)
+        }
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
