@@ -10,6 +10,14 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, ignore_conflicts []
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
 	}
+    o.InsertIgnore(ctx, [], whitelist)
+}
+
+
+func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignore_conflicts []string, whitelist ... string) error {
+	if o == nil {
+		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
+	}
 
 	var err error
 
@@ -57,6 +65,6 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, ignore_conflicts []
 	}
 
 	{{ hook . "after_insert" "o" .Model }}
-	
+
 	return nil
 }
