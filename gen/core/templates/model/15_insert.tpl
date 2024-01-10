@@ -10,6 +10,14 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
 	}
+    return o.InsertIgnore(ctx, []string{}, whitelist...)
+}
+
+
+func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflicts []string, whitelist ... string) error {
+	if o == nil {
+		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
+	}
 
 	var err error
 
@@ -19,7 +27,7 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 		whitelist = {{$varNameSingular}}Columns
 	}
 
-	key := makeCacheKey(whitelist)
+	key := makeCacheKey(append(whitelist, ignoreConflicts...))
 	{{$varNameSingular}}InsertCacheMut.RLock()
 	cache, cached := {{$varNameSingular}}InsertCache[key]
 	{{$varNameSingular}}InsertCacheMut.RUnlock()
@@ -35,6 +43,11 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 		} else {
 			cache.query = "INSERT INTO {{$schemaModel}} DEFAULT VALUES"
 		}
+
+        if len(ignoreConflicts) > 0 {
+           ignored := strings.Join(ignoreConflicts, ",")
+           cache.query += fmt.Sprintf(" ON CONFLICT (%s) DO NOTHING", ignored)
+        }
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -52,6 +65,6 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 	}
 
 	{{ hook . "after_insert" "o" .Model }}
-	
+
 	return nil
 }
