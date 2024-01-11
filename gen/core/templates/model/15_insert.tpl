@@ -10,11 +10,11 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
 	}
-    return o.InsertIgnore(ctx, []string{}, whitelist...)
+    return o.InsertIgnore(ctx, "", whitelist...)
 }
 
 
-func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflicts []string, whitelist ... string) error {
+func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflictCondition string, whitelist ... string) error {
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
 	}
@@ -27,7 +27,7 @@ func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflic
 		whitelist = {{$varNameSingular}}Columns
 	}
 
-	key := makeCacheKey(append(whitelist, ignoreConflicts...))
+	key := makeCacheKey(append(whitelist, ignoreConflictCondition))
 	{{$varNameSingular}}InsertCacheMut.RLock()
 	cache, cached := {{$varNameSingular}}InsertCache[key]
 	{{$varNameSingular}}InsertCacheMut.RUnlock()
@@ -44,9 +44,8 @@ func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflic
 			cache.query = "INSERT INTO {{$schemaModel}} DEFAULT VALUES"
 		}
 
-        if len(ignoreConflicts) > 0 {
-           ignored := strings.Join(ignoreConflicts, ",")
-           cache.query += fmt.Sprintf(" ON CONFLICT (%s) DO NOTHING", ignored)
+        if len(ignoreConflictCondition) > 0 {
+           cache.query += fmt.Sprintf(" ON CONFLICT %s DO NOTHING", ignoreConflictCondition)
         }
 	}
 
