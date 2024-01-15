@@ -36,6 +36,19 @@ func getApplied(ctx context.Context) (map[string]struct{}, error) {
 	return applied, nil
 }
 
+func (s *Store) ValidateMigrated(ctx context.Context) error {
+	applied, err := getApplied(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = s.validateMigrated(applied)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Store) Run(ctx context.Context) error {
 	var count int64
 	if err := bunny.QueryRow(ctx, checkMigrationsTableSQL).Scan(&count); err != nil {
