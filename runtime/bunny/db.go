@@ -123,24 +123,6 @@ func shouldRetryTransaction(err error) bool {
 	return false
 }
 
-// rollbackOnPanic rolls the passed transaction back if the code in the calling
-// function panics. This is needed in order to not leak transactions in case
-// of panic.
-func rollbackOnPanic(ctx context.Context, tx *txNode, begin time.Time) {
-	if err := recover(); err != nil {
-		logger.LogRollback(ctx, RollbackLogInfo{
-			Duration: time.Since(begin),
-			Err:      fmt.Errorf("panic %v", err),
-		})
-
-		err2 := tx.Rollback()
-		if err2 != nil {
-			panic(err2)
-		}
-		panic(err)
-	}
-}
-
 type txNode struct {
 	dbTx     *sql.Tx
 	parent   *txNode
@@ -213,7 +195,7 @@ type beginTxer interface {
 // Transaction invokes the passed function in the context of a managed SQL
 // transaction.  Any errors returned from
 // the user-supplied function are returned from this function.
-func doTransaction(ctx context.Context, fn func(ctx context.Context) error, readOnly bool) error {
+func doTransaction(ctx context.Context, fn func(ctx context.Context) error, readOnly bool) (err error) {
 	ctx = logger.LogBegin(ctx, BeginLogInfo{
 		ReadOnly: readOnly,
 	})
@@ -255,34 +237,43 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, read
 
 	ctx2 := ContextWithDB(ctx, node)
 
+	committed := false
 	// Since the user-provided function might panic, ensure the transaction
 	// releases all resources.
-	defer rollbackOnPanic(ctx, node, begin)
-
-	err := fn(ctx2)
-	if err != nil {
-		retErr := errors.Errorf("tx function returned error: %w", err)
-		logger.LogRollback(ctx, RollbackLogInfo{
-			Duration: time.Since(begin),
-			Err:      retErr,
-		})
-		err2 := node.Rollback()
-		if err2 != nil {
-			panic(err2)
+	defer func() {
+		if committed {
+			return
 		}
-		return retErr
+
+		if p := recover(); p != nil {
+			logger.LogRollback(ctx, RollbackLogInfo{
+				Duration: time.Since(begin),
+				Err:      fmt.Errorf("panic %v", p),
+			})
+			_ = node.Rollback() // just ignore errors here.
+			panic(p)            // re-throw panic.
+		} else if err != nil {
+			logger.LogRollback(ctx, RollbackLogInfo{
+				Duration: time.Since(begin),
+				Err:      err,
+			})
+			err2 := node.Rollback()
+			if err2 != nil {
+				err = errors.Errorf("tx failed: %w, and rollback failed: %w", err, err2)
+			}
+		}
+	}()
+
+	err = fn(ctx2)
+	if err != nil {
+		return errors.Errorf("tx function returned error: %w", err)
 	}
 
 	err = node.Commit()
 	if err != nil {
-		retErr := errors.Errorf("commit: %w", err)
-		logger.LogRollback(ctx, RollbackLogInfo{
-			Duration: time.Since(begin),
-			Err:      retErr,
-		})
-		_ = node.Rollback()
-		return retErr
+		return errors.Errorf("commit: %w", err)
 	}
+	committed = true
 	logger.LogCommit(ctx, CommitLogInfo{
 		Duration: time.Since(begin),
 	})
