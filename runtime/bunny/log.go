@@ -32,8 +32,15 @@ type Logger interface {
 	LogRollback(ctx context.Context, info RollbackLogInfo)
 }
 
-var logger Logger
+var logger Logger = &dummyLogger{}
 
 func SetLogger(l Logger) {
 	logger = l
 }
+
+type dummyLogger struct{}
+
+func (l *dummyLogger) LogQuery(ctx context.Context, info QueryLogInfo)                 {}
+func (l *dummyLogger) LogBegin(ctx context.Context, info BeginLogInfo) context.Context { return ctx }
+func (l *dummyLogger) LogCommit(ctx context.Context, info CommitLogInfo)               {}
+func (l *dummyLogger) LogRollback(ctx context.Context, info RollbackLogInfo)           {}
