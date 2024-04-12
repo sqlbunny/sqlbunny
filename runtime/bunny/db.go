@@ -38,6 +38,7 @@ func Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, e
 	db := DBFromContext(ctx)
 	begin := time.Now()
 	res, err := db.ExecContext(ctx, query, args...)
+	err = errors.WithStack(err)
 	logger.LogQuery(ctx, QueryLogInfo{
 		Query:    query,
 		Duration: time.Since(begin),
@@ -51,6 +52,7 @@ func Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, e
 	db := DBFromContext(ctx)
 	begin := time.Now()
 	res, err := db.QueryContext(ctx, query, args...)
+	err = errors.WithStack(err)
 	logger.LogQuery(ctx, QueryLogInfo{
 		Query:    query,
 		Duration: time.Since(begin),
