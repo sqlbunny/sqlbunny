@@ -226,6 +226,10 @@ func bind(rows *sql.Rows, obj interface{}, structType, sliceType reflect.Type, b
 		}
 	}
 
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
 	if bkind == kindStruct && !foundOne {
 		return sql.ErrNoRows
 	}
