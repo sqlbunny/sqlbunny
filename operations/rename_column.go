@@ -2,7 +2,6 @@ package operations
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
@@ -16,14 +15,6 @@ type RenameColumn struct {
 
 func (o RenameColumn) GetSQL() string {
 	return fmt.Sprintf("ALTER TABLE %s RENAME COLUMN \"%s\" TO \"%s\"", sqlName(o.SchemaName, o.TableName), o.OldColumnName, o.NewColumnName)
-}
-
-func (o RenameColumn) Dump(w io.Writer) {
-	fmt.Fprint(w, "operations.RenameColumn {\n")
-	fmt.Fprint(w, "SchemaName: "+esc(o.SchemaName)+",\n")
-	fmt.Fprint(w, "OldColumnName: "+esc(o.OldColumnName)+",\n")
-	fmt.Fprint(w, "NewColumnName: "+esc(o.NewColumnName)+",\n")
-	fmt.Fprint(w, "}")
 }
 
 func (o RenameColumn) Apply(d *schema.Database) error {

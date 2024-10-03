@@ -2,7 +2,6 @@ package operations
 
 import (
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/sqlbunny/sqlschema/schema"
@@ -13,10 +12,6 @@ type Column struct {
 	Type     string
 	Default  string
 	Nullable bool
-}
-
-func (c Column) Dump(w io.Writer) {
-	fmt.Fprintf(w, "operations.Column{Name: %s, Type: %s, Default: %s, Nullable: %s}", esc(c.Name), esc(c.Type), esc(c.Default), dumpBool(c.Nullable))
 }
 
 type CreateTable struct {
@@ -39,19 +34,6 @@ func (o CreateTable) GetSQL() string {
 		x = append(x, fmt.Sprintf("    \"%s\" %s%s%s", c.Name, c.Type, n, d))
 	}
 	return fmt.Sprintf("CREATE TABLE %s (\n%s\n)", sqlName(o.SchemaName, o.TableName), strings.Join(x, ",\n"))
-}
-
-func (o CreateTable) Dump(w io.Writer) {
-	fmt.Fprint(w, "operations.CreateTable {\n")
-	fmt.Fprint(w, "SchemaName: "+esc(o.SchemaName)+",\n")
-	fmt.Fprint(w, "TableName: "+esc(o.TableName)+",\n")
-	fmt.Fprint(w, "Columns: []operations.Column{\n")
-	for _, c := range o.Columns {
-		c.Dump(w)
-		fmt.Fprint(w, ",\n")
-	}
-	fmt.Fprint(w, "},\n")
-	fmt.Fprint(w, "}")
 }
 
 func (o CreateTable) Apply(d *schema.Database) error {

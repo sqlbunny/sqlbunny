@@ -3,7 +3,6 @@ package operations
 import (
 	"bytes"
 	"fmt"
-	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
@@ -28,21 +27,6 @@ func (o CreateIndex) GetSQL() string {
 		fmt.Fprintf(&buf, " WHERE %s", o.Where)
 	}
 	return buf.String()
-}
-
-func (o CreateIndex) Dump(w io.Writer) {
-	fmt.Fprint(w, "operations.CreateIndex {\n")
-	fmt.Fprint(w, "SchemaName: "+esc(o.SchemaName)+",\n")
-	fmt.Fprint(w, "TableName: "+esc(o.TableName)+",\n")
-	fmt.Fprint(w, "IndexName: "+esc(o.IndexName)+",\n")
-	fmt.Fprint(w, "Columns: []string{"+columnList(o.Columns)+"},\n")
-	if o.Method != "" {
-		fmt.Fprint(w, "Method: "+esc(o.Method)+",\n")
-	}
-	if o.Where != "" {
-		fmt.Fprint(w, "Where: "+esc(o.Where)+",\n")
-	}
-	fmt.Fprint(w, "}")
 }
 
 func (o CreateIndex) Apply(d *schema.Database) error {

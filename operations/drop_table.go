@@ -2,7 +2,6 @@ package operations
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/sqlbunny/sqlschema/schema"
 )
@@ -15,14 +14,6 @@ type DropTable struct {
 func (o DropTable) GetSQL() string {
 	return fmt.Sprintf("DROP TABLE %s", sqlName(o.SchemaName, o.TableName))
 }
-
-func (o DropTable) Dump(w io.Writer) {
-	fmt.Fprint(w, "operations.DropTable {\n")
-	fmt.Fprint(w, "SchemaName: "+esc(o.SchemaName)+",\n")
-	fmt.Fprint(w, "TableName: "+esc(o.TableName)+",\n")
-	fmt.Fprint(w, "}")
-}
-
 func (o DropTable) Apply(d *schema.Database) error {
 	s, ok := d.Schemas[o.SchemaName]
 	if !ok {
