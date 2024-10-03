@@ -7,7 +7,9 @@ type PrimaryKey struct {
 
 // Index represents an index in a database
 type Index struct {
-	Columns []string
+	Columns []string // Index columns. Order matters.
+	Method  string   // Index method. If empty, default is btree.
+	Where   string   // Index where clause, for partial indexes. If empty, no where clause is in effect.
 }
 
 // Unique represents a unique constraint in a database

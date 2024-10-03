@@ -268,6 +268,8 @@ func diffCreateIndexes(ops []operations.Operation, d1, d2 *schema.Database) []op
 						TableName:  tableName,
 						IndexName:  name,
 						Columns:    i2.Columns,
+						Method:     i2.Method,
+						Where:      i2.Where,
 					})
 				}
 			}
