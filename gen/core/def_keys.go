@@ -43,7 +43,19 @@ var PrimaryKey defFieldPrimaryKey = func(names ...string) defModelPrimaryKey {
 }
 
 type defModelIndex struct {
-	names []string
+	names  []string
+	where  string
+	method string
+}
+
+func (d defModelIndex) Where(val string) defModelIndex {
+	d.where = val
+	return d
+}
+
+func (d defModelIndex) Method(val string) defModelIndex {
+	d.method = val
+	return d
 }
 
 func (d defModelIndex) ModelItem(ctx *ModelContext)   {}
@@ -53,6 +65,8 @@ func (d defModelIndex) ModelRecursiveItem(ctx *ModelRecursiveContext) {
 	m := ctx.Model
 	m.Indexes = append(m.Indexes, &schema.Index{
 		Fields: parsePathsPrefix(ctx, ctx.Prefix, d.names),
+		Method: d.method,
+		Where:  d.where,
 	})
 }
 

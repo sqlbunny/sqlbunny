@@ -33,8 +33,8 @@ github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnIn
 github.com/spf13/viper v1.3.2/go.mod h1:ZiWeW+zYFKm7srdB9IoDzzZXaJaI5eL9QjNiN/DMA2s=
 github.com/sqlbunny/errors v0.0.0-20190927201458-cf9913986328 h1:E5YZCd9IXSq/lM/yqtWs7M0DLkLhKpaB+vOtVDaJsf0=
 github.com/sqlbunny/errors v0.0.0-20190927201458-cf9913986328/go.mod h1:q09kWQOmbbE2SkkN+8K4qW1HCkwPPyakfLnUQGedwWg=
-github.com/sqlbunny/sqlschema v0.0.0-20200106010312-30ff3295bbdf h1:xzh8U/8t0h++D5pkqAmAteCA9r1UmkSE8oZMxSUg7VA=
-github.com/sqlbunny/sqlschema v0.0.0-20200106010312-30ff3295bbdf/go.mod h1:4GlbxCxpZY/Zjmf/HCxo2cLuUHxY0WK93CQpd5110YY=
+github.com/sqlbunny/sqlschema v0.0.0-20241003152524-056dac31d21c h1:8xfLoDaDMZTtvo6qRzHricAzYqQWk5VG/+CNRey9QLc=
+github.com/sqlbunny/sqlschema v0.0.0-20241003152524-056dac31d21c/go.mod h1:4GlbxCxpZY/Zjmf/HCxo2cLuUHxY0WK93CQpd5110YY=
 github.com/stretchr/testify v0.0.0-20161117074351-18a02ba4a312/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=

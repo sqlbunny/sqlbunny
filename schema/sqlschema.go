@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -28,6 +30,30 @@ func makeName(model string, columns []Path, suffix string) string {
 	return fmt.Sprintf("%s___%s___%s", model, strings.Join(sqlNameAll(columns), "___"), suffix)
 }
 
+func makeHash(vals ...string) string {
+	allEmpty := true
+	for _, s := range vals {
+		if s != "" {
+			allEmpty = false
+			break
+		}
+	}
+	if allEmpty {
+		return ""
+	}
+
+	h := sha256.New()
+	for _, s := range vals {
+		hh := sha256.Sum256([]byte(s))
+		h.Write(hh[:])
+	}
+	s := h.Sum(nil)
+
+	// 4 underscores because the name can have triple underscores,
+	// and we don't want the hash to be able to collide with a column name.
+	return "____" + hex.EncodeToString(s[:4])
+}
+
 func (s *Schema) SQLSchema() *schema.Database {
 	d := schema.NewDatabase()
 	q := schema.NewSchema()
@@ -49,8 +75,10 @@ func (s *Schema) SQLSchema() *schema.Database {
 		}
 
 		for _, f := range m.Indexes {
-			t.Indexes[makeName(m.Name, f.Fields, "idx")] = &schema.Index{
+			t.Indexes[makeName(m.Name, f.Fields, "idx")+makeHash(f.Method, f.Where)] = &schema.Index{
 				Columns: sqlNameAll(f.Fields),
+				Method:  f.Method,
+				Where:   f.Where,
 			}
 		}
 
