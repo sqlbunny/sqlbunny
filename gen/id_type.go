@@ -1,7 +1,9 @@
 package bunnyid
 
-import "github.com/sqlbunny/sqlbunny/runtime/strmangle"
-import "github.com/sqlbunny/sqlbunny/schema"
+import (
+	"github.com/sqlbunny/sqlbunny/runtime/strmangle"
+	"github.com/sqlbunny/sqlbunny/schema"
+)
 
 type IDType struct {
 	Name   string
@@ -33,6 +35,6 @@ func (t *IDType) GoTypeNullField() string {
 func (t *IDType) SQLType() schema.SQLType {
 	return schema.SQLType{
 		Type:      "bytea",
-		ZeroValue: "'\\x000000000000'",
+		ZeroValue: "'\\x000000000000000000000000'",
 	}
 }
