@@ -116,7 +116,7 @@ func processAstError(err error, src []byte) error {
 
 func removeUnusedImports(src []byte) ([]byte, error) {
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, "", src, 0)
+	f, err := parser.ParseFile(fset, "", src, parser.ParseComments)
 	if err != nil {
 		return nil, processAstError(err, src)
 	}
