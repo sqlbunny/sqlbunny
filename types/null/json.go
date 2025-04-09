@@ -41,7 +41,7 @@ func JSONFromPtr(b *[]byte) JSON {
 // Unmarshal will unmarshal your JSON stored in
 // your JSON object and store the result in the
 // value pointed to by dest.
-func (j JSON) Unmarshal(dest interface{}) error {
+func (j JSON) Unmarshal(dest any) error {
 	if dest == nil {
 		return errors.New("destination is nil, not a valid pointer to an object")
 	}
@@ -91,7 +91,7 @@ func (j *JSON) UnmarshalText(text []byte) error {
 
 // Marshal will marshal the passed in object,
 // and store it in the JSON member on the JSON object.
-func (j *JSON) Marshal(obj interface{}) error {
+func (j *JSON) Marshal(obj any) error {
 	res, err := json.Marshal(obj)
 	if err != nil {
 		return err
@@ -139,7 +139,7 @@ func (j JSON) IsZero() bool {
 }
 
 // Scan implements the Scanner interface.
-func (j *JSON) Scan(value interface{}) error {
+func (j *JSON) Scan(value any) error {
 	if value == nil {
 		j.JSON, j.Valid = []byte{}, false
 		return nil

@@ -46,7 +46,7 @@ func (l loadRelationshipState) buildKey(depth int) string {
 // obj should be one of:
 // *[]*struct or *struct
 // bkind should reflect what kind of thing it is above
-func eagerLoad(ctx context.Context, toLoad []string, obj interface{}, bkind bindKind) error {
+func eagerLoad(ctx context.Context, toLoad []string, obj any, bkind bindKind) error {
 	state := loadRelationshipState{
 		ctx:    ctx,
 		loaded: map[string]struct{}{},
@@ -77,7 +77,7 @@ func eagerLoad(ctx context.Context, toLoad []string, obj interface{}, bkind bind
 // loadRelationships dynamically calls the template generated eager load
 // functions of the form:
 //
-//   func (l ModelL) LoadRelationshipName(ctx context.Context, slice []*Model) error
+//	func (l ModelL) LoadRelationshipName(ctx context.Context, slice []*Model) error
 //
 // The arguments to this function are:
 //   - l is not used, and it is always passed the zero value.
@@ -86,11 +86,12 @@ func eagerLoad(ctx context.Context, toLoad []string, obj interface{}, bkind bind
 //
 // We start with a normal select before eager loading anything: select * from a;
 // Then we start eager loading things, it can be represented by a DAG
-//          a1, a2           select id, a_id from b where id in (a1, a2)
-//         / |    \
-//        b1 b2    b3        select id, b_id from c where id in (b2, b3, b4)
-//       /   | \     \
-//      c1  c2 c3    c4
+//
+//	    a1, a2           select id, a_id from b where id in (a1, a2)
+//	   / |    \
+//	  b1 b2    b3        select id, b_id from c where id in (b2, b3, b4)
+//	 /   | \     \
+//	c1  c2 c3    c4
 //
 // That's to say that we descend the graph of relationships, and at each level
 // we gather all the things up we want to load into, load them, and then move
@@ -167,9 +168,9 @@ func (l loadRelationshipState) callLoadFunction(depth int, loadingFrom reflect.V
 //
 // For example when loadingFrom is [parent1, parent2]
 //
-//   parent1 -> child1
-//          \-> child2
-//   parent2 -> child3
+//	parent1 -> child1
+//	       \-> child2
+//	parent2 -> child3
 //
 // This should return [child1, child2, child3]
 func collectLoaded(key string, loadingFrom reflect.Value) (reflect.Value, error) {

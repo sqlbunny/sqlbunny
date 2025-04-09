@@ -53,7 +53,7 @@ const (
 //     of the inner fields.
 //   - If the ",null:valid_column_name" option is specified in addition to ",bind", the SQL boolean column
 //     "valid_column_name" is used to tell whether the nested struct is valid (not null) or not (null).
-func Bind(rows *sql.Rows, obj interface{}) error {
+func Bind(rows *sql.Rows, obj any) error {
 	structType, sliceType, singular, err := bindChecks(obj)
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func Bind(rows *sql.Rows, obj interface{}) error {
 // result into the passed in object pointer
 //
 // See documentation for bunny.Bind()
-func (q *Query) Bind(ctx context.Context, obj interface{}) error {
+func (q *Query) Bind(ctx context.Context, obj any) error {
 	structType, sliceType, bkind, err := bindChecks(obj)
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (q *Query) Bind(ctx context.Context, obj interface{}) error {
 
 // bindChecks resolves information about the bind target, and errors if it's not an object
 // we can bind to.
-func bindChecks(obj interface{}) (structType reflect.Type, sliceType reflect.Type, bkind bindKind, err error) {
+func bindChecks(obj any) (structType reflect.Type, sliceType reflect.Type, bkind bindKind, err error) {
 	typ := reflect.TypeOf(obj)
 	kind := typ.Kind()
 
@@ -143,7 +143,7 @@ func bindChecks(obj interface{}) (structType reflect.Type, sliceType reflect.Typ
 	}
 }
 
-func bind(rows *sql.Rows, obj interface{}, structType, sliceType reflect.Type, bkind bindKind) error {
+func bind(rows *sql.Rows, obj any, structType, sliceType reflect.Type, bkind bindKind) error {
 	cols, err := rows.Columns()
 	if err != nil {
 		return errors.Errorf("bind failed to get field names: %w", err)
@@ -199,7 +199,7 @@ func bind(rows *sql.Rows, obj interface{}, structType, sliceType reflect.Type, b
 
 		foundOne = true
 		var newStruct reflect.Value
-		var pointers []interface{}
+		var pointers []any
 
 		switch bkind {
 		case kindStruct:
@@ -266,8 +266,8 @@ ColLoop:
 
 // PtrsFromMapping expects to be passed an addressable struct and a mapping
 // of where to find things. It pulls the pointers out referred to by the mapping.
-func PtrsFromMapping(val reflect.Value, mapping []MappedField) []interface{} {
-	ptrs := make([]interface{}, len(mapping))
+func PtrsFromMapping(val reflect.Value, mapping []MappedField) []any {
+	ptrs := make([]any, len(mapping))
 	for i, m := range mapping {
 		ptrs[i] = ptrFromMapping(val, m, true)
 	}
@@ -276,8 +276,8 @@ func PtrsFromMapping(val reflect.Value, mapping []MappedField) []interface{} {
 
 // ValuesFromMapping expects to be passed an addressable struct and a mapping
 // of where to find things. It pulls the pointers out referred to by the mapping.
-func ValuesFromMapping(val reflect.Value, mapping []MappedField) []interface{} {
-	ptrs := make([]interface{}, len(mapping))
+func ValuesFromMapping(val reflect.Value, mapping []MappedField) []any {
+	ptrs := make([]any, len(mapping))
 	for i, m := range mapping {
 		ptrs[i] = ptrFromMapping(val, m, false)
 	}
@@ -285,11 +285,11 @@ func ValuesFromMapping(val reflect.Value, mapping []MappedField) []interface{} {
 }
 
 type ignoreNullScan struct {
-	dest interface{}
+	dest any
 }
 
 // Scan implements the Scanner interface.
-func (v *ignoreNullScan) Scan(value interface{}) error {
+func (v *ignoreNullScan) Scan(value any) error {
 	if value == nil {
 		return convert.AssignNil(v.dest)
 	}
@@ -298,16 +298,16 @@ func (v *ignoreNullScan) Scan(value interface{}) error {
 
 // ptrFromMapping expects to be passed an addressable struct that it's looking
 // for things on.
-func ptrFromMapping(val reflect.Value, mapping MappedField, addressOf bool) interface{} {
+func ptrFromMapping(val reflect.Value, mapping MappedField, addressOf bool) any {
 	if mapping.Path == 0 {
-		var ignored interface{}
+		var ignored any
 		return &ignored
 	}
 
 	if !addressOf && mapping.ParentValid != nil {
 		valid := ptrFromMapping(val, *mapping.ParentValid, false)
 		if valid != true {
-			var nothing interface{}
+			var nothing any
 			return &nothing
 		}
 	}
@@ -339,7 +339,7 @@ func ptrFromMapping(val reflect.Value, mapping MappedField, addressOf bool) inte
 		if val.Kind() == reflect.Ptr {
 			val = reflect.Indirect(val)
 			if !val.IsValid() {
-				var nothing interface{}
+				var nothing any
 				return reflect.ValueOf(&nothing)
 			}
 		}

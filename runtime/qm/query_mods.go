@@ -13,7 +13,7 @@ func Apply(q *queries.Query, mods ...QueryMod) {
 }
 
 // SQL allows you to execute a plain SQL statement
-func SQL(sql string, args ...interface{}) QueryMod {
+func SQL(sql string, args ...any) QueryMod {
 	return func(q *queries.Query) {
 		queries.SetSQL(q, sql, args...)
 	}
@@ -31,7 +31,7 @@ func Load(relationships ...string) QueryMod {
 }
 
 // InnerJoin on another model
-func InnerJoin(clause string, args ...interface{}) QueryMod {
+func InnerJoin(clause string, args ...any) QueryMod {
 	return func(q *queries.Query) {
 		queries.AppendInnerJoin(q, clause, args...)
 	}
@@ -45,7 +45,7 @@ func Select(fields ...string) QueryMod {
 }
 
 // Where allows you to specify a where clause for your statement
-func Where(clause string, args ...interface{}) QueryMod {
+func Where(clause string, args ...any) QueryMod {
 	return func(q *queries.Query) {
 		queries.AppendWhere(q, clause, args...)
 	}
@@ -53,7 +53,7 @@ func Where(clause string, args ...interface{}) QueryMod {
 
 // WhereIn allows you to specify a "x IN (set)" clause for your where statement
 // Example clauses: "field in ?", "(field1,field2) in ?"
-func WhereIn(clause string, args ...interface{}) QueryMod {
+func WhereIn(clause string, args ...any) QueryMod {
 	return func(q *queries.Query) {
 		queries.AppendIn(q, clause, args...)
 	}
@@ -74,7 +74,7 @@ func OrderBy(clause string) QueryMod {
 }
 
 // Having allows you to specify a having clause for your statement
-func Having(clause string, args ...interface{}) QueryMod {
+func Having(clause string, args ...any) QueryMod {
 	return func(q *queries.Query) {
 		queries.AppendHaving(q, clause, args...)
 	}

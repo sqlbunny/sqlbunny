@@ -3,7 +3,7 @@
 sqlbunny is a Go ORM based on code generation.
 
 ## Features
-- Statically typed, fast generated code. No `interface{}`!
+- Statically typed, fast generated code. No `any`!
 - Postgres fully supported, MySQL and others coming soon.
 - Automatic migration generation (diffing the current migrations with the defined models)
 - Relationship helper functions 

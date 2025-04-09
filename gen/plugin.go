@@ -16,7 +16,7 @@ type Configer interface {
 	BunnyConfig(c *ConfigStruct)
 }
 
-type HookFunc func(buf *bytes.Buffer, data map[string]interface{}, args ...interface{})
+type HookFunc func(buf *bytes.Buffer, data map[string]any, args ...any)
 
 var (
 	genFuncs  []func()
@@ -35,7 +35,7 @@ func OnHook(name string, f HookFunc) {
 	hookFuncs[name] = append(hookFuncs[name], f)
 }
 
-func hook(data map[string]interface{}, name string, args ...interface{}) string {
+func hook(data map[string]any, name string, args ...any) string {
 	var buf bytes.Buffer
 	for _, f := range hookFuncs[name] {
 		f(&buf, data, args...)

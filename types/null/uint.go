@@ -105,7 +105,7 @@ func (u Uint) IsZero() bool {
 }
 
 // Scan implements the Scanner interface.
-func (u *Uint) Scan(value interface{}) error {
+func (u *Uint) Scan(value any) error {
 	if value == nil {
 		u.Uint, u.Valid = 0, false
 		return nil

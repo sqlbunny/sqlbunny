@@ -83,7 +83,7 @@ func TestAppendWhere(t *testing.T) {
 		t.Errorf("args wrong: %#v", q.where)
 	}
 
-	q.where = []where{{clause: expect, args: []interface{}{5, 3}}}
+	q.where = []where{{clause: expect, args: []any{5, 3}}}
 	if q.where[0].clause != expect {
 		t.Errorf("Expected %s, got %v", expect, q.where)
 	}
@@ -124,7 +124,7 @@ func TestAppendIn(t *testing.T) {
 		t.Errorf("args wrong: %#v", q.in)
 	}
 
-	q.in = []in{{clause: expect, args: []interface{}{5, 3}}}
+	q.in = []in{{clause: expect, args: []any{5, 3}}}
 	if q.in[0].clause != expect {
 		t.Errorf("Expected %s, got %v", expect, q.in)
 	}
@@ -198,7 +198,7 @@ func TestAppendHaving(t *testing.T) {
 		t.Errorf("Expected %v, got %v %v", 10, q.having[0].args[0], q.having[1].args[0])
 	}
 
-	q.having = []having{{clause: expect, args: []interface{}{10}}}
+	q.having = []having{{clause: expect, args: []any{10}}}
 	if len(q.having) != 1 && (q.having[0].clause != expect || q.having[0].args[0] != 10) {
 		t.Errorf("Expected %s, got %s %v", expect, q.having[0], q.having[0].args[0])
 	}
@@ -248,7 +248,7 @@ func TestSetUpdate(t *testing.T) {
 	t.Parallel()
 
 	q := &Query{}
-	SetUpdate(q, map[string]interface{}{"test": 5})
+	SetUpdate(q, map[string]any{"test": 5})
 
 	if q.update["test"] != 5 {
 		t.Errorf("Wrong update, got %v", q.update)
@@ -333,7 +333,7 @@ func TestAppendInnerJoin(t *testing.T) {
 
 	q.joins = []join{{kind: JoinInner,
 		clause: "thing=$1 AND stuff=$2",
-		args:   []interface{}{2, 5},
+		args:   []any{2, 5},
 	}}
 
 	if len(q.joins) != 1 {

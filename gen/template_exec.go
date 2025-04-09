@@ -15,13 +15,13 @@ var (
 	templateByteBufferInner = &bytes.Buffer{}
 )
 
-func (t *TemplateList) ExecuteBuf(data map[string]interface{}, buf *bytes.Buffer) {
+func (t *TemplateList) ExecuteBuf(data map[string]any, buf *bytes.Buffer) {
 	for _, tplName := range t.Templates() {
 		executeTemplate(buf, t.Template, tplName, data)
 	}
 }
 
-func (t *TemplateList) Execute(data map[string]interface{}, filename string) {
+func (t *TemplateList) Execute(data map[string]any, filename string) {
 	resetImports()
 	innerOut := templateByteBufferInner
 	innerOut.Reset()
@@ -41,7 +41,7 @@ func (t *TemplateList) Execute(data map[string]interface{}, filename string) {
 	WriteFile(Config.ModelsPackagePath, filename, out.Bytes())
 }
 
-func (t *TemplateList) ExecuteSingleton(data map[string]interface{}) {
+func (t *TemplateList) ExecuteSingleton(data map[string]any) {
 	out := templateByteBuffer
 	for _, tplName := range t.Templates() {
 		out.Reset()
@@ -60,7 +60,7 @@ func (t *TemplateList) ExecuteSingleton(data map[string]interface{}) {
 
 // executeTemplate takes a template and returns the output of the template
 // execution.
-func executeTemplate(buf *bytes.Buffer, t *template.Template, name string, data interface{}) {
+func executeTemplate(buf *bytes.Buffer, t *template.Template, name string, data any) {
 	if err := t.ExecuteTemplate(buf, name, data); err != nil {
 		log.Fatalf("failed to execute template %s: %v", name, err)
 	}

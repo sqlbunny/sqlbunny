@@ -344,7 +344,7 @@ func TestValuesFromMapping(t *testing.T) {
 	if got := v[3].(int); got != 0 {
 		t.Error("nested pointer was wrong:", got)
 	}
-	if got := *v[4].(*interface{}); got != nil {
+	if got := *v[4].(*any); got != nil {
 		t.Error("nil pointer was not be ignored:", got)
 	}
 }
@@ -452,7 +452,7 @@ func TestBindChecks(t *testing.T) {
 	var tests = []struct {
 		BKind bindKind
 		Fail  bool
-		Obj   interface{}
+		Obj   any
 	}{
 		{BKind: kindStruct, Fail: false, Obj: &useless{}},
 		{BKind: kindSliceStruct, Fail: false, Obj: &[]useless{}},

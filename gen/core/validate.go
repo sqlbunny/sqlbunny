@@ -42,7 +42,7 @@ func buildSchema(items []gen.ConfigItem) (*schema.Schema, error) {
 }
 
 type Context interface {
-	AddError(message string, args ...interface{})
+	AddError(message string, args ...any)
 }
 
 func parseIdentifier(ctx Context, s string) {

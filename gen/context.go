@@ -19,11 +19,11 @@ func (q taskQueue) Len() int           { return len(q) }
 func (q taskQueue) Swap(i, j int)      { q[i], q[j] = q[j], q[i] }
 func (q taskQueue) Less(i, j int) bool { return q[i].order < q[j].order }
 
-func (q *taskQueue) Push(x interface{}) {
+func (q *taskQueue) Push(x any) {
 	*q = append(*q, x.(task))
 }
 
-func (q *taskQueue) Pop() interface{} {
+func (q *taskQueue) Pop() any {
 	old := *q
 	n := len(old)
 	item := old[n-1]
@@ -38,7 +38,7 @@ type Context struct {
 	queue  taskQueue
 }
 
-func (ctx *Context) AddError(message string, args ...interface{}) {
+func (ctx *Context) AddError(message string, args ...any) {
 	ctx.errors = append(ctx.errors, fmt.Errorf(message, args...))
 }
 

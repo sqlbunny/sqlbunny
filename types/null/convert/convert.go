@@ -22,7 +22,7 @@ var errNilPtr = errors.New("destination pointer is nil") // embedded in descript
 // Assign copies to dest the value in src, converting it if possible.
 // An error is returned if the copy would result in loss of information.
 // dest should be a pointer type.
-func Assign(dest, src interface{}) error {
+func Assign(dest, src any) error {
 	// Common cases, without reflect.
 	switch s := src.(type) {
 	case string:
@@ -54,7 +54,7 @@ func Assign(dest, src interface{}) error {
 			}
 			*d = string(s)
 			return nil
-		case *interface{}:
+		case *any:
 			if d == nil {
 				return errNilPtr
 			}
@@ -96,7 +96,7 @@ func Assign(dest, src interface{}) error {
 		}
 	case nil:
 		switch d := dest.(type) {
-		case *interface{}:
+		case *any:
 			if d == nil {
 				return errNilPtr
 			}
@@ -148,7 +148,7 @@ func Assign(dest, src interface{}) error {
 			*d = bv.(bool)
 		}
 		return err
-	case *interface{}:
+	case *any:
 		*d = src
 		return nil
 	}
@@ -241,7 +241,7 @@ func Assign(dest, src interface{}) error {
 
 // AssignNil tries to assign the nil or zero value to dest.
 // dest should be a pointer type.
-func AssignNil(dest interface{}) error {
+func AssignNil(dest any) error {
 	if scanner, ok := dest.(sql.Scanner); ok {
 		return scanner.Scan(nil)
 	}
@@ -275,7 +275,7 @@ func cloneBytes(b []byte) []byte {
 	return c
 }
 
-func asString(src interface{}) string {
+func asString(src any) string {
 	switch v := src.(type) {
 	case string:
 		return v

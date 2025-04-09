@@ -5,7 +5,7 @@ import (
 )
 
 // M type is for providing fields and field values to UpdateAll.
-type M map[string]interface{}
+type M map[string]any
 
 type insertCache struct {
 	query        string

@@ -24,7 +24,7 @@ type Query struct {
 	rawSQL     rawSQL
 	load       []string
 	delete     bool
-	update     map[string]interface{}
+	update     map[string]any
 	selectCols []string
 	count      bool
 	from       []string
@@ -58,32 +58,32 @@ type Dialect struct {
 
 type where struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 type in struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 type having struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 type rawSQL struct {
 	sql  string
-	args []interface{}
+	args []any
 }
 
 type join struct {
 	kind   joinKind
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Raw makes a raw query, usually for use with bind
-func Raw(query string, args ...interface{}) *Query {
+func Raw(query string, args ...any) *Query {
 	return &Query{
 		rawSQL: rawSQL{
 			sql:  query,
@@ -116,7 +116,7 @@ func SetDialect(q *Query, dialect *Dialect) {
 }
 
 // SetSQL on the query.
-func SetSQL(q *Query, sql string, args ...interface{}) {
+func SetSQL(q *Query, sql string, args ...any) {
 	q.rawSQL = rawSQL{sql: sql, args: args}
 }
 
@@ -166,7 +166,7 @@ func SetFor(q *Query, clause string) {
 }
 
 // SetUpdate on the query.
-func SetUpdate(q *Query, cols map[string]interface{}) {
+func SetUpdate(q *Query, cols map[string]any) {
 	q.update = cols
 }
 
@@ -186,22 +186,22 @@ func SetFrom(q *Query, from ...string) {
 }
 
 // AppendInnerJoin on the query.
-func AppendInnerJoin(q *Query, clause string, args ...interface{}) {
+func AppendInnerJoin(q *Query, clause string, args ...any) {
 	q.joins = append(q.joins, join{clause: clause, kind: JoinInner, args: args})
 }
 
 // AppendHaving on the query.
-func AppendHaving(q *Query, clause string, args ...interface{}) {
+func AppendHaving(q *Query, clause string, args ...any) {
 	q.having = append(q.having, having{clause: clause, args: args})
 }
 
 // AppendWhere on the query.
-func AppendWhere(q *Query, clause string, args ...interface{}) {
+func AppendWhere(q *Query, clause string, args ...any) {
 	q.where = append(q.where, where{clause: clause, args: args})
 }
 
 // AppendIn on the query.
-func AppendIn(q *Query, clause string, args ...interface{}) {
+func AppendIn(q *Query, clause string, args ...any) {
 	q.in = append(q.in, in{clause: clause, args: args})
 }
 

@@ -65,7 +65,6 @@ func (s *Store) validateMigrated(applied map[string]struct{}) error {
 	return nil
 }
 
-
 func (s *Store) FindHeads() []string {
 	notHeads := make(map[string]struct{})
 	for _, m := range s.Migrations {

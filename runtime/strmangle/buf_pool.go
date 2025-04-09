@@ -9,7 +9,7 @@ var bufPool = sync.Pool{
 	New: newBuffer,
 }
 
-func newBuffer() interface{} {
+func newBuffer() any {
 	return &bytes.Buffer{}
 }
 

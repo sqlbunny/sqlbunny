@@ -22,7 +22,7 @@ func (o *{{$modelNameSingular}}Slice) ReloadAll(ctx context.Context) error {
 	}
 
 	{{$varNamePlural}} := {{$modelNameSingular}}Slice{}
-	var args []interface{}
+	var args []any
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), {{$varNameSingular}}PrimaryKeyMapping)
 		args = append(args, pkeyArgs...)

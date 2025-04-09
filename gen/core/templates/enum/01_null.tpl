@@ -98,7 +98,7 @@ func (u Null{{$enumName}}) IsZero() bool {
 }
 
 // Scan implements the Scanner interface.
-func (u *Null{{$enumName}}) Scan(value interface{}) error {
+func (u *Null{{$enumName}}) Scan(value any) error {
 	if value == nil {
         var z {{$enumName}}
 		u.{{$enumName}}, u.Valid = z, false

@@ -7,7 +7,7 @@ import (
 
 type QueryLogInfo struct {
 	Query    string
-	Args     []interface{}
+	Args     []any
 	Duration time.Duration
 	Err      error
 }

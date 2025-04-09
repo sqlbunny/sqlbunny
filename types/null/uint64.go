@@ -103,7 +103,7 @@ func (u Uint64) IsZero() bool {
 }
 
 // Scan implements the Scanner interface.
-func (u *Uint64) Scan(value interface{}) error {
+func (u *Uint64) Scan(value any) error {
 	if value == nil {
 		u.Uint64, u.Valid = 0, false
 		return nil

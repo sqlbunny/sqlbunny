@@ -111,7 +111,7 @@ func (i Int16) IsZero() bool {
 }
 
 // Scan implements the Scanner interface.
-func (i *Int16) Scan(value interface{}) error {
+func (i *Int16) Scan(value any) error {
 	if value == nil {
 		i.Int16, i.Valid = 0, false
 		return nil

@@ -15,9 +15,9 @@ var (
 	rgxInClause   = regexp.MustCompile(`^(?i)(.*[\s|\)|\?])IN([\s|\(|\?].*)$`)
 )
 
-func buildQuery(q *Query) (string, []interface{}) {
+func buildQuery(q *Query) (string, []any) {
 	var buf *bytes.Buffer
-	var args []interface{}
+	var args []any
 
 	switch {
 	case len(q.rawSQL.sql) != 0:
@@ -40,9 +40,9 @@ func buildQuery(q *Query) (string, []interface{}) {
 	return bufStr, args
 }
 
-func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
+func buildSelectQuery(q *Query) (*bytes.Buffer, []any) {
 	buf := strmangle.GetBuffer()
-	var args []interface{}
+	var args []any
 
 	buf.WriteString("SELECT ")
 
@@ -116,8 +116,8 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
 	return buf, args
 }
 
-func buildDeleteQuery(q *Query) (*bytes.Buffer, []interface{}) {
-	var args []interface{}
+func buildDeleteQuery(q *Query) (*bytes.Buffer, []any) {
+	var args []any
 	buf := strmangle.GetBuffer()
 
 	buf.WriteString("DELETE FROM ")
@@ -142,14 +142,14 @@ func buildDeleteQuery(q *Query) (*bytes.Buffer, []interface{}) {
 	return buf, args
 }
 
-func buildUpdateQuery(q *Query) (*bytes.Buffer, []interface{}) {
+func buildUpdateQuery(q *Query) (*bytes.Buffer, []any) {
 	buf := strmangle.GetBuffer()
 
 	buf.WriteString("UPDATE ")
 	buf.WriteString(strings.Join(strmangle.IdentQuoteSlice(q.dialect.LQ, q.dialect.RQ, q.from), ", "))
 
 	cols := make(sort.StringSlice, len(q.update))
-	var args []interface{}
+	var args []any
 
 	count := 0
 	for name := range q.update {
@@ -326,7 +326,7 @@ func BuildUpsertQueryMSSQL(dia Dialect, modelName string, primary, update, inser
 	return buf.String()
 }
 
-func writeModifiers(q *Query, buf *bytes.Buffer, args *[]interface{}) {
+func writeModifiers(q *Query, buf *bytes.Buffer, args *[]any) {
 	if len(q.groupBy) != 0 {
 		fmt.Fprintf(buf, " GROUP BY %s", strings.Join(q.groupBy, ", "))
 	}
@@ -447,14 +447,14 @@ func writeAsStatements(q *Query) []string {
 // WHERE (a=$1) AND (b=$2)
 //
 // startAt specifies what number placeholders start at
-func whereClause(q *Query, startAt int) (string, []interface{}) {
+func whereClause(q *Query, startAt int) (string, []any) {
 	if len(q.where) == 0 {
 		return "", nil
 	}
 
 	buf := strmangle.GetBuffer()
 	defer strmangle.PutBuffer(buf)
-	var args []interface{}
+	var args []any
 
 	buf.WriteString(" WHERE ")
 	for i, where := range q.where {
@@ -479,14 +479,14 @@ func whereClause(q *Query, startAt int) (string, []interface{}) {
 // inClause parses an in slice and converts it into a
 // single IN clause, like:
 // WHERE ("a", "b") IN (($1,$2),($3,$4)).
-func inClause(q *Query, startAt int) (string, []interface{}) {
+func inClause(q *Query, startAt int) (string, []any) {
 	if len(q.in) == 0 {
 		return "", nil
 	}
 
 	buf := strmangle.GetBuffer()
 	defer strmangle.PutBuffer(buf)
-	var args []interface{}
+	var args []any
 
 	if len(q.where) == 0 {
 		buf.WriteString(" WHERE ")

@@ -6,8 +6,8 @@ type Type interface {
 	GetName() string
 	GoType() GoType
 
-	GetExtension(key interface{}) interface{}
-	SetExtension(key interface{}, value interface{})
+	GetExtension(key any) any
+	SetExtension(key any, value any)
 }
 
 type BaseType interface {

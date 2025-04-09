@@ -32,8 +32,8 @@ func (p *Plugin) BunnyPlugin() {
 	gen.OnHook("model", p.modelHook(gen.MustLoadTemplate(templatesPackage, "templates/model.tpl")))
 }
 
-func copyData(m map[string]interface{}) map[string]interface{} {
-	res := make(map[string]interface{})
+func copyData(m map[string]any) map[string]any {
+	res := make(map[string]any)
 	for k, v := range m {
 		res[k] = v
 	}
@@ -42,7 +42,7 @@ func copyData(m map[string]interface{}) map[string]interface{} {
 }
 
 func (p *Plugin) hook(tpl *gen.TemplateList) gen.HookFunc {
-	return func(buf *bytes.Buffer, data map[string]interface{}, args ...interface{}) {
+	return func(buf *bytes.Buffer, data map[string]any, args ...any) {
 		data2 := copyData(data)
 		data2["Var"] = args[0]
 		data2["Model"] = args[1]
@@ -51,7 +51,7 @@ func (p *Plugin) hook(tpl *gen.TemplateList) gen.HookFunc {
 }
 
 func (p *Plugin) modelHook(tpl *gen.TemplateList) gen.HookFunc {
-	return func(buf *bytes.Buffer, data map[string]interface{}, args ...interface{}) {
+	return func(buf *bytes.Buffer, data map[string]any, args ...any) {
 		tpl.ExecuteBuf(data, buf)
 	}
 }

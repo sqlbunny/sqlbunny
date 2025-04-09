@@ -13,9 +13,9 @@ import (
 
 // DB can perform SQL queries.
 type DB interface {
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 }
 
 type contextDBKeyType struct{}
@@ -34,7 +34,7 @@ func DBFromContext(ctx context.Context) DB {
 	return db
 }
 
-func Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	db := DBFromContext(ctx)
 	begin := time.Now()
 	res, err := db.ExecContext(ctx, query, args...)
@@ -48,7 +48,7 @@ func Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, e
 	return res, err
 }
 
-func Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func Query(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	db := DBFromContext(ctx)
 	begin := time.Now()
 	res, err := db.QueryContext(ctx, query, args...)
@@ -62,7 +62,7 @@ func Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, e
 	return res, err
 }
 
-func QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func QueryRow(ctx context.Context, query string, args ...any) *sql.Row {
 	db := DBFromContext(ctx)
 	begin := time.Now()
 	res := db.QueryRowContext(ctx, query, args...)
@@ -131,19 +131,19 @@ type txNode struct {
 	onCommit []func(context.Context) error
 }
 
-func (t *txNode) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (t *txNode) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	if t.child != nil {
 		panic("Transaction has a subtransaction active, can't run statements in it.")
 	}
 	return t.dbTx.ExecContext(ctx, query, args...)
 }
-func (t *txNode) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (t *txNode) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	if t.child != nil {
 		panic("Transaction has a subtransaction active, can't run statements in it.")
 	}
 	return t.dbTx.QueryContext(ctx, query, args...)
 }
-func (t *txNode) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (t *txNode) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	if t.child != nil {
 		panic("Transaction has a subtransaction active, can't run statements in it.")
 	}

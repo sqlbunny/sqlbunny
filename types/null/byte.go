@@ -108,7 +108,7 @@ func (b Byte) IsZero() bool {
 }
 
 // Scan implements the Scanner interface.
-func (b *Byte) Scan(value interface{}) error {
+func (b *Byte) Scan(value any) error {
 	if value == nil {
 		b.Byte, b.Valid = 0, false
 		return nil
