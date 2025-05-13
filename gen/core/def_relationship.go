@@ -59,3 +59,39 @@ func (d DirectRelationship) ModelRelationshipItem(ctx *ModelRelationshipContext)
 	ctx.Relationship.ForeignWhere = d.ForeignWhere
 	ctx.Relationship.ForeignOrderBy = d.ForeignOrderBy
 }
+
+type JoinRelationship struct {
+	// ForeignModel is the model name this relationship relates to.
+	ForeignModel string
+
+	// JoinModel is the model name that joins the local and foreign models.
+	JoinModel string
+
+	// ToMany indicates this model can be related with multiple ToModel instances, not just one.
+	ToMany bool
+
+	// len(LocalFields) = len(JoinLocalFields)
+	// len(JoinForeignFields) = len(ForeignFields)
+	LocalFields       []string
+	ForeignFields     []string
+	JoinLocalFields   []string
+	JoinForeignFields []string
+
+	JoinWhere      string
+	ForeignWhere   string
+	ForeignOrderBy string
+}
+
+func (d JoinRelationship) ModelRelationshipItem(ctx *ModelRelationshipContext) {
+	ctx.Relationship.IsJoinModel = true
+	ctx.Relationship.ForeignModel = d.ForeignModel
+	ctx.Relationship.JoinModel = d.JoinModel
+	ctx.Relationship.ForeignFields = parsePathsPrefix(ctx, nil, d.ForeignFields)
+	ctx.Relationship.LocalFields = parsePathsPrefix(ctx, nil, d.LocalFields)
+	ctx.Relationship.JoinForeignFields = parsePathsPrefix(ctx, nil, d.JoinForeignFields)
+	ctx.Relationship.JoinLocalFields = parsePathsPrefix(ctx, nil, d.JoinLocalFields)
+	ctx.Relationship.ToMany = d.ToMany
+	ctx.Relationship.JoinWhere = d.JoinWhere
+	ctx.Relationship.ForeignWhere = d.ForeignWhere
+	ctx.Relationship.ForeignOrderBy = d.ForeignOrderBy
+}

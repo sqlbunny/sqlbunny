@@ -20,6 +20,10 @@ func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignM
 		{{if .IsJoinModel -}}
 		qm.InnerJoin("{{.JoinModel | schemaModel }} ON {{joinOnClause $dot.LQ $dot.RQ .JoinModel .JoinForeignFields .ForeignModel .ForeignFields}}"),
 		qm.Where("{{joinWhereClause $dot.LQ $dot.RQ 0 .JoinModel .JoinLocalFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
+		{{if .JoinWhere -}}
+		{{- $schemaModel := .JoinModel | schemaModel }}
+		qm.Where("{{replaceAll .JoinWhere "$join" $schemaModel}}"),
+		{{- end }}
 		{{ else }}
 		qm.Where("{{whereClause $dot.LQ $dot.RQ 0 .ForeignFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
 		{{- end }}
@@ -71,14 +75,16 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 	query := NewQuery(
 		qm.Select(
 			{{ range $i, $c := $foreignModel.Table.Columns -}}"f.{{$i}}",{{end}}
-			{{ range $i, $c := .JoinLocalFields -}}{{if $i}},{{end}} "j.{{$c}}"{{end}},
+			{{ range $i, $c := .JoinLocalFields -}}{{if $i}},{{end}} "j.{{$c.SQLName}}"{{end}},
 		),
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
 		qm.InnerJoin("{{.JoinModel | schemaModel }} AS j ON {{joinOnClause $dot.LQ $dot.RQ "j" .JoinForeignFields "f" .ForeignFields}}"),
 		qm.Where(where, args...),
+		{{if .JoinWhere -}}
+		qm.Where("{{replaceAll .JoinWhere "$join" "j"}}"),
+		{{- end }}
 		{{if .ForeignWhere -}}
-		{{- $schemaModel := .ForeignModel | schemaModel }}
-		qm.Where("{{replaceAll .ForeignWhere "f" $schemaModel}}"),
+		qm.Where("{{replaceAll .ForeignWhere "$foreign" "f"}}"),
 		{{- end }}
 		{{if .ForeignOrderBy -}}
 		qm.OrderBy("{{.ForeignOrderBy}}"),
@@ -124,7 +130,6 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
 		qm.Where(where, args...),
 		{{if .ForeignWhere -}}
-		{{- $schemaModel := .ForeignModel | schemaModel }}
 		qm.Where("{{replaceAll .ForeignWhere "$foreign" "f"}}"),
 		{{- end }}
 		{{if .ForeignOrderBy -}}
