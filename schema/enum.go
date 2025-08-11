@@ -4,7 +4,7 @@ import "github.com/sqlbunny/sqlbunny/runtime/strmangle"
 
 type Enum struct {
 	Name    string
-	Choices []string
+	Choices map[int]string
 
 	Extendable
 }

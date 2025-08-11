@@ -87,19 +87,13 @@ func (t BaseType) TypeItem(ctx *TypeContext) schema.Type {
 	}
 }
 
-type enum struct {
-	choices []string
-}
+type Enum map[int]string
 
-func (t enum) TypeItem(ctx *TypeContext) schema.Type {
+func (t Enum) TypeItem(ctx *TypeContext) schema.Type {
 	return &schema.Enum{
 		Name:    ctx.Name,
-		Choices: t.choices,
+		Choices: t,
 	}
-}
-
-func Enum(choices ...string) enum {
-	return enum{choices}
 }
 
 type array struct {
