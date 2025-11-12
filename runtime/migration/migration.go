@@ -2,6 +2,7 @@ package migration
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/sqlbunny/sqlbunny/runtime/bunny"
 	"github.com/sqlbunny/sqlschema/operations"
@@ -19,7 +20,7 @@ func (m Migration) Run(ctx context.Context) error {
 
 		_, err := bunny.Exec(ctx, sql)
 		if err != nil {
-			return err
+			return fmt.Errorf("error applying operation %v: %w", op, err)
 		}
 	}
 	return nil
