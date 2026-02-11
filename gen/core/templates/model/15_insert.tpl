@@ -6,7 +6,7 @@
 // No whitelist behavior: Without a whitelist, fields are inferred by the following rules:
 // - All fields without a default value are included (i.e. name, age)
 // - All fields with a default, but non-zero are included (i.e. health = 75)
-func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... string) error {
+func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... {{$modelNameSingular}}Column) error {
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
 	}
@@ -15,7 +15,7 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... strin
 }
 
 
-func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflictCondition string, whitelist ... string) (bool, error) {
+func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflictCondition string, whitelist ... {{$modelNameSingular}}Column) (bool, error) {
 	if o == nil {
 		return false, errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
 	}
@@ -24,23 +24,26 @@ func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflic
 
 	{{ hook . "before_insert" "o" .Model }}
 
+	var wl []string
 	if len(whitelist) == 0 {
-		whitelist = {{$varNameSingular}}Columns
+		wl = {{$varNameSingular}}Columns
+	} else {
+		wl = columnStrings(whitelist)
 	}
 
-	key := makeCacheKey(append(whitelist, ignoreConflictCondition))
+	key := makeCacheKey(append(wl, ignoreConflictCondition))
 	{{$varNameSingular}}InsertCacheMut.RLock()
 	cache, cached := {{$varNameSingular}}InsertCache[key]
 	{{$varNameSingular}}InsertCacheMut.RUnlock()
 
 	if !cached {
-		cache.valueMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, whitelist)
+		cache.valueMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, wl)
 		if err != nil {
 			return false, err
 		}
 
-		if len(whitelist) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO {{$schemaModel}} ({{.LQ}}%s{{.RQ}}) VALUES (%s)", strings.Join(whitelist, "{{.RQ}},{{.LQ}}"), strmangle.Placeholders(dialect.IndexPlaceholders, len(whitelist), 1, 1))
+		if len(wl) != 0 {
+			cache.query = fmt.Sprintf("INSERT INTO {{$schemaModel}} ({{.LQ}}%s{{.RQ}}) VALUES (%s)", strings.Join(wl, "{{.RQ}},{{.LQ}}"), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
 		} else {
 			cache.query = "INSERT INTO {{$schemaModel}} DEFAULT VALUES"
 		}

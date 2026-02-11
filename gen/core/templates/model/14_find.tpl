@@ -4,12 +4,12 @@
 
 // Find{{$modelNameSingular}} retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all fields.
-func Find{{$modelNameSingular}}(ctx context.Context{{range .Model.PrimaryKey.Fields}}, {{$f := $model.FindField .}}{{$f.Name | camelCase}} {{goType $f.Type.GoType}}{{end}}, selectCols ...string) (*{{$modelNameSingular}}, error) {
+func Find{{$modelNameSingular}}(ctx context.Context{{range .Model.PrimaryKey.Fields}}, {{$f := $model.FindField .}}{{$f.Name | camelCase}} {{goType $f.Type.GoType}}{{end}}, selectCols ...{{$modelNameSingular}}Column) (*{{$modelNameSingular}}, error) {
 	{{$varNameSingular}}Obj := &{{$modelNameSingular}}{}
 
 	sel := "*"
 	if len(selectCols) > 0 {
-		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
+		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, columnStrings(selectCols)), ",")
 	}
 	query := fmt.Sprintf(
 		"SELECT %s FROM {{.Model.Name | schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Fields}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Fields}}{{end}}", sel,

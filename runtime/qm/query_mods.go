@@ -38,9 +38,13 @@ func InnerJoin(clause string, args ...any) QueryMod {
 }
 
 // Select specific fields opposed to all fields
-func Select(fields ...string) QueryMod {
+func Select[T ~string](fields ...T) QueryMod {
+	s := make([]string, len(fields))
+	for i, f := range fields {
+		s[i] = string(f)
+	}
 	return func(q *queries.Query) {
-		queries.AppendSelect(q, fields...)
+		queries.AppendSelect(q, s...)
 	}
 }
 

@@ -8,31 +8,34 @@
 // - All primary keys are subtracted from this set
 // Update does not automatically update the record in case of default values. Use .Reload()
 // to refresh the records.
-func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... string) error {
+func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... {{$modelNameSingular}}Column) error {
 	var err error
 
 	{{ hook . "before_update" "o" .Model }}
 
+	var wl []string
 	if len(whitelist) == 0 {
-		whitelist = {{$varNameSingular}}NonPrimaryKeyColumns
+		wl = {{$varNameSingular}}NonPrimaryKeyColumns
+	} else {
+		wl = columnStrings(whitelist)
 	}
 
-	if len(whitelist) == 0 {
+	if len(wl) == 0 {
 		// Nothing to update
 		return nil
 	}
 
-	key := makeCacheKey(whitelist)
+	key := makeCacheKey(wl)
 	{{$varNameSingular}}UpdateCacheMut.RLock()
 	cache, cached := {{$varNameSingular}}UpdateCache[key]
 	{{$varNameSingular}}UpdateCacheMut.RUnlock()
 
 	if !cached {
 		cache.query = fmt.Sprintf("UPDATE {{$schemaModel}} SET %s WHERE %s",
-			strmangle.SetParamNames("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, whitelist),
-			strmangle.WhereClause("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}len(whitelist)+1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns),
+			strmangle.SetParamNames("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, wl),
+			strmangle.WhereClause("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}len(wl)+1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns),
 		)
-		cache.valueMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, append(whitelist, {{$varNameSingular}}PrimaryKeyColumns...))
+		cache.valueMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, append(wl, {{$varNameSingular}}PrimaryKeyColumns...))
 		if err != nil {
 			return err
 		}

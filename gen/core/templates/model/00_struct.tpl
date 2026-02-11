@@ -26,9 +26,11 @@ type {{$modelName}} struct {
 	L {{$modelNameCamel}}L `json:"-" toml:"-" yaml:"-"`
 }
 
+type {{$modelName}}Column string
+
 var {{$modelName}}Columns = struct {
 	{{range $name, $column := .Model.Table.Columns -}}
-	{{titleCase $name}} string
+	{{titleCase $name}} {{$modelName}}Column
 	{{end -}}
 }{
 	{{range $name, $column := .Model.Table.Columns -}}

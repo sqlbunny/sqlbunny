@@ -29,3 +29,11 @@ func makeCacheKey(wl []string) string {
 	strmangle.PutBuffer(buf)
 	return str
 }
+
+func columnStrings[T ~string](cols []T) []string {
+	result := make([]string, len(cols))
+	for i, c := range cols {
+		result[i] = string(c)
+	}
+	return result
+}
