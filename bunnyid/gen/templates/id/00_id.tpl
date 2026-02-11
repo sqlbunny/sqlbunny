@@ -9,7 +9,7 @@
 {{ import "strings" "strings" }}
 {{ import "errors" "github.com/sqlbunny/errors" }}
 {{ import "bunny" "github.com/sqlbunny/sqlbunny/runtime/bunny" }}
-{{ import "bunnyid" "github.com/sqlbunny/bunnyid" }}
+{{ import "bunnyid" "github.com/sqlbunny/sqlbunny/bunnyid" }}
 
 {{- $modelName := .IDType.Name | titleCase -}}
 {{- $modelNameCamel := .IDType.Name | camelCase -}}
