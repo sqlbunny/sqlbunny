@@ -1,6 +1,6 @@
 package schema
 
-import "github.com/sqlbunny/sqlschema/schema"
+import "github.com/sqlbunny/sqlbunny/sqlschema/schema"
 
 // Model metadata from the database schema.
 type Model struct {

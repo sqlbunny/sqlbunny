@@ -15,8 +15,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sqlbunny/sqlbunny/gen"
 	"github.com/sqlbunny/sqlbunny/runtime/migration"
-	"github.com/sqlbunny/sqlschema/diff"
-	"github.com/sqlbunny/sqlschema/schema"
+	"github.com/sqlbunny/sqlbunny/sqlschema/diff"
+	"github.com/sqlbunny/sqlbunny/sqlschema/schema"
 )
 
 type Plugin struct {
@@ -195,7 +195,7 @@ func (p *Plugin) writeMigration(m *migration.Migration) {
 	gen.WritePackageName(&buf, p.PackageName)
 	buf.WriteString("import (\n")
 	buf.WriteString("    \"github.com/sqlbunny/sqlbunny/runtime/migration\"\n")
-	buf.WriteString("    \"github.com/sqlbunny/sqlschema/operations\"\n")
+	buf.WriteString("    \"github.com/sqlbunny/sqlbunny/sqlschema/operations\"\n")
 	buf.WriteString(")\n")
 	buf.WriteString(fmt.Sprintf("func init() {\nStore.Register("))
 	buf.WriteString(litter.Options{}.Sdump(m))

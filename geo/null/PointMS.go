@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"github.com/sqlbunny/geo"
+	"github.com/sqlbunny/sqlbunny/geo"
 )
 
 // PointMS is a nullable geo.PointMS.

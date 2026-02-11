@@ -3,8 +3,8 @@ package diff
 import (
 	"reflect"
 
-	"github.com/sqlbunny/sqlschema/operations"
-	"github.com/sqlbunny/sqlschema/schema"
+	"github.com/sqlbunny/sqlbunny/sqlschema/operations"
+	"github.com/sqlbunny/sqlbunny/sqlschema/schema"
 )
 
 func Diff(d1, d2 *schema.Database) []operations.Operation {

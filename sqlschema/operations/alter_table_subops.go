@@ -3,7 +3,7 @@ package operations
 import (
 	"fmt"
 
-	"github.com/sqlbunny/sqlschema/schema"
+	"github.com/sqlbunny/sqlbunny/sqlschema/schema"
 )
 
 type AlterTableSuboperation interface {

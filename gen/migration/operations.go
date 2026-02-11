@@ -2,7 +2,7 @@ package migration
 
 import (
 	"github.com/sqlbunny/sqlbunny/runtime/migration"
-	"github.com/sqlbunny/sqlschema/schema"
+	"github.com/sqlbunny/sqlbunny/sqlschema/schema"
 )
 
 func ApplyMigration(m *migration.Migration, d *schema.Database) error {

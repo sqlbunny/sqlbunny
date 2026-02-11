@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sqlbunny/sqlschema/schema"
+	"github.com/sqlbunny/sqlbunny/sqlschema/schema"
 )
 
 type Column struct {

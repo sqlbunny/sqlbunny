@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sqlbunny/sqlbunny/runtime/bunny"
-	"github.com/sqlbunny/sqlschema/operations"
+	"github.com/sqlbunny/sqlbunny/sqlschema/operations"
 )
 
 type Migration struct {

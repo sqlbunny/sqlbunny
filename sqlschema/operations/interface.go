@@ -1,7 +1,7 @@
 package operations
 
 import (
-	"github.com/sqlbunny/sqlschema/schema"
+	"github.com/sqlbunny/sqlbunny/sqlschema/schema"
 )
 
 type Operation interface {

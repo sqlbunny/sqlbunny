@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	templatesPackage = "github.com/sqlbunny/bunnyid/gen"
+	templatesPackage = "github.com/sqlbunny/sqlbunny/bunnyid/gen"
 )
 
 type Plugin struct {
