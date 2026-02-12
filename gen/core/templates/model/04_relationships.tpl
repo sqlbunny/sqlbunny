@@ -48,7 +48,7 @@ func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignM
 
 // Load{{$relationshipName}} allows an eager lookup of values, cached into the
 // loaded structs of the objects.
-func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice []*{{$modelName}}) error {
+func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice []*{{$modelName}}, mods ...qm.QueryMod) error {
 	args := make([]any, len(slice)*{{len .LocalFields}})
 	for i, obj := range slice {
 		if obj.R == nil {
@@ -90,6 +90,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		qm.OrderBy("{{.ForeignOrderBy}}"),
 		{{- end }}
 	)
+	qm.Apply(query.Query, mods...)
 	type joinStruct struct {
 		F {{ $foreignModelName }} `bunny:"f.,bind"`
 		J {{ $joinModelName }} `bunny:"j.,bind"`
@@ -136,6 +137,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		qm.OrderBy("{{.ForeignOrderBy}}"),
 		{{- end }}
 	)
+	qm.Apply(query.Query, mods...)
 
 	var resultSlice []*{{$foreignModelName}}
 	if err := query.Bind(ctx, &resultSlice); err != nil {
