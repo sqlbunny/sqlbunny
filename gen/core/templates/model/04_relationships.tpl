@@ -70,7 +70,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 
 	where := fmt.Sprintf(
 		"{{ whereInClause $dot.LQ $dot.RQ "j" .JoinLocalFields }} in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, len(slice)*{{len .LocalFields}}, 1, {{len .LocalFields}}),
+		strmangle.Placeholders(false, len(slice)*{{len .LocalFields}}, 1, {{len .LocalFields}}),
 	)
 	query := NewQuery(
 		qm.Select(
@@ -90,7 +90,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		qm.OrderBy("{{.ForeignOrderBy}}"),
 		{{- end }}
 	)
-	qm.Apply(query.Query, mods...)
+	qm.Apply(query, mods...)
 	type joinStruct struct {
 		F {{ $foreignModelName }} `bunny:"f.,bind"`
 		J {{ $joinModelName }} `bunny:"j.,bind"`
@@ -124,7 +124,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 	{{else}}
 	where := fmt.Sprintf(
 		"{{ whereInClause $dot.LQ $dot.RQ "f" .ForeignFields }} in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, len(slice)*{{len .LocalFields}}, 1, {{len .LocalFields}}),
+		strmangle.Placeholders(false, len(slice)*{{len .LocalFields}}, 1, {{len .LocalFields}}),
 	)
 	query := NewQuery(
 		qm.Select("f.*"),
@@ -137,7 +137,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		qm.OrderBy("{{.ForeignOrderBy}}"),
 		{{- end }}
 	)
-	qm.Apply(query.Query, mods...)
+	qm.Apply(query, mods...)
 
 	var resultSlice []*{{$foreignModelName}}
 	if err := query.Bind(ctx, &resultSlice); err != nil {
