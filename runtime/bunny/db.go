@@ -108,6 +108,14 @@ func AtomicWithOptions(ctx context.Context, opts AtomicOptions, fn func(ctx cont
 }
 
 func doAtomic(ctx context.Context, fn func(ctx context.Context) error, opts AtomicOptions) error {
+	// If we're already inside a transaction, don't retry here.
+	// Serialization failures poison the entire transaction, so retrying
+	// a savepoint is pointless. Let the error propagate to the outermost
+	// Atomic which can retry the whole transaction.
+	if _, ok := DBFromContext(ctx).(*txNode); ok {
+		return doTransaction(ctx, fn, opts)
+	}
+
 	var err error
 	for try := uint(0); try < 12; try++ {
 		err = doTransaction(ctx, fn, opts)
