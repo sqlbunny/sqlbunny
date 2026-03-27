@@ -75,13 +75,19 @@ func QueryRow(ctx context.Context, query string, args ...any) *sql.Row {
 	return res
 }
 
+// AtomicOptions configures transaction behavior for AtomicWithOptions.
+type AtomicOptions struct {
+	ReadOnly  bool
+	Isolation sql.IsolationLevel // 0 means use default (Serializable)
+}
+
 // Atomic invokes the passed function in the context of a managed SQL
 // transaction.  Any errors returned from the user-supplied function are
 // returned from this function.
 //
 // Retries are automatically performed in case of serialization failures or deadlocks.
 func Atomic(ctx context.Context, fn func(ctx context.Context) error) error {
-	return doAtomic(ctx, fn, false)
+	return doAtomic(ctx, fn, AtomicOptions{})
 }
 
 // AtomicReadOnly invokes the passed function in the context of a managed SQL
@@ -90,13 +96,21 @@ func Atomic(ctx context.Context, fn func(ctx context.Context) error) error {
 //
 // Retries are automatically performed in case of serialization failures or deadlocks.
 func AtomicReadOnly(ctx context.Context, fn func(ctx context.Context) error) error {
-	return doAtomic(ctx, fn, true)
+	return doAtomic(ctx, fn, AtomicOptions{ReadOnly: true})
 }
 
-func doAtomic(ctx context.Context, fn func(ctx context.Context) error, readOnly bool) error {
+// AtomicWithOptions invokes the passed function in the context of a managed SQL
+// transaction with the given options.
+//
+// Retries are automatically performed in case of serialization failures or deadlocks.
+func AtomicWithOptions(ctx context.Context, opts AtomicOptions, fn func(ctx context.Context) error) error {
+	return doAtomic(ctx, fn, opts)
+}
+
+func doAtomic(ctx context.Context, fn func(ctx context.Context) error, opts AtomicOptions) error {
 	var err error
 	for try := uint(0); try < 12; try++ {
-		err = doTransaction(ctx, fn, readOnly)
+		err = doTransaction(ctx, fn, opts)
 		if err == nil {
 			return nil
 		}
@@ -195,18 +209,23 @@ type beginTxer interface {
 // Transaction invokes the passed function in the context of a managed SQL
 // transaction.  Any errors returned from
 // the user-supplied function are returned from this function.
-func doTransaction(ctx context.Context, fn func(ctx context.Context) error, readOnly bool) (err error) {
+func doTransaction(ctx context.Context, fn func(ctx context.Context) error, opts AtomicOptions) (err error) {
 	ctx = logger.LogBegin(ctx, BeginLogInfo{
-		ReadOnly: readOnly,
+		ReadOnly: opts.ReadOnly,
 	})
 	begin := time.Now()
+
+	isolation := opts.Isolation
+	if isolation == 0 {
+		isolation = sql.LevelSerializable
+	}
 
 	var node *txNode
 	switch db := DBFromContext(ctx).(type) {
 	case beginTxer:
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{
-			Isolation: sql.LevelSerializable,
-			ReadOnly:  readOnly,
+			Isolation: isolation,
+			ReadOnly:  opts.ReadOnly,
 		})
 		if err != nil {
 			retErr := errors.Errorf("BeginTx failed: %w", err)
