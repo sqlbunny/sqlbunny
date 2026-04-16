@@ -133,10 +133,20 @@ type AlterTableCreateForeignKey struct {
 	ForeignSchema  string
 	ForeignTable   string
 	ForeignColumns []string
+	// NotValid adds the constraint with `NOT VALID`, skipping the
+	// full-table validation scan. The constraint is enforced on all
+	// subsequent writes; existing rows are not checked until a later
+	// `ALTER TABLE ... VALIDATE CONSTRAINT`. Useful when adding FKs to
+	// huge tables without a long AccessExclusiveLock-holding scan.
+	NotValid bool
 }
 
 func (o AlterTableCreateForeignKey) GetAlterTableSQL(ato *AlterTable) string {
-	return fmt.Sprintf("ADD CONSTRAINT \"%s\" FOREIGN KEY (%s) REFERENCES %s (%s)", o.Name, columnList(o.Columns), sqlName(o.ForeignSchema, o.ForeignTable), columnList(o.ForeignColumns))
+	sql := fmt.Sprintf("ADD CONSTRAINT \"%s\" FOREIGN KEY (%s) REFERENCES %s (%s)", o.Name, columnList(o.Columns), sqlName(o.ForeignSchema, o.ForeignTable), columnList(o.ForeignColumns))
+	if o.NotValid {
+		sql += " NOT VALID"
+	}
+	return sql
 }
 
 func (o AlterTableCreateForeignKey) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
