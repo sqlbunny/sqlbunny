@@ -15,10 +15,15 @@ import (
 	"github.com/sqlbunny/sqlbunny/types/null/convert"
 )
 
+type bindingMapKey struct {
+	typ  reflect.Type
+	cols string // comma-joined column names
+}
+
 var (
 	mut         sync.RWMutex
-	bindingMaps = make(map[string][]MappedField)
-	structMaps  = make(map[string]map[string]MappedField)
+	bindingMaps = make(map[bindingMapKey][]MappedField)
+	structMaps  = make(map[reflect.Type]map[string]MappedField)
 )
 
 type MappedField struct {
@@ -160,13 +165,11 @@ func bind(rows *sql.Rows, obj any, structType, sliceType reflect.Type, bkind bin
 	var mapping []MappedField
 	var ok bool
 
-	typStr := structType.String()
-
-	mapKey := makeCacheKey(typStr, cols)
+	mapKey := makeBindingMapKey(structType, cols)
 	mut.RLock()
 	mapping, ok = bindingMaps[mapKey]
 	if !ok {
-		if strMapping, sok = structMaps[typStr]; !sok {
+		if strMapping, sok = structMaps[structType]; !sok {
 			strMapping = MakeStructMapping(structType)
 		}
 	}
@@ -180,7 +183,7 @@ func bind(rows *sql.Rows, obj any, structType, sliceType reflect.Type, bkind bin
 
 		mut.Lock()
 		if !sok {
-			structMaps[typStr] = strMapping
+			structMaps[structType] = strMapping
 		}
 		bindingMaps[mapKey] = mapping
 		mut.Unlock()
@@ -452,15 +455,13 @@ func getBunnyTag(field reflect.StructField) (bunnyTag, error) {
 	return res, nil
 }
 
-func makeCacheKey(typ string, cols []string) string {
+func makeBindingMapKey(typ reflect.Type, cols []string) bindingMapKey {
 	buf := strmangle.GetBuffer()
-	buf.WriteString(typ)
 	for _, s := range cols {
 		buf.WriteString(s)
 		buf.WriteByte(',')
 	}
-	mapKey := buf.String()
+	key := bindingMapKey{typ: typ, cols: buf.String()}
 	strmangle.PutBuffer(buf)
-
-	return mapKey
+	return key
 }
