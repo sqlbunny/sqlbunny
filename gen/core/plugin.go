@@ -14,6 +14,7 @@ const (
 	templatesModelDirectory     = "templates/model"
 	templatesStructDirectory    = "templates/struct"
 	templatesEnumDirectory      = "templates/enum"
+	templatesEnumArrayDirectory = "templates/enum_array"
 	templatesSingletonDirectory = "templates/singleton"
 )
 
@@ -21,6 +22,7 @@ type Plugin struct {
 	ModelTemplates     *gen.TemplateList
 	StructTemplates    *gen.TemplateList
 	EnumTemplates      *gen.TemplateList
+	EnumArrayTemplates *gen.TemplateList
 	SingletonTemplates *gen.TemplateList
 }
 
@@ -40,6 +42,7 @@ func (p *Plugin) BunnyPlugin() {
 	p.ModelTemplates = gen.MustLoadTemplates(templatesPackage, templatesModelDirectory)
 	p.StructTemplates = gen.MustLoadTemplates(templatesPackage, templatesStructDirectory)
 	p.EnumTemplates = gen.MustLoadTemplates(templatesPackage, templatesEnumDirectory)
+	p.EnumArrayTemplates = gen.MustLoadTemplates(templatesPackage, templatesEnumArrayDirectory)
 	p.SingletonTemplates = gen.MustLoadTemplates(templatesPackage, templatesSingletonDirectory)
 
 	gen.OnGen(p.gen)
@@ -59,6 +62,10 @@ func (p *Plugin) gen() {
 			data := gen.BaseTemplateData()
 			data["Enum"] = t
 			p.EnumTemplates.Execute(data, t.Name+".gen.go")
+		case *schema.EnumArrayType:
+			data := gen.BaseTemplateData()
+			data["ArrayType"] = t
+			p.EnumArrayTemplates.Execute(data, t.Name+".gen.go")
 		case *schema.Struct:
 			data := gen.BaseTemplateData()
 			data["Struct"] = t

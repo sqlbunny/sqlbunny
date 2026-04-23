@@ -116,3 +116,39 @@ func (t array) TypeItem(ctx *TypeContext) schema.Type {
 func Array(element string) array {
 	return array{element}
 }
+
+type enumArray struct {
+	element string
+}
+
+func (t enumArray) TypeItem(ctx *TypeContext) schema.Type {
+	at := &schema.EnumArrayType{
+		Name: ctx.Name,
+	}
+	// Defer element lookup: the referenced enum may be defined later in
+	// the config.
+	element := t.element
+	name := ctx.Name
+	ctx.Enqueue(0, func() {
+		el, ok := ctx.Schema.Types[element]
+		if !ok {
+			ctx.AddError("Type '%s' (enum array) references unknown element type '%s'", name, element)
+			return
+		}
+		enum, ok := el.(*schema.Enum)
+		if !ok {
+			ctx.AddError("Type '%s' (enum array) element '%s' is not an enum", name, element)
+			return
+		}
+		at.Element = enum
+	})
+	return at
+}
+
+// EnumArray declares a postgres integer[] column storing a list of values
+// from the given enum. The generator produces a Go slice wrapper type named
+// after the array type (e.g. Type("verb_array", EnumArray("verb")) produces
+// `type VerbArray []Verb` with Scan/Value implementations).
+func EnumArray(element string) enumArray {
+	return enumArray{element}
+}
