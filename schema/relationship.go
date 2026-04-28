@@ -22,6 +22,12 @@ type Relationship struct {
 	JoinLocalFields   []Path
 	JoinForeignFields []Path
 
+	// IsArray indicates this relationship is keyed by an array column on the local
+	// side, matched against a scalar column on the foreign side. ToMany is implicit.
+	// LocalFields has one entry (the array column); ForeignFields has one entry
+	// (the scalar column on the foreign model).
+	IsArray bool
+
 	JoinWhere      string
 	ForeignWhere   string
 	ForeignOrderBy string

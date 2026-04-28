@@ -24,6 +24,10 @@ func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignM
 		{{- $schemaModel := .JoinModel | schemaModel }}
 		qm.Where("{{replaceAll .JoinWhere "$join" $schemaModel}}"),
 		{{- end }}
+		{{ else if .IsArray }}
+		{{- $localArray := index .LocalFields 0 -}}
+		{{- $foreignCol := index .ForeignFields 0 }}
+		qm.Where("{{$dot.LQ}}{{$foreignCol.SQLName}}{{$dot.RQ}} = ANY(?)", o.{{$localArray | titleCasePath}}),
 		{{ else }}
 		qm.Where("{{whereClause $dot.LQ $dot.RQ 0 .ForeignFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
 		{{- end }}
@@ -49,6 +53,74 @@ func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignM
 // Load{{$relationshipName}} allows an eager lookup of values, cached into the
 // loaded structs of the objects.
 func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice []*{{$modelName}}, mods ...qm.QueryMod) error {
+	{{if .IsArray}}
+	{{- $localArray := index .LocalFields 0 -}}
+	{{- $foreignCol := index .ForeignFields 0 -}}
+	{{- $fcol := $foreignModel.FindField $foreignCol }}
+	for _, obj := range slice {
+		if obj.R == nil {
+			obj.R = &{{$modelNameCamel}}R{}
+		}
+	}
+
+	// Collect unique foreign IDs across all local arrays.
+	seen := make(map[{{ goType $fcol.GoType }}]struct{})
+	var allIDs []any
+	for _, obj := range slice {
+		for _, id := range obj.{{$localArray | titleCasePath}} {
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			allIDs = append(allIDs, id)
+		}
+	}
+	if len(allIDs) == 0 {
+		return nil
+	}
+
+	where := fmt.Sprintf(
+		"f.{{$dot.LQ}}{{$foreignCol.SQLName}}{{$dot.RQ}} in (%s)",
+		strmangle.Placeholders(false, len(allIDs), 1, 1),
+	)
+	query := NewQuery(
+		qm.Select("f.*"),
+		qm.From("{{.ForeignModel | schemaModel}} AS f"),
+		qm.Where(where, allIDs...),
+		{{if .ForeignWhere -}}
+		qm.Where("{{replaceAll .ForeignWhere "$foreign" "f"}}"),
+		{{- end }}
+		{{if .ForeignOrderBy -}}
+		qm.OrderBy("{{.ForeignOrderBy}}"),
+		{{- end }}
+	)
+	qm.Apply(query, mods...)
+
+	var resultSlice []*{{$foreignModelName}}
+	if err := query.Bind(ctx, &resultSlice); err != nil {
+		return errors.Errorf("failed to bind eager loaded slice {{$foreignModelName}}: %w", err)
+	}
+
+	{{ hook $dot "after_select_slice_noreturn" "resultSlice" $foreignModel }}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	// Index foreign rows by their key for O(1) lookup, preserving order.
+	foreignByKey := make(map[{{ goType $fcol.GoType }}]*{{$foreignModelName}}, len(resultSlice))
+	for _, foreign := range resultSlice {
+		foreignByKey[foreign.{{$foreignCol | titleCasePath}}] = foreign
+	}
+
+	for _, local := range slice {
+		for _, id := range local.{{$localArray | titleCasePath}} {
+			if foreign, ok := foreignByKey[id]; ok {
+				local.R.{{$relationshipName}} = append(local.R.{{$relationshipName}}, foreign)
+			}
+		}
+	}
+	{{else}}
 	args := make([]any, len(slice)*{{len .LocalFields}})
 	for i, obj := range slice {
 		if obj.R == nil {
@@ -168,6 +240,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 			}
 		}
 	}
+	{{end}}
 	{{end}}
 
 	return nil

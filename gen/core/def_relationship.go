@@ -95,3 +95,36 @@ func (d JoinRelationship) ModelRelationshipItem(ctx *ModelRelationshipContext) {
 	ctx.Relationship.ForeignWhere = d.ForeignWhere
 	ctx.Relationship.ForeignOrderBy = d.ForeignOrderBy
 }
+
+// ArrayRelationship describes a to-many relationship where the local side stores
+// an array of foreign IDs in a single column. The match is:
+//
+//	foreign.<ForeignField> = ANY(local.<LocalArrayField>)
+//
+// LocalArrayField must be an array column on the local model.
+// ForeignField is a scalar column on the foreign model (typically its primary key).
+type ArrayRelationship struct {
+	// ForeignModel is the model name this relationship relates to.
+	ForeignModel string
+
+	// LocalArrayField is the name of the array column on the local model
+	// holding foreign IDs.
+	LocalArrayField string
+
+	// ForeignField is the name of the scalar column on the foreign model
+	// that LocalArrayField's elements match against.
+	ForeignField string
+
+	ForeignWhere   string
+	ForeignOrderBy string
+}
+
+func (d ArrayRelationship) ModelRelationshipItem(ctx *ModelRelationshipContext) {
+	ctx.Relationship.IsArray = true
+	ctx.Relationship.ToMany = true
+	ctx.Relationship.ForeignModel = d.ForeignModel
+	ctx.Relationship.LocalFields = parsePathsPrefix(ctx, nil, []string{d.LocalArrayField})
+	ctx.Relationship.ForeignFields = parsePathsPrefix(ctx, nil, []string{d.ForeignField})
+	ctx.Relationship.ForeignWhere = d.ForeignWhere
+	ctx.Relationship.ForeignOrderBy = d.ForeignOrderBy
+}
