@@ -130,14 +130,20 @@ func checkPrimaryKey(ctx *gen.Context, m *schema.Model) {
 }
 
 func checkIndexes(ctx *gen.Context, m *schema.Model) {
-	seen := make(map[string]struct{})
+	type indexKey struct {
+		fields string
+		method string
+		where  string
+	}
+	seen := make(map[indexKey]struct{})
 	for _, f := range m.Indexes {
 		desc := describeIndex(f.Fields)
+		key := indexKey{fields: desc, method: f.Method, where: f.Where}
 
-		if _, ok := seen[desc]; ok {
+		if _, ok := seen[key]; ok {
 			ctx.AddError("Model '%s' index '%s' is defined multiple times.", m.Name, desc)
 		}
-		seen[desc] = struct{}{}
+		seen[key] = struct{}{}
 
 		for _, path := range f.Fields {
 			c := m.FindField(path)
