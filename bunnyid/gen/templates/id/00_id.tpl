@@ -75,6 +75,11 @@ func {{$modelName}}FromRaw(id bunnyid.Raw) {{$modelName}} {
 	}
 }
 
+// SetRaw sets the id from its raw representation.
+func (id *{{$modelName}}) SetRaw(raw bunnyid.Raw) {
+	id.raw = raw
+}
+
 // {{$modelName}}FromString reads an ID from its string representation
 func {{$modelName}}FromString(id string) ({{$modelName}}, error) {
 	i := &{{$modelName}}{}
