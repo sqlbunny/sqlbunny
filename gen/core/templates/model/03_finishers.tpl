@@ -63,15 +63,16 @@ func (q {{$varNameSingular}}Query) Count(ctx context.Context) (int64, error) {
 
 // Exists checks if the row exists in the model.
 func (q {{$varNameSingular}}Query) Exists(ctx context.Context) (bool, error) {
-	var count int64
-
-	queries.SetCount(q.Query)
+	queries.SetSelect(q.Query, []string{"1"})
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow(ctx).Scan(&count)
+	var i int
+	err := q.Query.QueryRow(ctx).Scan(&i)
+	if bunny.IsErrNoRows(err) {
+		return false, nil
+	}
 	if err != nil {
 		return false, errors.Errorf("{{.PkgName}}: failed to check if {{.Model.Name}} exists: %w", err)
 	}
-
-	return count > 0, nil
+	return true, nil
 }
