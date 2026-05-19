@@ -112,7 +112,7 @@ func doAtomic(ctx context.Context, fn func(ctx context.Context) error, opts Atom
 	// Serialization failures poison the entire transaction, so retrying
 	// a savepoint is pointless. Let the error propagate to the outermost
 	// Atomic which can retry the whole transaction.
-	if _, ok := DBFromContext(ctx).(*txNode); ok {
+	if _, ok := DBFromContext(ctx).(*Tx); ok {
 		return doTransaction(ctx, fn, opts)
 	}
 
@@ -145,34 +145,110 @@ func shouldRetryTransaction(err error) bool {
 	return false
 }
 
-type txNode struct {
-	dbTx     *sql.Tx
-	parent   *txNode
-	child    *txNode
-	depth    int
-	onCommit []func(context.Context) error
+// Tx represents one level of a managed transaction: either the root
+// transaction (depth=0, an actual BEGIN/COMMIT) or a savepoint inside a
+// parent transaction (depth>0, a SAVEPOINT/RELEASE pair).
+//
+// Tx exposes per-level hooks (BeforeCommit, AfterCommit) that fire when
+// this specific level commits — i.e. when this savepoint is released, or
+// when the root transaction's SQL COMMIT lands. Hooks registered on a
+// subtx whose savepoint gets rolled back are silently discarded along
+// with the subtx; they only fire if the subtx successfully commits.
+//
+// Tx also exposes a per-level mutable state map (GetState, SetState) for
+// components that want to attach metadata that should die with the subtx
+// if it rolls back. State on a parent is visible only to that parent
+// (not to descendants); use CurrentTx(ctx).Parent() to reach it.
+type Tx struct {
+	dbTx         *sql.Tx
+	parent       *Tx
+	child        *Tx
+	depth        int
+	beforeCommit []func(ctx context.Context, tx *Tx) error
+	afterCommit  []func(ctx context.Context, tx *Tx) error
+	state        map[any]any
 }
 
-func (t *txNode) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+// Parent returns this Tx's parent, or nil if this is the root transaction.
+func (t *Tx) Parent() *Tx { return t.parent }
+
+// BeforeCommit registers fn to run just before this subtx commits (i.e.
+// before SAVEPOINT RELEASE for a subtx, before SQL COMMIT for the root).
+// fn runs *inside* the transaction, so its DB writes are part of the same
+// atomic unit and are rolled back together if either fn or the commit
+// itself fails.
+//
+// Hooks fire in registration order and may register additional hooks; new
+// hooks added during iteration are picked up in the same loop.
+//
+// To match the semantics of the legacy package-level BeforeCommit (run
+// only when the root transaction commits, never on savepoint release),
+// register a self-bubbling closure — see the BeforeCommit package
+// function for a ready-made implementation.
+func (t *Tx) BeforeCommit(fn func(ctx context.Context, tx *Tx) error) {
+	t.beforeCommit = append(t.beforeCommit, fn)
+}
+
+// AfterCommit registers fn to run just after this subtx commits (i.e.
+// after SAVEPOINT RELEASE for a subtx, after SQL COMMIT for the root).
+// For a subtx, AfterCommit fires inside the outer transaction so DB
+// writes still work; for the root tx it fires after the actual commit,
+// outside any transaction.
+//
+// Hooks added on a subtx that rolls back are discarded.
+func (t *Tx) AfterCommit(fn func(ctx context.Context, tx *Tx) error) {
+	t.afterCommit = append(t.afterCommit, fn)
+}
+
+// GetState returns the value stored on this Tx under key, or nil if no
+// value was set. State is per-Tx (not shared with parent / children); use
+// Parent() to reach into the enclosing tx's state.
+func (t *Tx) GetState(key any) any {
+	return t.state[key]
+}
+
+// SetState stores val on this Tx under key. Passing nil deletes the entry.
+// State lives only as long as this Tx — when a subtx rolls back, its state
+// is discarded along with its hooks.
+func (t *Tx) SetState(key, val any) {
+	if val == nil {
+		delete(t.state, key)
+		return
+	}
+	if t.state == nil {
+		t.state = make(map[any]any)
+	}
+	t.state[key] = val
+}
+
+// CurrentTx returns the innermost Tx for ctx, or nil if ctx is not inside
+// a transaction. Use this to register per-level hooks or attach per-level
+// state from libraries that build on top of bunny.
+func CurrentTx(ctx context.Context) *Tx {
+	tx, _ := ctx.Value(ContextDBKey).(*Tx)
+	return tx
+}
+
+func (t *Tx) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	if t.child != nil {
 		panic("Transaction has a subtransaction active, can't run statements in it.")
 	}
 	return t.dbTx.ExecContext(ctx, query, args...)
 }
-func (t *txNode) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+func (t *Tx) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	if t.child != nil {
 		panic("Transaction has a subtransaction active, can't run statements in it.")
 	}
 	return t.dbTx.QueryContext(ctx, query, args...)
 }
-func (t *txNode) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
+func (t *Tx) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	if t.child != nil {
 		panic("Transaction has a subtransaction active, can't run statements in it.")
 	}
 	return t.dbTx.QueryRowContext(ctx, query, args...)
 }
 
-func (t *txNode) Commit() error {
+func (t *Tx) commit() error {
 	if t.parent == nil {
 		return t.dbTx.Commit()
 	}
@@ -181,7 +257,7 @@ func (t *txNode) Commit() error {
 	return err
 }
 
-func (t *txNode) Rollback() error {
+func (t *Tx) rollback() error {
 	if t.parent == nil {
 		return t.dbTx.Rollback()
 	}
@@ -190,23 +266,16 @@ func (t *txNode) Rollback() error {
 	return err
 }
 
-func (t *txNode) runOnCommit(ctx context.Context) error {
-	if t.parent != nil {
-		// If we're in a subtransaction, we don't want to execute the onCommits yet.
-		// We append them to the parent transaction, so they'll run when the topmost transaction commits.
-		t.parent.onCommit = append(t.parent.onCommit, t.onCommit...)
-		return nil
-	}
-
-	// We are the top most transaction.
-	// Just run the onCommit hooks.
-	for _, fn := range t.onCommit {
-		err := fn(ctx)
-		if err != nil {
+// runHooks runs each hook in `hooks` in order, with this Tx as the
+// argument, and using an index loop so hooks added during iteration are
+// also picked up. Resets the hook slice when done.
+func (t *Tx) runHooks(ctx context.Context, which *[]func(ctx context.Context, tx *Tx) error) error {
+	for i := 0; i < len(*which); i++ {
+		if err := (*which)[i](ctx, t); err != nil {
 			return err
 		}
 	}
-
+	*which = nil
 	return nil
 }
 
@@ -228,7 +297,7 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, opts
 		isolation = sql.LevelSerializable
 	}
 
-	var node *txNode
+	var node *Tx
 	switch db := DBFromContext(ctx).(type) {
 	case beginTxer:
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{
@@ -243,12 +312,12 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, opts
 			})
 			return retErr
 		}
-		node = &txNode{
+		node = &Tx{
 			dbTx:  tx,
 			depth: 0,
 		}
-	case *txNode:
-		node = &txNode{
+	case *Tx:
+		node = &Tx{
 			dbTx:   db.dbTx,
 			parent: db,
 			depth:  db.depth + 1,
@@ -277,14 +346,14 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, opts
 				Duration: time.Since(begin),
 				Err:      fmt.Errorf("panic %v", p),
 			})
-			_ = node.Rollback() // just ignore errors here.
+			_ = node.rollback() // just ignore errors here.
 			panic(p)            // re-throw panic.
 		} else if err != nil {
 			logger.LogRollback(ctx, RollbackLogInfo{
 				Duration: time.Since(begin),
 				Err:      err,
 			})
-			err2 := node.Rollback()
+			err2 := node.rollback()
 			if err2 != nil {
 				err = errors.Errorf("tx failed: %w, and rollback failed: %w", err, err2)
 			}
@@ -296,7 +365,12 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, opts
 		return errors.Errorf("tx function returned error: %w", err)
 	}
 
-	err = node.Commit()
+	err = node.runHooks(ctx2, &node.beforeCommit)
+	if err != nil {
+		return errors.Errorf("BeforeCommit returned error: %w", err)
+	}
+
+	err = node.commit()
 	if err != nil {
 		return errors.Errorf("commit: %w", err)
 	}
@@ -305,17 +379,20 @@ func doTransaction(ctx context.Context, fn func(ctx context.Context) error, opts
 		Duration: time.Since(begin),
 	})
 
-	err = node.runOnCommit(ctx)
+	// AfterCommit fires after the commit. For a subtx (savepoint release)
+	// the parent tx is still open and ctx already carries it (that's how
+	// we picked up the parent in doTransaction's switch). For the root,
+	// ctx carries no tx — correct, since AfterCommit fires after COMMIT.
+	err = node.runHooks(ctx, &node.afterCommit)
 	if err != nil {
-		return errors.Errorf("OnCommit returned error: %w", err)
+		return errors.Errorf("AfterCommit returned error: %w", err)
 	}
 
 	return nil
 }
 
 func IsAtomic(ctx context.Context) bool {
-	_, ok := DBFromContext(ctx).(*txNode)
-	return ok
+	return CurrentTx(ctx) != nil
 }
 
 func AssertAtomic(ctx context.Context) {
@@ -328,14 +405,4 @@ func AssertNotAtomic(ctx context.Context) {
 	if IsAtomic(ctx) {
 		panic("AssertNotAtomic failed")
 	}
-}
-
-func OnCommit(ctx context.Context, fn func(context.Context) error) {
-	db := DBFromContext(ctx)
-	tx, ok := db.(*txNode)
-	if !ok {
-		panic("OnCommit called while not in atomic")
-	}
-
-	tx.onCommit = append(tx.onCommit, fn)
 }

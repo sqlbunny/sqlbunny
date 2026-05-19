@@ -227,83 +227,6 @@ func TestAtomic_WithOptions_Isolation(t *testing.T) {
 	})
 }
 
-func TestAtomic_OnCommit(t *testing.T) {
-	ctx, mock, rec := setupTest(t)
-
-	mock.ExpectBegin()
-	mock.ExpectCommit()
-
-	err := Atomic(ctx, func(ctx context.Context) error {
-		rec.record("fn")
-		OnCommit(ctx, func(ctx context.Context) error {
-			rec.record("oncommit1")
-			return nil
-		})
-		OnCommit(ctx, func(ctx context.Context) error {
-			rec.record("oncommit2")
-			return nil
-		})
-		return nil
-	})
-
-	rec.record(fmt.Sprintf("err=%v", err))
-	rec.check(t, []string{
-		"fn",
-		"oncommit1",
-		"oncommit2",
-		"err=<nil>",
-	})
-}
-
-func TestAtomic_OnCommit_NotCalledOnError(t *testing.T) {
-	ctx, mock, rec := setupTest(t)
-
-	mock.ExpectBegin()
-	mock.ExpectRollback()
-
-	err := Atomic(ctx, func(ctx context.Context) error {
-		rec.record("fn")
-		OnCommit(ctx, func(ctx context.Context) error {
-			rec.record("oncommit")
-			return nil
-		})
-		return errTest
-	})
-
-	rec.record(fmt.Sprintf("err is errTest=%v", errors.Is(err, errTest)))
-	rec.check(t, []string{
-		"fn",
-		"err is errTest=true",
-	})
-}
-
-func TestAtomic_OnCommit_Error(t *testing.T) {
-	ctx, mock, rec := setupTest(t)
-
-	mock.ExpectBegin()
-	mock.ExpectCommit()
-
-	err := Atomic(ctx, func(ctx context.Context) error {
-		rec.record("fn")
-		OnCommit(ctx, func(ctx context.Context) error {
-			rec.record("oncommit1")
-			return errTest
-		})
-		OnCommit(ctx, func(ctx context.Context) error {
-			rec.record("oncommit2")
-			return nil
-		})
-		return nil
-	})
-
-	rec.record(fmt.Sprintf("err is errTest=%v", errors.Is(err, errTest)))
-	rec.check(t, []string{
-		"fn",
-		"oncommit1",
-		"err is errTest=true",
-	})
-}
-
 // Nested transactions (savepoints)
 
 func TestAtomic_Nested_Success(t *testing.T) {
@@ -471,79 +394,6 @@ func TestAtomic_Nested_DeadlockNotRetried(t *testing.T) {
 	})
 }
 
-func TestAtomic_Nested_OnCommit_DefersToOuter(t *testing.T) {
-	ctx, mock, rec := setupTest(t)
-
-	mock.ExpectBegin()
-	mock.ExpectExec("SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
-	mock.ExpectExec("RELEASE SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
-	mock.ExpectCommit()
-
-	err := Atomic(ctx, func(ctx context.Context) error {
-		rec.record("outer")
-		OnCommit(ctx, func(ctx context.Context) error {
-			rec.record("outer oncommit")
-			return nil
-		})
-		err := Atomic(ctx, func(ctx context.Context) error {
-			rec.record("inner")
-			OnCommit(ctx, func(ctx context.Context) error {
-				rec.record("inner oncommit")
-				return nil
-			})
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-
-	rec.record(fmt.Sprintf("err=%v", err))
-	rec.check(t, []string{
-		"outer",
-		"inner",
-		"outer oncommit",
-		"inner oncommit",
-		"err=<nil>",
-	})
-}
-
-func TestAtomic_Nested_OnCommit_NotCalledOnInnerError(t *testing.T) {
-	ctx, mock, rec := setupTest(t)
-
-	mock.ExpectBegin()
-	mock.ExpectExec("SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
-	mock.ExpectExec("ROLLBACK TO SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
-	mock.ExpectCommit()
-
-	err := Atomic(ctx, func(ctx context.Context) error {
-		rec.record("outer")
-		OnCommit(ctx, func(ctx context.Context) error {
-			rec.record("outer oncommit")
-			return nil
-		})
-		_ = Atomic(ctx, func(ctx context.Context) error {
-			rec.record("inner")
-			OnCommit(ctx, func(ctx context.Context) error {
-				rec.record("inner oncommit")
-				return nil
-			})
-			return errTest
-		})
-		// outer still succeeds
-		return nil
-	})
-
-	rec.record(fmt.Sprintf("err=%v", err))
-	rec.check(t, []string{
-		"outer",
-		"inner",
-		"outer oncommit",
-		"err=<nil>",
-	})
-}
-
 func TestAtomic_Nested_TwoLevels(t *testing.T) {
 	ctx, mock, rec := setupTest(t)
 
@@ -656,5 +506,301 @@ func TestAtomic_BeginError(t *testing.T) {
 	rec.check(t, []string{
 		"fn called=false",
 		"err contains test error=true",
+	})
+}
+
+// -----------------------------------------------------------------------
+// Tx / CurrentTx / per-level BeforeCommit / AfterCommit / state.
+// -----------------------------------------------------------------------
+
+func TestCurrentTx_OutsideTx_Nil(t *testing.T) {
+	ctx, _, rec := setupTest(t)
+
+	if tx := CurrentTx(ctx); tx != nil {
+		t.Errorf("CurrentTx outside Atomic = %v, want nil", tx)
+	}
+	rec.record("ok")
+	rec.check(t, []string{"ok"})
+}
+
+func TestCurrentTx_RootHasNoParent(t *testing.T) {
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	_ = Atomic(ctx, func(ctx context.Context) error {
+		tx := CurrentTx(ctx)
+		rec.record(fmt.Sprintf("tx=%v parent=%v", tx != nil, tx.Parent()))
+		return nil
+	})
+
+	rec.check(t, []string{
+		"tx=true parent=<nil>",
+	})
+}
+
+func TestCurrentTx_NestedHasParent(t *testing.T) {
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectExec("SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("RELEASE SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectCommit()
+
+	var outerTx *Tx
+	_ = Atomic(ctx, func(ctx context.Context) error {
+		outerTx = CurrentTx(ctx)
+		return Atomic(ctx, func(ctx context.Context) error {
+			innerTx := CurrentTx(ctx)
+			rec.record(fmt.Sprintf("inner.parent==outer=%v", innerTx.Parent() == outerTx))
+			rec.record(fmt.Sprintf("outer.parent=%v", outerTx.Parent()))
+			return nil
+		})
+	})
+
+	rec.check(t, []string{
+		"inner.parent==outer=true",
+		"outer.parent=<nil>",
+	})
+}
+
+func TestTx_BeforeCommit_FiresPerLevel(t *testing.T) {
+	// Tx.BeforeCommit fires when THIS level commits — for a subtx, that's
+	// the savepoint release; for the root, the SQL COMMIT.
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectExec("SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("RELEASE SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectCommit()
+
+	_ = Atomic(ctx, func(ctx context.Context) error {
+		CurrentTx(ctx).BeforeCommit(func(ctx context.Context, tx *Tx) error {
+			rec.record("outer-before")
+			return nil
+		})
+		return Atomic(ctx, func(ctx context.Context) error {
+			CurrentTx(ctx).BeforeCommit(func(ctx context.Context, tx *Tx) error {
+				rec.record("inner-before")
+				return nil
+			})
+			return nil
+		})
+	})
+
+	// Inner BeforeCommit fires before the savepoint release; outer fires
+	// before the root commit.
+	rec.check(t, []string{
+		"inner-before",
+		"outer-before",
+	})
+}
+
+func TestTx_AfterCommit_FiresPerLevel(t *testing.T) {
+	// Tx.AfterCommit fires immediately after THIS level commits.
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectExec("SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("RELEASE SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectCommit()
+
+	_ = Atomic(ctx, func(ctx context.Context) error {
+		CurrentTx(ctx).AfterCommit(func(ctx context.Context, tx *Tx) error {
+			rec.record("outer-after")
+			return nil
+		})
+		return Atomic(ctx, func(ctx context.Context) error {
+			CurrentTx(ctx).AfterCommit(func(ctx context.Context, tx *Tx) error {
+				rec.record("inner-after")
+				return nil
+			})
+			return nil
+		})
+	})
+
+	// Inner AfterCommit fires after its savepoint release (still inside
+	// outer tx); outer AfterCommit fires after the root commit.
+	rec.check(t, []string{
+		"inner-after",
+		"outer-after",
+	})
+}
+
+func TestTx_BeforeCommit_FollowedByDB(t *testing.T) {
+	// BeforeCommit hooks run inside the transaction, so they can issue
+	// SQL writes that are part of the same atomic unit.
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectExec("DELETE FROM stuff").WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	_ = Atomic(ctx, func(ctx context.Context) error {
+		CurrentTx(ctx).BeforeCommit(func(ctx context.Context, tx *Tx) error {
+			_, err := Exec(ctx, "DELETE FROM stuff")
+			rec.record(fmt.Sprintf("delete err=%v", err))
+			return nil
+		})
+		return nil
+	})
+
+	rec.check(t, []string{
+		"delete err=<nil>",
+	})
+}
+
+func TestTx_BeforeCommit_NotCalled_OnRollback(t *testing.T) {
+	// BeforeCommit hooks registered on a subtx that rolls back are not
+	// called and don't leak to the parent.
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectExec("SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("ROLLBACK TO SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectCommit()
+
+	_ = Atomic(ctx, func(ctx context.Context) error {
+		rec.record("outer")
+		_ = Atomic(ctx, func(ctx context.Context) error {
+			rec.record("inner")
+			CurrentTx(ctx).BeforeCommit(func(ctx context.Context, tx *Tx) error {
+				rec.record("inner-before SHOULD NOT FIRE")
+				return nil
+			})
+			CurrentTx(ctx).AfterCommit(func(ctx context.Context, tx *Tx) error {
+				rec.record("inner-after SHOULD NOT FIRE")
+				return nil
+			})
+			return errTest
+		})
+		// outer commits; the inner's hooks must not have fired or leaked.
+		return nil
+	})
+
+	rec.check(t, []string{
+		"outer",
+		"inner",
+	})
+}
+
+func TestTx_BeforeCommit_PicksUpNewHooks(t *testing.T) {
+	// A BeforeCommit hook that registers another BeforeCommit hook on the
+	// same Tx is picked up by the same iteration loop.
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	_ = Atomic(ctx, func(ctx context.Context) error {
+		CurrentTx(ctx).BeforeCommit(func(ctx context.Context, tx *Tx) error {
+			rec.record("hook1")
+			tx.BeforeCommit(func(ctx context.Context, tx *Tx) error {
+				rec.record("hook2 (added by hook1)")
+				return nil
+			})
+			return nil
+		})
+		return nil
+	})
+
+	rec.check(t, []string{
+		"hook1",
+		"hook2 (added by hook1)",
+	})
+}
+
+func TestTx_BeforeCommit_ErrorAborts(t *testing.T) {
+	// If a BeforeCommit hook returns an error, the transaction rolls back
+	// instead of committing.
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+
+	err := Atomic(ctx, func(ctx context.Context) error {
+		CurrentTx(ctx).BeforeCommit(func(ctx context.Context, tx *Tx) error {
+			rec.record("hook1")
+			return errTest
+		})
+		CurrentTx(ctx).BeforeCommit(func(ctx context.Context, tx *Tx) error {
+			rec.record("hook2 SHOULD NOT FIRE")
+			return nil
+		})
+		return nil
+	})
+
+	rec.record(fmt.Sprintf("err is errTest=%v", errors.Is(err, errTest)))
+	rec.check(t, []string{
+		"hook1",
+		"err is errTest=true",
+	})
+}
+
+func TestTx_State_PerLevel(t *testing.T) {
+	// SetState/GetState are per-Tx — state set on the inner tx is invisible
+	// to the outer, and dies with the subtx.
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectExec("SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("RELEASE SAVEPOINT savepoint_1").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectCommit()
+
+	type keyA struct{}
+	type keyB struct{}
+
+	_ = Atomic(ctx, func(ctx context.Context) error {
+		outer := CurrentTx(ctx)
+		outer.SetState(keyA{}, "outer-A")
+
+		_ = Atomic(ctx, func(ctx context.Context) error {
+			inner := CurrentTx(ctx)
+			// Inner's state is empty; outer's is set.
+			rec.record(fmt.Sprintf("inner-A before=%v", inner.GetState(keyA{})))
+			rec.record(fmt.Sprintf("outer-A from inner=%v", inner.Parent().GetState(keyA{})))
+			inner.SetState(keyB{}, "inner-B")
+			rec.record(fmt.Sprintf("inner-B=%v", inner.GetState(keyB{})))
+			// Sanity check: outer.GetState doesn't see inner's keyB.
+			rec.record(fmt.Sprintf("outer-B from outer=%v", outer.GetState(keyB{})))
+			return nil
+		})
+
+		// Inner committed; its state is gone (we held no reference outside).
+		// Outer's state is still there.
+		rec.record(fmt.Sprintf("outer-A=%v", outer.GetState(keyA{})))
+		return nil
+	})
+
+	rec.check(t, []string{
+		"inner-A before=<nil>",
+		"outer-A from inner=outer-A",
+		"inner-B=inner-B",
+		"outer-B from outer=<nil>",
+		"outer-A=outer-A",
+	})
+}
+
+func TestTx_SetState_NilDeletes(t *testing.T) {
+	ctx, mock, rec := setupTest(t)
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	type keyA struct{}
+
+	_ = Atomic(ctx, func(ctx context.Context) error {
+		tx := CurrentTx(ctx)
+		tx.SetState(keyA{}, "value")
+		rec.record(fmt.Sprintf("set=%v", tx.GetState(keyA{})))
+		tx.SetState(keyA{}, nil)
+		rec.record(fmt.Sprintf("after-nil=%v", tx.GetState(keyA{})))
+		return nil
+	})
+
+	rec.check(t, []string{
+		"set=value",
+		"after-nil=<nil>",
 	})
 }
