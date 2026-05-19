@@ -75,10 +75,18 @@ func (s *Schema) SQLSchema() *schema.Database {
 		}
 
 		for _, f := range m.Indexes {
-			t.Indexes[makeName(m.Name, f.Fields, "idx")+makeHash(f.Method, f.Where)] = &schema.Index{
+			// Only mix the unique flag into the hash when it's set, so
+			// existing non-unique partial indexes keep their pre-existing
+			// names (which only hashed method + where).
+			hashArgs := []string{f.Method, f.Where}
+			if f.Unique {
+				hashArgs = append(hashArgs, "unique")
+			}
+			t.Indexes[makeName(m.Name, f.Fields, "idx")+makeHash(hashArgs...)] = &schema.Index{
 				Columns: sqlNameAll(f.Fields),
 				Method:  f.Method,
 				Where:   f.Where,
+				Unique:  f.Unique,
 			}
 		}
 

@@ -46,6 +46,7 @@ type defModelIndex struct {
 	names  []string
 	where  string
 	method string
+	unique bool
 }
 
 func (d defModelIndex) Where(val string) defModelIndex {
@@ -58,6 +59,13 @@ func (d defModelIndex) Method(val string) defModelIndex {
 	return d
 }
 
+// Unique marks the index as UNIQUE. Combine with .Where(...) for partial
+// unique indexes (which plain Unique constraints can't express).
+func (d defModelIndex) Unique() defModelIndex {
+	d.unique = true
+	return d
+}
+
 func (d defModelIndex) ModelItem(ctx *ModelContext)   {}
 func (d defModelIndex) StructItem(ctx *StructContext) {}
 
@@ -67,6 +75,7 @@ func (d defModelIndex) ModelRecursiveItem(ctx *ModelRecursiveContext) {
 		Fields: parsePathsPrefix(ctx, ctx.Prefix, d.names),
 		Method: d.method,
 		Where:  d.where,
+		Unique: d.unique,
 	})
 }
 

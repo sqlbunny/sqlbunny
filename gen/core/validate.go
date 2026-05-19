@@ -134,11 +134,12 @@ func checkIndexes(ctx *gen.Context, m *schema.Model) {
 		fields string
 		method string
 		where  string
+		unique bool
 	}
 	seen := make(map[indexKey]struct{})
 	for _, f := range m.Indexes {
 		desc := describeIndex(f.Fields)
-		key := indexKey{fields: desc, method: f.Method, where: f.Where}
+		key := indexKey{fields: desc, method: f.Method, where: f.Where, unique: f.Unique}
 
 		if _, ok := seen[key]; ok {
 			ctx.AddError("Model '%s' index '%s' is defined multiple times.", m.Name, desc)

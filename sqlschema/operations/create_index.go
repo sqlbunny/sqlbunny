@@ -14,11 +14,16 @@ type CreateIndex struct {
 	Columns    []string
 	Method     string // Index method. If empty, default is btree.
 	Where      string // Index where clause, for partial indexes. If empty, no where clause is in effect.
+	Unique     bool   // If true, emits CREATE UNIQUE INDEX.
 }
 
 func (o CreateIndex) GetSQL() string {
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "CREATE INDEX CONCURRENTLY \"%s\" ON %s", o.IndexName, sqlName(o.SchemaName, o.TableName))
+	kind := "INDEX"
+	if o.Unique {
+		kind = "UNIQUE INDEX"
+	}
+	fmt.Fprintf(&buf, "CREATE %s CONCURRENTLY \"%s\" ON %s", kind, o.IndexName, sqlName(o.SchemaName, o.TableName))
 	if o.Method != "" {
 		fmt.Fprintf(&buf, " USING %s", o.Method)
 	}
@@ -45,6 +50,7 @@ func (o CreateIndex) Apply(d *schema.Database) error {
 		Columns: o.Columns,
 		Method:  o.Method,
 		Where:   o.Where,
+		Unique:  o.Unique,
 	}
 	return nil
 }

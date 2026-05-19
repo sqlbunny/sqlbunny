@@ -10,6 +10,7 @@ type Index struct {
 	Fields []Path
 	Method string // Index method. If empty, default is btree.
 	Where  string // Index where clause, for partial indexes. If empty, no where clause is in effect.
+	Unique bool   // If true, emits CREATE UNIQUE INDEX (useful for partial unique indexes).
 }
 
 // Unique represents a unique constraint in a database
