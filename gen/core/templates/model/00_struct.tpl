@@ -4,6 +4,7 @@
 {{ import "json" "encoding/json" }}
 {{ import "fmt" "fmt" }}
 {{ import "reflect" "reflect" }}
+{{ import "sort" "sort" }}
 {{ import "strings" "strings" }}
 {{ import "sync" "sync" }}
 {{ import "time" "time" }}

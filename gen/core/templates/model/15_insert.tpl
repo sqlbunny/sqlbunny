@@ -10,16 +10,39 @@ func (o *{{$modelNameSingular}}) Insert(ctx context.Context, whitelist ... {{$mo
 	if o == nil {
 		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
 	}
-    _, err := o.InsertIgnore(ctx, "", whitelist...)
+	_, err := o.insertImpl(ctx, "", whitelist)
 	return err
 }
 
-
-func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflictCondition string, whitelist ... {{$modelNameSingular}}Column) (bool, error) {
+// InsertIgnore inserts the row, appending `ON CONFLICT <conflictTarget> DO NOTHING`.
+// If conflictTarget is "" the clause becomes `ON CONFLICT DO NOTHING` (matches on
+// any unique constraint). Returns whether a row was actually inserted.
+func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, conflictTarget string, whitelist ... {{$modelNameSingular}}Column) (bool, error) {
 	if o == nil {
 		return false, errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
 	}
+	return o.insertImpl(ctx, {{$varNameSingular}}IgnoreClause(conflictTarget), whitelist)
+}
 
+// Upsert inserts the row, appending `ON CONFLICT <conflictTarget> DO UPDATE SET ...`.
+// If conflictTarget is "" the clause becomes `ON CONFLICT DO UPDATE SET ...`.
+// updates maps column name to SQL expression for the SET list (e.g. EXCLUDED."foo"
+// or "foo" + 1). Must be non-empty.
+func (o *{{$modelNameSingular}}) Upsert(ctx context.Context, conflictTarget string, updates map[{{$modelNameSingular}}Column]string, whitelist ... {{$modelNameSingular}}Column) error {
+	if o == nil {
+		return errors.New("{{.PkgName}}: no {{.Model.Name}} provided for insertion")
+	}
+	clause, err := {{$varNameSingular}}UpsertClause(conflictTarget, updates)
+	if err != nil {
+		return err
+	}
+	_, err = o.insertImpl(ctx, clause, whitelist)
+	return err
+}
+
+// insertImpl runs INSERT and optionally appends conflictClause (the full
+// " ON CONFLICT ..." suffix, or "" for none). Returns whether a row was inserted.
+func (o *{{$modelNameSingular}}) insertImpl(ctx context.Context, conflictClause string, whitelist []{{$modelNameSingular}}Column) (bool, error) {
 	var err error
 
 	{{ hook . "before_insert" "o" .Model }}
@@ -31,7 +54,7 @@ func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflic
 		wl = columnStrings(whitelist)
 	}
 
-	key := makeCacheKey(append(wl, ignoreConflictCondition))
+	key := makeCacheKey(append(wl, conflictClause))
 	{{$varNameSingular}}InsertCacheMut.RLock()
 	cache, cached := {{$varNameSingular}}InsertCache[key]
 	{{$varNameSingular}}InsertCacheMut.RUnlock()
@@ -48,9 +71,7 @@ func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflic
 			cache.query = "INSERT INTO {{$schemaModel}} DEFAULT VALUES"
 		}
 
-        if len(ignoreConflictCondition) > 0 {
-           cache.query += fmt.Sprintf(" ON CONFLICT %s DO NOTHING", ignoreConflictCondition)
-        }
+		cache.query += conflictClause
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -76,4 +97,42 @@ func (o *{{$modelNameSingular}}) InsertIgnore(ctx context.Context, ignoreConflic
 	{{ hook . "after_insert" "o" .Model }}
 
 	return inserted, nil
+}
+
+// {{$varNameSingular}}IgnoreClause builds the " ON CONFLICT [target] DO NOTHING" suffix.
+func {{$varNameSingular}}IgnoreClause(conflictTarget string) string {
+	if conflictTarget == "" {
+		return " ON CONFLICT DO NOTHING"
+	}
+	return " ON CONFLICT " + conflictTarget + " DO NOTHING"
+}
+
+// {{$varNameSingular}}UpsertClause builds the " ON CONFLICT [target] DO UPDATE SET ..." suffix.
+// Returns an error if updates is empty.
+func {{$varNameSingular}}UpsertClause(conflictTarget string, updates map[{{$modelNameSingular}}Column]string) (string, error) {
+	if len(updates) == 0 {
+		return "", errors.New("{{.PkgName}}: Upsert requires at least one update column")
+	}
+	cols := make([]string, 0, len(updates))
+	for c := range updates {
+		cols = append(cols, string(c))
+	}
+	sort.Strings(cols)
+	var sb strings.Builder
+	sb.WriteString(" ON CONFLICT ")
+	if conflictTarget != "" {
+		sb.WriteString(conflictTarget)
+		sb.WriteString(" ")
+	}
+	sb.WriteString("DO UPDATE SET ")
+	for i, c := range cols {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString("{{.LQ}}")
+		sb.WriteString(c)
+		sb.WriteString("{{.RQ}} = ")
+		sb.WriteString(updates[{{$modelNameSingular}}Column(c)])
+	}
+	return sb.String(), nil
 }

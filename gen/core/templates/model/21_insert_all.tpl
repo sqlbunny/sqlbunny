@@ -7,6 +7,23 @@
 // INSERT statements (chunked to stay under Postgres' bind-parameter limit).
 // Whitelist semantics match the per-row Insert.
 func (o {{$modelNameSingular}}Slice) InsertAll(ctx context.Context, whitelist ...{{$modelNameSingular}}Column) error {
+	return o.bulkInsertImpl(ctx, "", whitelist)
+}
+
+// UpsertAll bulk-inserts every row, appending `ON CONFLICT <conflictTarget>
+// DO UPDATE SET ...` to every statement. Semantics for conflictTarget and
+// updates match the per-row Upsert.
+func (o {{$modelNameSingular}}Slice) UpsertAll(ctx context.Context, conflictTarget string, updates map[{{$modelNameSingular}}Column]string, whitelist ...{{$modelNameSingular}}Column) error {
+	clause, err := {{$varNameSingular}}UpsertClause(conflictTarget, updates)
+	if err != nil {
+		return err
+	}
+	return o.bulkInsertImpl(ctx, clause, whitelist)
+}
+
+// bulkInsertImpl runs the multi-row INSERT, optionally appending conflictClause
+// (the full " ON CONFLICT ..." suffix, or "" for none). Does not RETURN.
+func (o {{$modelNameSingular}}Slice) bulkInsertImpl(ctx context.Context, conflictClause string, whitelist []{{$modelNameSingular}}Column) error {
 	if len(o) == 0 {
 		return nil
 	}
@@ -35,7 +52,7 @@ func (o {{$modelNameSingular}}Slice) InsertAll(ctx context.Context, whitelist ..
 		}
 
 		placeholders := strmangle.Placeholders(dialect.IndexPlaceholders, len(chunk)*len(wl), 1, len(wl))
-		query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") VALUES " + placeholders
+		query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") VALUES " + placeholders + conflictClause
 		if _, err := bunny.Exec(ctx, query, args...); err != nil {
 			return errors.Errorf("{{.PkgName}}: unable to bulk insert into {{.Model.Name}}: %w", err)
 		}
@@ -63,11 +80,12 @@ func {{$varNameSingular}}BulkInsertPrep(whitelist []{{$modelNameSingular}}Column
 {{- $pkGoType := goType ($model.FindField $pkPath).Type.GoType }}
 
 // InsertAllIgnore is like InsertAll but appends
-// `ON CONFLICT <ignoreConflictCondition> DO NOTHING` to every statement.
+// `ON CONFLICT <conflictTarget> DO NOTHING` to every statement. If
+// conflictTarget is "" the clause becomes `ON CONFLICT DO NOTHING`.
 // Returns the set of primary-key values that were actually inserted; rows
 // skipped by the ON CONFLICT clause are absent. Returns nil for an empty
 // slice.
-func (o {{$modelNameSingular}}Slice) InsertAllIgnore(ctx context.Context, ignoreConflictCondition string, whitelist ...{{$modelNameSingular}}Column) (map[{{$pkGoType}}]struct{}, error) {
+func (o {{$modelNameSingular}}Slice) InsertAllIgnore(ctx context.Context, conflictTarget string, whitelist ...{{$modelNameSingular}}Column) (map[{{$pkGoType}}]struct{}, error) {
 	if len(o) == 0 {
 		return nil, nil
 	}
@@ -76,6 +94,7 @@ func (o {{$modelNameSingular}}Slice) InsertAllIgnore(ctx context.Context, ignore
 		return nil, err
 	}
 	colsClause := "{{.LQ}}" + strings.Join(wl, "{{.RQ}},{{.LQ}}") + "{{.RQ}}"
+	conflictClause := {{$varNameSingular}}IgnoreClause(conflictTarget)
 
 	const maxParams = 60000
 	chunkSize := maxParams / len(wl)
@@ -97,11 +116,7 @@ func (o {{$modelNameSingular}}Slice) InsertAllIgnore(ctx context.Context, ignore
 		}
 
 		placeholders := strmangle.Placeholders(dialect.IndexPlaceholders, len(chunk)*len(wl), 1, len(wl))
-		query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") VALUES " + placeholders
-		if len(ignoreConflictCondition) > 0 {
-			query += " ON CONFLICT " + ignoreConflictCondition + " DO NOTHING"
-		}
-		query += " RETURNING {{.LQ}}{{$pkColumn}}{{.RQ}}"
+		query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") VALUES " + placeholders + conflictClause + " RETURNING {{.LQ}}{{$pkColumn}}{{.RQ}}"
 
 		rows, err := bunny.Query(ctx, query, args...)
 		if err != nil {
