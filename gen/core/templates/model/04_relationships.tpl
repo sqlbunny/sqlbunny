@@ -8,6 +8,7 @@
 
 {{- $relationship := . }}
 {{- $relationshipName := .Name | titleCase}}
+{{- $relationshipNameCamel := .Name | camelCase}}
 
 
 {{ $foreignModel := index $dot.Schema.Models .ForeignModel }}
@@ -53,15 +54,16 @@ func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignM
 // Load{{$relationshipName}} allows an eager lookup of values, cached into the
 // loaded structs of the objects.
 func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice []*{{$modelName}}, mods ...qm.QueryMod) error {
+	// Mark loaded and reset any previous value so re-loads start from a clean slate.
+	for _, obj := range slice {
+		obj.R.{{$relationshipNameCamel}}Loaded = true
+		obj.R.{{$relationshipNameCamel}} = nil
+	}
+
 	{{if .IsArray}}
 	{{- $localArray := index .LocalFields 0 -}}
 	{{- $foreignCol := index .ForeignFields 0 -}}
 	{{- $fcol := $foreignModel.FindField $foreignCol }}
-	for _, obj := range slice {
-		if obj.R == nil {
-			obj.R = &{{$modelNameCamel}}R{}
-		}
-	}
 
 	// Collect unique foreign IDs across all local arrays.
 	seen := make(map[{{ goType $fcol.GoType }}]struct{})
@@ -116,16 +118,13 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 	for _, local := range slice {
 		for _, id := range local.{{$localArray | titleCasePath}} {
 			if foreign, ok := foreignByKey[id]; ok {
-				local.R.{{$relationshipName}} = append(local.R.{{$relationshipName}}, foreign)
+				local.R.{{$relationshipNameCamel}} = append(local.R.{{$relationshipNameCamel}}, foreign)
 			}
 		}
 	}
 	{{else}}
 	args := make([]any, len(slice)*{{len .LocalFields}})
 	for i, obj := range slice {
-		if obj.R == nil {
-			obj.R = &{{$modelNameCamel}}R{}
-		}
 		{{ range $i, $c := .LocalFields }}
 		args[i*{{len $relationship.LocalFields}} + {{$i}}] = obj.{{$c | titleCasePath}}
 		{{ end }}
@@ -186,9 +185,9 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 				{{doCompare (printf "local.%s" ($lc | titleCasePath)) (printf "joined.J.%s" ($jc | titleCasePath)) $lcol $jcol }}
 			{{- end }} {
 				{{if .ToMany}}
-				local.R.{{$relationshipName}} = append(local.R.{{$relationshipName}}, &joined.F)
+				local.R.{{$relationshipNameCamel}} = append(local.R.{{$relationshipNameCamel}}, &joined.F)
 				{{else}}
-				local.R.{{$relationshipName}} = &joined.F
+				local.R.{{$relationshipNameCamel}} = &joined.F
 				{{end}}
 			}
 		}
@@ -232,9 +231,9 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 				{{doCompare (printf "local.%s" ($lc | titleCasePath)) (printf "foreign.%s" ($fc | titleCasePath)) $lcol $fcol }}
 			{{- end }} {
 				{{if .ToMany}}
-				local.R.{{$relationshipName}} = append(local.R.{{$relationshipName}}, foreign)
+				local.R.{{$relationshipNameCamel}} = append(local.R.{{$relationshipNameCamel}}, foreign)
 				{{else}}
-				local.R.{{$relationshipName}} = foreign
+				local.R.{{$relationshipNameCamel}} = foreign
 				break
 				{{end}}
 			}

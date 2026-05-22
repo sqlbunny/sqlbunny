@@ -173,6 +173,9 @@ func (l loadRelationshipState) callLoadFunction(depth int, loadingFrom reflect.V
 //	parent2 -> child3
 //
 // This should return [child1, child2, child3]
+//
+// Relationship fields on the R struct are private; the value is fetched
+// via the exported getter method generated alongside them.
 func collectLoaded(key string, loadingFrom reflect.Value) (reflect.Value, error) {
 	currentModelType := loadingFrom.Type().Elem().Elem()
 	f, ok := currentModelType.FieldByName(relationshipStructName)
@@ -180,27 +183,29 @@ func collectLoaded(key string, loadingFrom reflect.Value) (reflect.Value, error)
 		return reflect.Value{}, errors.New("relationship struct was not found")
 	}
 	relFieldIndex := f.Index
-	f, ok = f.Type.Elem().FieldByName(key)
+	getter, ok := reflect.PointerTo(f.Type).MethodByName(key)
 	if !ok {
-		return reflect.Value{}, errors.New("field was not found in relationship struct")
+		return reflect.Value{}, errors.Errorf("relationship getter %s not found on %s", key, f.Type.Name())
 	}
-	keyFieldIndex := f.Index
 
-	// Ensure that we get rid of all the helper "XSlice" types
-	toMany := f.Type.Kind() == reflect.Slice
+	// The getter returns either *Foo or FooSlice. Strip down to *Foo so all
+	// collections look the same.
+	retType := getter.Type.Out(0)
+	toMany := retType.Kind() == reflect.Slice
 	var nextModelType reflect.Type
 	if toMany {
-		nextModelType = f.Type.Elem().Elem()
+		nextModelType = retType.Elem().Elem()
 	} else {
-		nextModelType = f.Type.Elem()
+		nextModelType = retType.Elem()
 	}
-	nextSliceType := reflect.SliceOf(reflect.PtrTo(nextModelType))
+	nextSliceType := reflect.SliceOf(reflect.PointerTo(nextModelType))
 
 	collection := reflect.MakeSlice(nextSliceType, 0, 0)
 
 	lnFrom := loadingFrom.Len()
 	for i := 0; i < lnFrom; i++ {
-		o := loadingFrom.Index(i).Elem().FieldByIndex(relFieldIndex).Elem().FieldByIndex(keyFieldIndex)
+		rVal := loadingFrom.Index(i).Elem().FieldByIndex(relFieldIndex)
+		o := rVal.Addr().MethodByName(key).Call(nil)[0]
 		if o.IsNil() {
 			continue
 		}

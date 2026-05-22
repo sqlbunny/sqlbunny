@@ -23,7 +23,7 @@ type {{$modelName}} struct {
 	{{range $field := .Model.Fields }}
     {{titleCase $field.Name}} {{goType $field.GoType}} `{{$field.GenerateTags}}`
 	{{- end }}
-	R *{{$modelNameCamel}}R `json:"-" toml:"-" yaml:"-"`
+	R {{$modelNameCamel}}R `json:"-" toml:"-" yaml:"-"`
 	L {{$modelNameCamel}}L `json:"-" toml:"-" yaml:"-"`
 }
 
@@ -40,15 +40,30 @@ var {{$modelName}}Columns = struct {
 }
 
 // {{$modelNameCamel}}R is where relationships are stored.
+// Fields are private; access them via the generated getter methods, which
+// panic if the relationship hasn't been loaded. Use qm.Load("rel_name")
+// in your query to load.
 type {{$modelNameCamel}}R struct {
 	{{range .Model.Relationships -}}
-	{{- if .ToMany -}}
-	{{ .Name | titleCase }} {{ .ForeignModel | titleCase}}Slice
-	{{ else -}}
-	{{ .Name | titleCase }} *{{ .ForeignModel | titleCase}}
-	{{ end -}}
+	{{ .Name | camelCase }}Loaded bool
+	{{- if .ToMany }}
+	{{ .Name | camelCase }} {{ .ForeignModel | titleCase}}Slice
+	{{- else }}
+	{{ .Name | camelCase }} *{{ .ForeignModel | titleCase}}
+	{{- end }}
 	{{end -}}
 }
+
+{{range .Model.Relationships}}
+// {{ .Name | titleCase }} returns the loaded {{ .Name }} relationship.
+// Panics if the relationship was not loaded via qm.Load("{{ .Name }}").
+func (r *{{$modelNameCamel}}R) {{ .Name | titleCase }}() {{if .ToMany}}{{ .ForeignModel | titleCase}}Slice{{else}}*{{ .ForeignModel | titleCase}}{{end}} {
+	if !r.{{ .Name | camelCase }}Loaded {
+		panic(`sqlbunny: relationship "{{ .Name | titleCase }}" on {{$modelName}} not loaded; use qm.Load("{{ .Name }}")`)
+	}
+	return r.{{ .Name | camelCase }}
+}
+{{end}}
 
 // {{$modelNameCamel}}L is where Load methods for each relationship are stored.
 type {{$modelNameCamel}}L struct{}

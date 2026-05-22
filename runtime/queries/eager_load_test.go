@@ -15,34 +15,80 @@ var testEagerCounters struct {
 
 type testEager struct {
 	ID int
-	R  *testEagerR
+	R  testEagerR
 	L  testEagerL
 }
 
 type testEagerR struct {
-	ChildOne  *testEagerChild
-	ChildMany []*testEagerChild
-	ZeroOne   *testEagerZero
-	ZeroMany  []*testEagerZero
+	childOneLoaded   bool
+	childOne         *testEagerChild
+	childManyLoaded  bool
+	childMany        []*testEagerChild
+	zeroOneLoaded    bool
+	zeroOne          *testEagerZero
+	zeroManyLoaded   bool
+	zeroMany         []*testEagerZero
 }
+
+func (r *testEagerR) ChildOne() *testEagerChild {
+	if !r.childOneLoaded {
+		panic(`relationship "ChildOne" not loaded`)
+	}
+	return r.childOne
+}
+func (r *testEagerR) ChildMany() []*testEagerChild {
+	if !r.childManyLoaded {
+		panic(`relationship "ChildMany" not loaded`)
+	}
+	return r.childMany
+}
+func (r *testEagerR) ZeroOne() *testEagerZero {
+	if !r.zeroOneLoaded {
+		panic(`relationship "ZeroOne" not loaded`)
+	}
+	return r.zeroOne
+}
+func (r *testEagerR) ZeroMany() []*testEagerZero {
+	if !r.zeroManyLoaded {
+		panic(`relationship "ZeroMany" not loaded`)
+	}
+	return r.zeroMany
+}
+
 type testEagerL struct {
 }
 
 type testEagerChild struct {
 	ID int
-	R  *testEagerChildR
+	R  testEagerChildR
 	L  testEagerChildL
 }
 type testEagerChildR struct {
-	NestedOne  *testEagerNested
-	NestedMany []*testEagerNested
+	nestedOneLoaded  bool
+	nestedOne        *testEagerNested
+	nestedManyLoaded bool
+	nestedMany       []*testEagerNested
 }
+
+func (r *testEagerChildR) NestedOne() *testEagerNested {
+	if !r.nestedOneLoaded {
+		panic(`relationship "NestedOne" not loaded`)
+	}
+	return r.nestedOne
+}
+func (r *testEagerChildR) NestedMany() []*testEagerNested {
+	if !r.nestedManyLoaded {
+		panic(`relationship "NestedMany" not loaded`)
+	}
+	return r.nestedMany
+}
+
 type testEagerChildL struct {
 }
 
 type testEagerNested struct {
 	ID int
-	R  *testEagerNestedR
+	R  testEagerNestedR
 	L  testEagerNestedL
 }
 type testEagerNestedR struct {
@@ -52,22 +98,36 @@ type testEagerNestedL struct {
 
 type testEagerZero struct {
 	ID int
-	R  *testEagerZeroR
+	R  testEagerZeroR
 	L  testEagerZeroL
 }
 type testEagerZeroR struct {
-	NestedOne  *testEagerNested
-	NestedMany []*testEagerNested
+	nestedOneLoaded  bool
+	nestedOne        *testEagerNested
+	nestedManyLoaded bool
+	nestedMany       []*testEagerNested
 }
+
+func (r *testEagerZeroR) NestedOne() *testEagerNested {
+	if !r.nestedOneLoaded {
+		panic(`relationship "NestedOne" not loaded`)
+	}
+	return r.nestedOne
+}
+func (r *testEagerZeroR) NestedMany() []*testEagerNested {
+	if !r.nestedManyLoaded {
+		panic(`relationship "NestedMany" not loaded`)
+	}
+	return r.nestedMany
+}
+
 type testEagerZeroL struct {
 }
 
 func (testEagerL) LoadChildOne(_ context.Context, slice []*testEager) error {
 	for _, o := range slice {
-		if o.R == nil {
-			o.R = &testEagerR{}
-		}
-		o.R.ChildOne = &testEagerChild{ID: 11}
+		o.R.childOneLoaded = true
+		o.R.childOne = &testEagerChild{ID: 11}
 	}
 
 	testEagerCounters.ChildOne++
@@ -77,12 +137,10 @@ func (testEagerL) LoadChildOne(_ context.Context, slice []*testEager) error {
 
 func (testEagerL) LoadChildMany(_ context.Context, slice []*testEager) error {
 	for _, o := range slice {
-		if o.R == nil {
-			o.R = &testEagerR{}
-		}
-		o.R.ChildMany = []*testEagerChild{
-			&testEagerChild{ID: 12},
-			&testEagerChild{ID: 13},
+		o.R.childManyLoaded = true
+		o.R.childMany = []*testEagerChild{
+			{ID: 12},
+			{ID: 13},
 		}
 	}
 
@@ -93,10 +151,8 @@ func (testEagerL) LoadChildMany(_ context.Context, slice []*testEager) error {
 
 func (testEagerChildL) LoadNestedOne(_ context.Context, slice []*testEagerChild) error {
 	for _, o := range slice {
-		if o.R == nil {
-			o.R = &testEagerChildR{}
-		}
-		o.R.NestedOne = &testEagerNested{ID: 21}
+		o.R.nestedOneLoaded = true
+		o.R.nestedOne = &testEagerNested{ID: 21}
 	}
 
 	testEagerCounters.NestedOne++
@@ -106,12 +162,10 @@ func (testEagerChildL) LoadNestedOne(_ context.Context, slice []*testEagerChild)
 
 func (testEagerChildL) LoadNestedMany(_ context.Context, slice []*testEagerChild) error {
 	for _, o := range slice {
-		if o.R == nil {
-			o.R = &testEagerChildR{}
-		}
-		o.R.NestedMany = []*testEagerNested{
-			&testEagerNested{ID: 22},
-			&testEagerNested{ID: 23},
+		o.R.nestedManyLoaded = true
+		o.R.nestedMany = []*testEagerNested{
+			{ID: 22},
+			{ID: 23},
 		}
 	}
 
@@ -122,9 +176,7 @@ func (testEagerChildL) LoadNestedMany(_ context.Context, slice []*testEagerChild
 
 func (testEagerL) LoadZeroOne(_ context.Context, slice []*testEager) error {
 	for _, o := range slice {
-		if o.R == nil {
-			o.R = &testEagerR{}
-		}
+		o.R.zeroOneLoaded = true
 	}
 
 	return nil
@@ -132,19 +184,23 @@ func (testEagerL) LoadZeroOne(_ context.Context, slice []*testEager) error {
 
 func (testEagerL) LoadZeroMany(_ context.Context, slice []*testEager) error {
 	for _, o := range slice {
-		if o.R == nil {
-			o.R = &testEagerR{}
-		}
-		o.R.ZeroMany = []*testEagerZero{}
+		o.R.zeroManyLoaded = true
+		o.R.zeroMany = []*testEagerZero{}
 	}
 	return nil
 }
 
 func (testEagerZeroL) LoadNestedOne(_ context.Context, slice []*testEagerZero) error {
+	for _, o := range slice {
+		o.R.nestedOneLoaded = true
+	}
 	return nil
 }
 
 func (testEagerZeroL) LoadNestedMany(_ context.Context, slice []*testEagerZero) error {
+	for _, o := range slice {
+		o.R.nestedManyLoaded = true
+	}
 	return nil
 }
 
@@ -175,16 +231,16 @@ func TestEagerLoadFromOne(t *testing.T) {
 		t.Error(testEagerCounters.NestedOne)
 	}
 
-	checkChildOne(obj.R.ChildOne)
-	checkChildMany(obj.R.ChildMany)
+	checkChildOne(obj.R.ChildOne())
+	checkChildMany(obj.R.ChildMany())
 
-	checkNestedOne(obj.R.ChildOne.R.NestedOne)
-	checkNestedOne(obj.R.ChildMany[0].R.NestedOne)
-	checkNestedOne(obj.R.ChildMany[1].R.NestedOne)
+	checkNestedOne(obj.R.ChildOne().R.NestedOne())
+	checkNestedOne(obj.R.ChildMany()[0].R.NestedOne())
+	checkNestedOne(obj.R.ChildMany()[1].R.NestedOne())
 
-	checkNestedMany(obj.R.ChildOne.R.NestedMany)
-	checkNestedMany(obj.R.ChildMany[0].R.NestedMany)
-	checkNestedMany(obj.R.ChildMany[1].R.NestedMany)
+	checkNestedMany(obj.R.ChildOne().R.NestedMany())
+	checkNestedMany(obj.R.ChildMany()[0].R.NestedMany())
+	checkNestedMany(obj.R.ChildMany()[1].R.NestedMany())
 }
 
 func TestEagerLoadFromMany(t *testing.T) {
@@ -217,24 +273,24 @@ func TestEagerLoadFromMany(t *testing.T) {
 		t.Error(testEagerCounters.NestedOne)
 	}
 
-	checkChildOne(slice[0].R.ChildOne)
-	checkChildOne(slice[1].R.ChildOne)
-	checkChildMany(slice[0].R.ChildMany)
-	checkChildMany(slice[1].R.ChildMany)
+	checkChildOne(slice[0].R.ChildOne())
+	checkChildOne(slice[1].R.ChildOne())
+	checkChildMany(slice[0].R.ChildMany())
+	checkChildMany(slice[1].R.ChildMany())
 
-	checkNestedOne(slice[0].R.ChildOne.R.NestedOne)
-	checkNestedOne(slice[0].R.ChildMany[0].R.NestedOne)
-	checkNestedOne(slice[0].R.ChildMany[1].R.NestedOne)
-	checkNestedOne(slice[1].R.ChildOne.R.NestedOne)
-	checkNestedOne(slice[1].R.ChildMany[0].R.NestedOne)
-	checkNestedOne(slice[1].R.ChildMany[1].R.NestedOne)
+	checkNestedOne(slice[0].R.ChildOne().R.NestedOne())
+	checkNestedOne(slice[0].R.ChildMany()[0].R.NestedOne())
+	checkNestedOne(slice[0].R.ChildMany()[1].R.NestedOne())
+	checkNestedOne(slice[1].R.ChildOne().R.NestedOne())
+	checkNestedOne(slice[1].R.ChildMany()[0].R.NestedOne())
+	checkNestedOne(slice[1].R.ChildMany()[1].R.NestedOne())
 
-	checkNestedMany(slice[0].R.ChildOne.R.NestedMany)
-	checkNestedMany(slice[0].R.ChildMany[0].R.NestedMany)
-	checkNestedMany(slice[0].R.ChildMany[1].R.NestedMany)
-	checkNestedMany(slice[1].R.ChildOne.R.NestedMany)
-	checkNestedMany(slice[1].R.ChildMany[0].R.NestedMany)
-	checkNestedMany(slice[1].R.ChildMany[1].R.NestedMany)
+	checkNestedMany(slice[0].R.ChildOne().R.NestedMany())
+	checkNestedMany(slice[0].R.ChildMany()[0].R.NestedMany())
+	checkNestedMany(slice[0].R.ChildMany()[1].R.NestedMany())
+	checkNestedMany(slice[1].R.ChildOne().R.NestedMany())
+	checkNestedMany(slice[1].R.ChildMany()[0].R.NestedMany())
+	checkNestedMany(slice[1].R.ChildMany()[1].R.NestedMany())
 }
 
 func TestEagerLoadZeroParents(t *testing.T) {
@@ -248,10 +304,10 @@ func TestEagerLoadZeroParents(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(obj.R.ZeroMany) != 0 {
+	if len(obj.R.ZeroMany()) != 0 {
 		t.Error("should have loaded nothing")
 	}
-	if obj.R.ZeroOne != nil {
+	if obj.R.ZeroOne() != nil {
 		t.Error("should have loaded nothing")
 	}
 }
@@ -260,8 +316,8 @@ func TestEagerLoadZeroParentsMany(t *testing.T) {
 	t.Parallel()
 
 	obj := []*testEager{
-		&testEager{},
-		&testEager{},
+		{},
+		{},
 	}
 
 	toLoad := []string{"ZeroMany.NestedMany", "ZeroOne.NestedOne", "ZeroMany.NestedMany", "ZeroOne.NestedOne"}
@@ -270,16 +326,16 @@ func TestEagerLoadZeroParentsMany(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(obj[0].R.ZeroMany) != 0 {
+	if len(obj[0].R.ZeroMany()) != 0 {
 		t.Error("should have loaded nothing")
 	}
-	if obj[0].R.ZeroOne != nil {
+	if obj[0].R.ZeroOne() != nil {
 		t.Error("should have loaded nothing")
 	}
-	if len(obj[1].R.ZeroMany) != 0 {
+	if len(obj[1].R.ZeroMany()) != 0 {
 		t.Error("should have loaded nothing")
 	}
-	if obj[1].R.ZeroOne != nil {
+	if obj[1].R.ZeroOne() != nil {
 		t.Error("should have loaded nothing")
 	}
 }
