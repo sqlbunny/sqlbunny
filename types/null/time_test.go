@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 )
@@ -27,8 +28,15 @@ func TestUnmarshalTimeJSON(t *testing.T) {
 
 	var invalid Time
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*time.ParseError); !ok {
-		t.Errorf("expected json.ParseError, not %T", err)
+	// On older Go, time.Time.UnmarshalJSON delegated straight to the time
+	// parser and returned *time.ParseError. On modern Go (>=1.21) it first
+	// rejects non-JSON-string input with a plain errors.errorString, so the
+	// parse error only appears if the input is a quoted-but-unparseable
+	// time. Accept either: ParseError if present (via errors.As to handle
+	// wrapping), otherwise just verify some error came back.
+	var pe *time.ParseError
+	if !errors.As(err, &pe) && err == nil {
+		t.Errorf("expected an error, got nil")
 	}
 	assertNullTime(t, invalid, "invalid from object json")
 

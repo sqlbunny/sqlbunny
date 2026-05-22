@@ -5,7 +5,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/sqlbunny/sqlbunny/types/null/convert"
 )
@@ -60,7 +59,9 @@ func (j JSON) Unmarshal(dest any) error {
 // UnmarshalJSON implements json.Unmarshaler.
 func (j *JSON) UnmarshalJSON(data []byte) error {
 	if data == nil {
-		return fmt.Errorf("json: cannot unmarshal nil into Go value of type null.JSON")
+		j.JSON = nil
+		j.Valid = false
+		return nil
 	}
 
 	if bytes.Equal(data, NullBytes) {
