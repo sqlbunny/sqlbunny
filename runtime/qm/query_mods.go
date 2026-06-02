@@ -48,6 +48,23 @@ func Select[T ~string](fields ...T) QueryMod {
 	}
 }
 
+// Expr builds a composable SQL expression from a clause containing `?`
+// placeholders and its args. The returned value can be passed as an arg to
+// Where (or any other clause taking `?` placeholders), where it expands in
+// place — wrapped in parentheses — with its args spliced into the surrounding
+// arg list. Exprs nest: an Expr's args may themselves be Exprs.
+//
+//	a := qm.Expr("? + ?", 25, 34)
+//	b := qm.Expr("? * ?", a, 45)
+//	qm.Where("foo = ?", b)
+//
+// is equivalent to:
+//
+//	qm.Where("foo = ((? + ?) * ?)", 25, 34, 45)
+func Expr(clause string, args ...any) *queries.Expr {
+	return queries.NewExpr(clause, args...)
+}
+
 // Where allows you to specify a where clause for your statement
 func Where(clause string, args ...any) QueryMod {
 	return func(q *queries.Query) {

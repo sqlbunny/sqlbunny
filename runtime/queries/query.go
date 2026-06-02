@@ -187,16 +187,25 @@ func SetFrom(q *Query, from ...string) {
 
 // AppendInnerJoin on the query.
 func AppendInnerJoin(q *Query, clause string, args ...any) {
+	if containsExpr(args) {
+		clause, args = expandExprs(clause, args)
+	}
 	q.joins = append(q.joins, join{clause: clause, kind: JoinInner, args: args})
 }
 
 // AppendHaving on the query.
 func AppendHaving(q *Query, clause string, args ...any) {
+	if containsExpr(args) {
+		clause, args = expandExprs(clause, args)
+	}
 	q.having = append(q.having, having{clause: clause, args: args})
 }
 
 // AppendWhere on the query.
 func AppendWhere(q *Query, clause string, args ...any) {
+	if containsExpr(args) {
+		clause, args = expandExprs(clause, args)
+	}
 	q.where = append(q.where, where{clause: clause, args: args})
 }
 
