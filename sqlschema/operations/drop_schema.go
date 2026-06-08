@@ -10,7 +10,7 @@ type DropSchema struct {
 	SchemaName string
 }
 
-func (o DropSchema) GetSQL() string {
+func (o DropSchema) GetSQL(transaction bool) string {
 	return fmt.Sprintf("DROP SCHEMA \"%s\"", o.SchemaName)
 }
 

@@ -12,7 +12,7 @@ type DropIndex struct {
 	IndexName  string
 }
 
-func (o DropIndex) GetSQL() string {
+func (o DropIndex) GetSQL(transaction bool) string {
 	return fmt.Sprintf("DROP INDEX %s", sqlName(o.SchemaName, o.IndexName))
 }
 

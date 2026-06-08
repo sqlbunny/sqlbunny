@@ -92,12 +92,19 @@ func (s *Store) Run(ctx context.Context) error {
 	head := heads[0]
 
 	return s.RunMigration(head, applied, func(m *Migration) error {
-		if err := m.Run(ctx); err != nil {
+		// apply runs the migration's operations and marks it as applied. When
+		// m.Transaction is set, both run inside a single transaction (passed via
+		// bunny.Atomic), so the migration commits all-or-nothing.
+		apply := func(ctx context.Context) error {
+			if err := m.Run(ctx); err != nil {
+				return err
+			}
+			_, err := bunny.Exec(ctx, insertMigrationSQL, m.Name, time.Now())
 			return err
 		}
-		if _, err := bunny.Exec(ctx, insertMigrationSQL, m.Name, time.Now()); err != nil {
-			return err
+		if m.Transaction {
+			return bunny.Atomic(ctx, apply)
 		}
-		return nil
+		return apply(ctx)
 	})
 }

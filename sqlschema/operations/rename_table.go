@@ -12,7 +12,7 @@ type RenameTable struct {
 	NewTableName string
 }
 
-func (o RenameTable) GetSQL() string {
+func (o RenameTable) GetSQL(transaction bool) string {
 	return fmt.Sprintf("ALTER TABLE %s RENAME TO \"%s\"", sqlName(o.SchemaName, o.TableName), o.NewTableName)
 }
 

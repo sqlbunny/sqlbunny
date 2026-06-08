@@ -17,13 +17,20 @@ type CreateIndex struct {
 	Unique     bool   // If true, emits CREATE UNIQUE INDEX.
 }
 
-func (o CreateIndex) GetSQL() string {
+// GetSQL drops CONCURRENTLY when run inside a transaction, since Postgres
+// forbids CREATE INDEX CONCURRENTLY in a transaction block. A migration with
+// Transaction: true relies on this.
+func (o CreateIndex) GetSQL(transaction bool) string {
 	var buf bytes.Buffer
 	kind := "INDEX"
 	if o.Unique {
 		kind = "UNIQUE INDEX"
 	}
-	fmt.Fprintf(&buf, "CREATE %s CONCURRENTLY \"%s\" ON %s", kind, o.IndexName, sqlName(o.SchemaName, o.TableName))
+	fmt.Fprintf(&buf, "CREATE %s ", kind)
+	if !transaction {
+		fmt.Fprintf(&buf, "CONCURRENTLY ")
+	}
+	fmt.Fprintf(&buf, "\"%s\" ON %s", o.IndexName, sqlName(o.SchemaName, o.TableName))
 	if o.Method != "" {
 		fmt.Fprintf(&buf, " USING %s", o.Method)
 	}

@@ -11,7 +11,7 @@ type DropTable struct {
 	TableName  string
 }
 
-func (o DropTable) GetSQL() string {
+func (o DropTable) GetSQL(transaction bool) string {
 	return fmt.Sprintf("DROP TABLE %s", sqlName(o.SchemaName, o.TableName))
 }
 func (o DropTable) Apply(d *schema.Database) error {

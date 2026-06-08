@@ -5,6 +5,8 @@ import (
 )
 
 type Operation interface {
-	GetSQL() string
+	// GetSQL returns the SQL for the operation. transaction reports whether the
+	// migration is running inside a transaction.
+	GetSQL(transaction bool) string
 	Apply(d *schema.Database) error
 }

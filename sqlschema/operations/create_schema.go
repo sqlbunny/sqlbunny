@@ -10,7 +10,7 @@ type CreateSchema struct {
 	SchemaName string
 }
 
-func (o CreateSchema) GetSQL() string {
+func (o CreateSchema) GetSQL(transaction bool) string {
 	return fmt.Sprintf("CREATE SCHEMA \"%s\"", o.SchemaName)
 }
 

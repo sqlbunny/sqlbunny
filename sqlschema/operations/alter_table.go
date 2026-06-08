@@ -13,7 +13,7 @@ type AlterTable struct {
 	Ops        []AlterTableSuboperation
 }
 
-func (o AlterTable) GetSQL() string {
+func (o AlterTable) GetSQL(transaction bool) string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("ALTER TABLE %s\n", sqlName(o.SchemaName, o.TableName)))
 	first := true

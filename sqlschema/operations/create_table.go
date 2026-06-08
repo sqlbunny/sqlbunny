@@ -20,7 +20,7 @@ type CreateTable struct {
 	Columns    []Column
 }
 
-func (o CreateTable) GetSQL() string {
+func (o CreateTable) GetSQL(transaction bool) string {
 	var x []string
 	for _, c := range o.Columns {
 		var n string

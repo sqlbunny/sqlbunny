@@ -12,7 +12,7 @@ type SetTableSchema struct {
 	NewSchemaName string
 }
 
-func (o SetTableSchema) GetSQL() string {
+func (o SetTableSchema) GetSQL(transaction bool) string {
 	return fmt.Sprintf("ALTER TABLE %s SET SCHEMA \"%s\"", sqlName(o.SchemaName, o.TableName), o.NewSchemaName)
 }
 

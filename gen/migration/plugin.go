@@ -213,7 +213,7 @@ func (p *Plugin) cmdGenSQL(cmd *cobra.Command, args []string) {
 	}
 
 	for _, op := range ops {
-		q := op.GetSQL()
+		q := op.GetSQL(false)
 		fmt.Println(q + ";\n")
 	}
 }

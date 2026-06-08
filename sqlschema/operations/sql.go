@@ -8,7 +8,7 @@ type SQL struct {
 	SQL string
 }
 
-func (o SQL) GetSQL() string {
+func (o SQL) GetSQL(transaction bool) string {
 	return o.SQL
 }
 
