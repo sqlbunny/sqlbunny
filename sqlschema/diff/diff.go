@@ -1,11 +1,27 @@
 package diff
 
 import (
+	"iter"
+	"maps"
 	"reflect"
+	"slices"
 
 	"github.com/sqlbunny/sqlbunny/sqlschema/operations"
 	"github.com/sqlbunny/sqlbunny/sqlschema/schema"
 )
+
+// sorted iterates a map in sorted key order. All map iteration in the diff
+// goes through it, so diffing the same two schemas always yields the same
+// operations in the same order.
+func sorted[V any](m map[string]V) iter.Seq2[string, V] {
+	return func(yield func(string, V) bool) {
+		for _, k := range slices.Sorted(maps.Keys(m)) {
+			if !yield(k, m[k]) {
+				return
+			}
+		}
+	}
+}
 
 func Diff(d1, d2 *schema.Database) []operations.Operation {
 	var ops []operations.Operation
@@ -93,11 +109,11 @@ func hasForeignKey(d *schema.Database, schemaName, tableName string, name string
 }
 
 func diffDropForeignKeys(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName, s1 := range d1.Schemas {
-		for tableName, t1 := range s1.Tables {
+	for schemaName, s1 := range sorted(d1.Schemas) {
+		for tableName, t1 := range sorted(s1.Tables) {
 			var subops []operations.AlterTableSuboperation
 
-			for name, k := range t1.ForeignKeys {
+			for name, k := range sorted(t1.ForeignKeys) {
 				if !hasForeignKey(d2, schemaName, tableName, name, k) {
 					subops = append(subops, &operations.AlterTableDropForeignKey{Name: name})
 				}
@@ -116,15 +132,15 @@ func diffDropForeignKeys(ops []operations.Operation, d1, d2 *schema.Database) []
 }
 
 func diffDropConstraints(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName, s1 := range d1.Schemas {
-		for tableName, t1 := range s1.Tables {
+	for schemaName, s1 := range sorted(d1.Schemas) {
+		for tableName, t1 := range sorted(s1.Tables) {
 			var subops []operations.AlterTableSuboperation
 
 			if t1.PrimaryKey != nil && !hasPrimaryKey(d2, schemaName, tableName, t1.PrimaryKey) {
 				subops = append(subops, operations.AlterTableDropPrimaryKey{})
 			}
 
-			for name, k := range t1.Uniques {
+			for name, k := range sorted(t1.Uniques) {
 				if !hasUnique(d2, schemaName, tableName, name, k) {
 					subops = append(subops, operations.AlterTableDropUnique{Name: name})
 				}
@@ -143,9 +159,9 @@ func diffDropConstraints(ops []operations.Operation, d1, d2 *schema.Database) []
 }
 
 func diffDropIndexes(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName, s1 := range d1.Schemas {
-		for tableName, t1 := range s1.Tables {
-			for name, k := range t1.Indexes {
+	for schemaName, s1 := range sorted(d1.Schemas) {
+		for tableName, t1 := range sorted(s1.Tables) {
+			for name, k := range sorted(t1.Indexes) {
 				if !hasIndex(d2, schemaName, tableName, name, k) {
 					ops = append(ops, operations.DropIndex{
 						SchemaName: schemaName,
@@ -160,8 +176,8 @@ func diffDropIndexes(ops []operations.Operation, d1, d2 *schema.Database) []oper
 }
 
 func diffDropTables(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName, s1 := range d1.Schemas {
-		for tableName := range s1.Tables {
+	for schemaName, s1 := range sorted(d1.Schemas) {
+		for tableName := range sorted(s1.Tables) {
 			if getTable(d2, schemaName, tableName) == nil {
 				ops = append(ops, operations.DropTable{
 					SchemaName: schemaName,
@@ -174,7 +190,7 @@ func diffDropTables(ops []operations.Operation, d1, d2 *schema.Database) []opera
 }
 
 func diffDropSchemas(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName := range d1.Schemas {
+	for schemaName := range sorted(d1.Schemas) {
 		if d2.Schemas[schemaName] == nil {
 			ops = append(ops, operations.DropSchema{
 				SchemaName: schemaName,
@@ -185,11 +201,11 @@ func diffDropSchemas(ops []operations.Operation, d1, d2 *schema.Database) []oper
 }
 
 func diffAlterTables(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName, s1 := range d1.Schemas {
-		for tableName, t1 := range s1.Tables {
+	for schemaName, s1 := range sorted(d1.Schemas) {
+		for tableName, t1 := range sorted(s1.Tables) {
 			if t2 := getTable(d2, schemaName, tableName); t2 != nil {
 				var subops []operations.AlterTableSuboperation
-				for name, c1 := range t1.Columns {
+				for name, c1 := range sorted(t1.Columns) {
 					c2, ok := t2.Columns[name]
 					if ok {
 						subops = diffColumn(subops, name, c1, c2)
@@ -197,7 +213,7 @@ func diffAlterTables(ops []operations.Operation, d1, d2 *schema.Database) []oper
 						subops = append(subops, operations.AlterTableDropColumn{Name: name})
 					}
 				}
-				for name, c2 := range t2.Columns {
+				for name, c2 := range sorted(t2.Columns) {
 					_, ok := t1.Columns[name]
 					if !ok {
 						subops = append(subops, operations.AlterTableAddColumn{
@@ -223,7 +239,7 @@ func diffAlterTables(ops []operations.Operation, d1, d2 *schema.Database) []oper
 }
 
 func diffCreateSchemas(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName := range d2.Schemas {
+	for schemaName := range sorted(d2.Schemas) {
 		if d1.Schemas[schemaName] == nil {
 			ops = append(ops, operations.CreateSchema{
 				SchemaName: schemaName,
@@ -234,11 +250,11 @@ func diffCreateSchemas(ops []operations.Operation, d1, d2 *schema.Database) []op
 }
 
 func diffCreateTables(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName, s2 := range d2.Schemas {
-		for tableName, t2 := range s2.Tables {
+	for schemaName, s2 := range sorted(d2.Schemas) {
+		for tableName, t2 := range sorted(s2.Tables) {
 			if t1 := getTable(d1, schemaName, tableName); t1 == nil {
 				var cols []operations.Column
-				for name, c := range t2.Columns {
+				for name, c := range sorted(t2.Columns) {
 					cols = append(cols, operations.Column{
 						Name:     name,
 						Type:     c.Type,
@@ -259,9 +275,9 @@ func diffCreateTables(ops []operations.Operation, d1, d2 *schema.Database) []ope
 }
 
 func diffCreateIndexes(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName, s2 := range d2.Schemas {
-		for tableName, t2 := range s2.Tables {
-			for name, i2 := range t2.Indexes {
+	for schemaName, s2 := range sorted(d2.Schemas) {
+		for tableName, t2 := range sorted(s2.Tables) {
+			for name, i2 := range sorted(t2.Indexes) {
 				if !hasIndex(d1, schemaName, tableName, name, i2) {
 					ops = append(ops, operations.CreateIndex{
 						SchemaName: schemaName,
@@ -280,15 +296,15 @@ func diffCreateIndexes(ops []operations.Operation, d1, d2 *schema.Database) []op
 }
 
 func diffCreateConstraints(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName, s2 := range d2.Schemas {
-		for tableName, t2 := range s2.Tables {
+	for schemaName, s2 := range sorted(d2.Schemas) {
+		for tableName, t2 := range sorted(s2.Tables) {
 			var subops []operations.AlterTableSuboperation
 
 			if t2.PrimaryKey != nil && !hasPrimaryKey(d1, schemaName, tableName, t2.PrimaryKey) {
 				subops = append(subops, operations.AlterTableCreatePrimaryKey{Columns: t2.PrimaryKey.Columns})
 			}
 
-			for name, i2 := range t2.Uniques {
+			for name, i2 := range sorted(t2.Uniques) {
 				if !hasUnique(d1, schemaName, tableName, name, i2) {
 					subops = append(subops, operations.AlterTableCreateUnique{
 						Name:    name,
@@ -310,11 +326,11 @@ func diffCreateConstraints(ops []operations.Operation, d1, d2 *schema.Database) 
 }
 
 func diffCreateForeignKeys(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
-	for schemaName, s2 := range d2.Schemas {
-		for tableName, t2 := range s2.Tables {
+	for schemaName, s2 := range sorted(d2.Schemas) {
+		for tableName, t2 := range sorted(s2.Tables) {
 			var subops []operations.AlterTableSuboperation
 
-			for name, i2 := range t2.ForeignKeys {
+			for name, i2 := range sorted(t2.ForeignKeys) {
 				if !hasForeignKey(d1, schemaName, tableName, name, i2) {
 					subops = append(subops, operations.AlterTableCreateForeignKey{
 						Name:           name,
