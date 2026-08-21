@@ -367,42 +367,6 @@ func PrefixStringSlice(str string, strs []string) []string {
 	return ret
 }
 
-// Placeholders generates the SQL statement placeholders for in queries.
-// For example, ($1,$2,$3),($4,$5,$6) etc.
-// It will start counting placeholders at "start".
-// If indexPlaceholders is false, it will convert to ? instead of $1 etc.
-func Placeholders(indexPlaceholders bool, count int, start int, group int) string {
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-
-	if start == 0 || group == 0 {
-		panic("Invalid start or group numbers supplied.")
-	}
-
-	if group > 1 {
-		buf.WriteByte('(')
-	}
-	for i := 0; i < count; i++ {
-		if i != 0 {
-			if group > 1 && i%group == 0 {
-				buf.WriteString("),(")
-			} else {
-				buf.WriteByte(',')
-			}
-		}
-		if indexPlaceholders {
-			buf.WriteString(fmt.Sprintf("$%d", start+i))
-		} else {
-			buf.WriteByte('?')
-		}
-	}
-	if group > 1 {
-		buf.WriteByte(')')
-	}
-
-	return buf.String()
-}
-
 // SetParamNames takes a slice of fields and returns a comma separated
 // list of parameter names for a template statement SET clause.
 // eg: "col1"=$1, "col2"=$2, "col3"=$3
@@ -442,30 +406,6 @@ func WhereClause(lq, rq string, start int, cols []string) string {
 			buf.WriteString(" AND ")
 		}
 	}
-
-	return buf.String()
-}
-
-// WhereClauseRepeated returns the where clause repeated with OR clause using start as the $ flag index
-// For example, if start was 2 output would be: "(colthing=$2 AND colstuff=$3) OR (colthing=$4 AND colstuff=$5)"
-func WhereClauseRepeated(lq, rq string, start int, cols []string, count int) string {
-	var startIndex int
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-	buf.WriteByte('(')
-	for i := 0; i < count; i++ {
-		if i != 0 {
-			buf.WriteString(") OR (")
-		}
-
-		startIndex = 0
-		if start > 0 {
-			startIndex = start + i*len(cols)
-		}
-
-		buf.WriteString(WhereClause(lq, rq, startIndex, cols))
-	}
-	buf.WriteByte(')')
 
 	return buf.String()
 }

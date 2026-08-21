@@ -66,7 +66,7 @@ func (o *{{$modelNameSingular}}) insertImpl(ctx context.Context, conflictClause 
 		}
 
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO {{$schemaModel}} ({{.LQ}}%s{{.RQ}}) VALUES (%s)", strings.Join(wl, "{{.RQ}},{{.LQ}}"), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO {{$schemaModel}} ({{.LQ}}%s{{.RQ}}) VALUES (%s)", strings.Join(wl, "{{.RQ}},{{.LQ}}"), paramList(len(wl)))
 		} else {
 			cache.query = "INSERT INTO {{$schemaModel}} DEFAULT VALUES"
 		}

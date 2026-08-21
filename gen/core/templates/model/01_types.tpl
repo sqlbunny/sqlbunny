@@ -4,6 +4,8 @@ var (
 	{{$varNameSingular}}Columns               = []string{{"{"}}{{modelColumns      .Model | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
 	{{$varNameSingular}}PrimaryKeyColumns     = []string{{"{"}}{{modelPKColumns    .Model | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
 	{{$varNameSingular}}NonPrimaryKeyColumns  = []string{{"{"}}{{modelNonPKColumns .Model | stringMap .StringFuncs.quoteWrap | join ", "}}{{"}"}}
+	// Postgres type of every column, for building typed array parameters.
+	{{$varNameSingular}}ColumnSQLTypes = map[string]string{{"{"}}{{modelColumnSQLTypes .Model | join ", "}}{{"}"}}
 )
 
 type (

@@ -61,52 +61,6 @@ func TestQuoteCharacter(t *testing.T) {
 	}
 }
 
-func TestPlaceholders(t *testing.T) {
-	t.Parallel()
-
-	x := Placeholders(true, 1, 2, 1)
-	want := "$2"
-	if want != x {
-		t.Errorf("want %s, got %s", want, x)
-	}
-
-	x = Placeholders(true, 5, 1, 1)
-	want = "$1,$2,$3,$4,$5"
-	if want != x {
-		t.Errorf("want %s, got %s", want, x)
-	}
-
-	x = Placeholders(false, 5, 1, 1)
-	want = "?,?,?,?,?"
-	if want != x {
-		t.Errorf("want %s, got %s", want, x)
-	}
-
-	x = Placeholders(true, 6, 1, 2)
-	want = "($1,$2),($3,$4),($5,$6)"
-	if want != x {
-		t.Errorf("want %s, got %s", want, x)
-	}
-
-	x = Placeholders(true, 6, 1, 2)
-	want = "($1,$2),($3,$4),($5,$6)"
-	if want != x {
-		t.Errorf("want %s, got %s", want, x)
-	}
-
-	x = Placeholders(false, 9, 1, 3)
-	want = "(?,?,?),(?,?,?),(?,?,?)"
-	if want != x {
-		t.Errorf("want %s, got %s", want, x)
-	}
-
-	x = Placeholders(true, 7, 1, 3)
-	want = "($1,$2,$3),($4,$5,$6),($7)"
-	if want != x {
-		t.Errorf("want %s, got %s", want, x)
-	}
-}
-
 func TestSingular(t *testing.T) {
 	t.Parallel()
 

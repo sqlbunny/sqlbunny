@@ -146,9 +146,19 @@ var TemplateFunctions = template.FuncMap{
 	"setComplement": strmangle.SetComplement,
 
 	// Database related mangling
-	"whereClause":     WhereClause,
-	"whereInClause":   WhereInClause,
-	"sqlType":         templateSQLType,
+	"whereClause":   WhereClause,
+	"whereInClause": WhereInClause,
+	"sqlType":       templateSQLType,
+	"pkArrayWhere":  PKArrayWhere,
+	"modelColumnSQLTypes": func(m *schema.Model) []string {
+		names := modelColumns(m)
+		sort.Strings(names)
+		res := make([]string, len(names))
+		for i, n := range names {
+			res[i] = fmt.Sprintf("%q: %q", n, m.Table.Columns[n].Type)
+		}
+		return res
+	},
 	"joinOnClause":    JoinOnClause,
 	"joinWhereClause": JoinWhereClause,
 
@@ -252,30 +262,6 @@ func WhereClause(lq, rq string, start int, cols []schema.Path) string {
 	return buf.String()
 }
 
-// WhereClauseRepeated returns the where clause repeated with OR clause using start as the $ flag index
-// For example, if start was 2 output would be: "(colthing=$2 AND colstuff=$3) OR (colthing=$4 AND colstuff=$5)"
-func WhereClauseRepeated(lq, rq string, start int, cols []schema.Path, count int) string {
-	var startIndex int
-	buf := strmangle.GetBuffer()
-	defer strmangle.PutBuffer(buf)
-	buf.WriteByte('(')
-	for i := 0; i < count; i++ {
-		if i != 0 {
-			buf.WriteString(") OR (")
-		}
-
-		startIndex = 0
-		if start > 0 {
-			startIndex = start + i*len(cols)
-		}
-
-		buf.WriteString(WhereClause(lq, rq, startIndex, cols))
-	}
-	buf.WriteByte(')')
-
-	return buf.String()
-}
-
 // JoinOnClause returns a join on clause
 func JoinOnClause(lq, rq string, table1 string, cols1 []schema.Path, table2 string, cols2 []schema.Path) string {
 	buf := strmangle.GetBuffer()
@@ -348,4 +334,29 @@ func templateSQLType(f *schema.Field) string {
 		panic(fmt.Sprintf("field %s has type %s with no SQL type", f.Name, f.Type.GetName()))
 	}
 	return bt.SQLType().Type
+}
+
+// PKArrayWhere returns a where clause that matches the given key columns
+// against one array parameter per column, starting at placeholder "start":
+//
+//	"id" = ANY($1::bytea[])
+//	("a","b") IN (SELECT * FROM unnest($1::text[], $2::int[]))
+func PKArrayWhere(lq, rq string, start int, m *schema.Model, cols []schema.Path) string {
+	param := func(i int) string {
+		if start == 0 {
+			return "?"
+		}
+		return fmt.Sprintf("$%d", start+i)
+	}
+	if len(cols) == 1 {
+		f := m.FindField(cols[0])
+		return fmt.Sprintf("%s%s%s = ANY(%s::%s[])", lq, cols[0].SQLName(), rq, param(0), templateSQLType(f))
+	}
+	names := make([]string, len(cols))
+	params := make([]string, len(cols))
+	for i, c := range cols {
+		names[i] = fmt.Sprintf("%s%s%s", lq, c.SQLName(), rq)
+		params[i] = fmt.Sprintf("%s::%s[]", param(i), templateSQLType(m.FindField(c)))
+	}
+	return fmt.Sprintf("(%s) IN (SELECT * FROM unnest(%s))", strings.Join(names, ","), strings.Join(params, ", "))
 }

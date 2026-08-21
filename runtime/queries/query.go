@@ -30,7 +30,6 @@ type Query struct {
 	from       []string
 	joins      []join
 	where      []where
-	in         []in
 	groupBy    []string
 	orderBy    []string
 	having     []having
@@ -57,11 +56,6 @@ type Dialect struct {
 }
 
 type where struct {
-	clause string
-	args   []any
-}
-
-type in struct {
 	clause string
 	args   []any
 }
@@ -207,11 +201,6 @@ func AppendWhere(q *Query, clause string, args ...any) {
 		clause, args = expandExprs(clause, args)
 	}
 	q.where = append(q.where, where{clause: clause, args: args})
-}
-
-// AppendIn on the query.
-func AppendIn(q *Query, clause string, args ...any) {
-	q.in = append(q.in, in{clause: clause, args: args})
 }
 
 // AppendGroupBy on the query.

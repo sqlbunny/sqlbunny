@@ -2,7 +2,8 @@
 {{- $modelNameSingularCamel := .Model.Name | singular | camelCase -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
 {{- $varNamePlural := .Model.Name | plural | camelCase -}}
-{{- $schemaModel := .Model.Name | schemaModel}}
+{{- $schemaModel := .Model.Name | schemaModel -}}
+{{- $model := .Model}}
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 //
@@ -59,16 +60,21 @@ func (o *{{$modelNameSingular}}Slice) ReloadAll(ctx context.Context) error {
 	{{- end}}
 
 	{{$varNamePlural}} := {{$modelNameSingular}}Slice{}
-	var args []any
-	for _, obj := range *o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), {{$varNameSingular}}PrimaryKeyMapping)
-		args = append(args, pkeyArgs...)
+	// One array parameter per key column, so the parameter count does not
+	// grow with the slice.
+	{{- range $i, $p := .Model.PrimaryKey.Fields }}
+	{{- $f := $model.FindField $p }}
+	keys{{$i}} := make([]{{ goType $f.GoType }}, len(*o))
+	{{- end }}
+	for i, obj := range *o {
+		{{- range $i, $p := .Model.PrimaryKey.Fields }}
+		keys{{$i}}[i] = obj.{{ $p | titleCasePath }}
+		{{- end }}
 	}
 
-	sql := "SELECT {{$schemaModel}}.* FROM {{$schemaModel}} WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns, len(*o))
+	sql := "SELECT {{$schemaModel}}.* FROM {{$schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{pkArrayWhere .LQ .RQ 1 .Model .Model.PrimaryKey.Fields}}{{else}}{{pkArrayWhere .LQ .RQ 0 .Model .Model.PrimaryKey.Fields}}{{end}}"
 
-	q := queries.Raw(sql, args...)
+	q := queries.Raw(sql, {{ range $i, $p := .Model.PrimaryKey.Fields }}{{if $i}}, {{end}}queries.Array(keys{{$i}}){{ end }})
 
 	err := q.Bind(ctx, &{{$varNamePlural}})
 	if err != nil {

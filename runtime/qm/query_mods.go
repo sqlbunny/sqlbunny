@@ -72,14 +72,6 @@ func Where(clause string, args ...any) QueryMod {
 	}
 }
 
-// WhereIn allows you to specify a "x IN (set)" clause for your where statement
-// Example clauses: "field in ?", "(field1,field2) in ?"
-func WhereIn(clause string, args ...any) QueryMod {
-	return func(q *queries.Query) {
-		queries.AppendIn(q, clause, args...)
-	}
-}
-
 // GroupBy allows you to specify a group by clause for your statement
 func GroupBy(clause string) QueryMod {
 	return func(q *queries.Query) {

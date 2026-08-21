@@ -3,8 +3,8 @@
 {{- $schemaModel := .Model.Name | schemaModel -}}
 {{- $model := .Model -}}
 
-// InsertAll inserts every row in the slice using one or more multi-row
-// INSERT statements (chunked to stay under Postgres' bind-parameter limit).
+// InsertAll inserts every row in the slice with one INSERT ... SELECT FROM
+// unnest(...) statement.
 // Whitelist semantics match the per-row Insert.
 func (o {{$modelNameSingular}}Slice) InsertAll(ctx context.Context, whitelist ...{{$modelNameSingular}}Column) error {
 	return o.bulkInsertImpl(ctx, "", whitelist)
@@ -21,7 +21,7 @@ func (o {{$modelNameSingular}}Slice) UpsertAll(ctx context.Context, conflictTarg
 	return o.bulkInsertImpl(ctx, clause, whitelist)
 }
 
-// bulkInsertImpl runs the multi-row INSERT, optionally appending conflictClause
+// bulkInsertImpl runs the bulk INSERT, optionally appending conflictClause
 // (the full " ON CONFLICT ..." suffix, or "" for none). Does not RETURN.
 func (o {{$modelNameSingular}}Slice) bulkInsertImpl(ctx context.Context, conflictClause string, whitelist []{{$modelNameSingular}}Column) error {
 	if len(o) == 0 {
@@ -33,31 +33,26 @@ func (o {{$modelNameSingular}}Slice) bulkInsertImpl(ctx context.Context, conflic
 	}
 	colsClause := "{{.LQ}}" + strings.Join(wl, "{{.RQ}},{{.LQ}}") + "{{.RQ}}"
 
-	const maxParams = 60000
-	chunkSize := maxParams / len(wl)
-	if chunkSize < 1 {
-		chunkSize = 1
-	}
-
-	for start := 0; start < len(o); start += chunkSize {
-		end := start + chunkSize
-		if end > len(o) {
-			end = len(o)
-		}
-		chunk := o[start:end]
-
-		args := make([]any, 0, len(chunk)*len(wl))
-		for _, row := range chunk {
-			args = append(args, queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(row)), mapping)...)
-		}
-
-		placeholders := strmangle.Placeholders(dialect.IndexPlaceholders, len(chunk)*len(wl), 1, len(wl))
-		query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") VALUES " + placeholders + conflictClause
-		if _, err := bunny.Exec(ctx, query, args...); err != nil {
-			return errors.Errorf("{{.PkgName}}: unable to bulk insert into {{.Model.Name}}: %w", err)
-		}
+	src, args := {{$varNameSingular}}BulkValues(o, wl, mapping)
+	query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") " + src + conflictClause
+	if _, err := bunny.Exec(ctx, query, args...); err != nil {
+		return errors.Errorf("{{.PkgName}}: unable to bulk insert into {{.Model.Name}}: %w", err)
 	}
 	return nil
+}
+
+// {{$varNameSingular}}BulkValues builds the "SELECT ... FROM unnest(...)"
+// source for a bulk insert of o, with one array parameter per column.
+func {{$varNameSingular}}BulkValues(o {{$modelNameSingular}}Slice, wl []string, mapping []queries.MappedField) (string, []any) {
+	colTypes := make([]string, len(wl))
+	for i, col := range wl {
+		colTypes[i] = {{$varNameSingular}}ColumnSQLTypes[col]
+	}
+	rows := make([][]any, len(o))
+	for i, row := range o {
+		rows[i] = queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(row)), mapping)
+	}
+	return queries.BulkValues(dialect, colTypes, rows)
 }
 
 func {{$varNameSingular}}BulkInsertPrep(whitelist []{{$modelNameSingular}}Column) ([]string, []queries.MappedField, error) {
@@ -96,45 +91,24 @@ func (o {{$modelNameSingular}}Slice) InsertAllIgnore(ctx context.Context, confli
 	colsClause := "{{.LQ}}" + strings.Join(wl, "{{.RQ}},{{.LQ}}") + "{{.RQ}}"
 	conflictClause := {{$varNameSingular}}IgnoreClause(conflictTarget)
 
-	const maxParams = 60000
-	chunkSize := maxParams / len(wl)
-	if chunkSize < 1 {
-		chunkSize = 1
+	src, args := {{$varNameSingular}}BulkValues(o, wl, mapping)
+	query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") " + src + conflictClause + " RETURNING {{.LQ}}{{$pkColumn}}{{.RQ}}"
+
+	rows, err := bunny.Query(ctx, query, args...)
+	if err != nil {
+		return nil, errors.Errorf("{{.PkgName}}: unable to bulk insert into {{.Model.Name}}: %w", err)
 	}
-
+	defer rows.Close()
 	inserted := make(map[{{$pkGoType}}]struct{}, len(o))
-	for start := 0; start < len(o); start += chunkSize {
-		end := start + chunkSize
-		if end > len(o) {
-			end = len(o)
-		}
-		chunk := o[start:end]
-
-		args := make([]any, 0, len(chunk)*len(wl))
-		for _, row := range chunk {
-			args = append(args, queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(row)), mapping)...)
-		}
-
-		placeholders := strmangle.Placeholders(dialect.IndexPlaceholders, len(chunk)*len(wl), 1, len(wl))
-		query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") VALUES " + placeholders + conflictClause + " RETURNING {{.LQ}}{{$pkColumn}}{{.RQ}}"
-
-		rows, err := bunny.Query(ctx, query, args...)
-		if err != nil {
-			return nil, errors.Errorf("{{.PkgName}}: unable to bulk insert into {{.Model.Name}}: %w", err)
-		}
-		for rows.Next() {
-			var id {{$pkGoType}}
-			if err := rows.Scan(&id); err != nil {
-				rows.Close()
-				return nil, err
-			}
-			inserted[id] = struct{}{}
-		}
-		if err := rows.Err(); err != nil {
-			rows.Close()
+	for rows.Next() {
+		var id {{$pkGoType}}
+		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
-		rows.Close()
+		inserted[id] = struct{}{}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return inserted, nil
 }

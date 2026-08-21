@@ -1,6 +1,7 @@
 {{- $modelNameSingular := .Model.Name | singular | titleCase -}}
 {{- $varNameSingular := .Model.Name | singular | camelCase -}}
-{{- $schemaModel := .Model.Name | schemaModel}}
+{{- $schemaModel := .Model.Name | schemaModel -}}
+{{- $model := .Model}}
 // Delete deletes a single {{$modelNameSingular}} record with an executor.
 // Delete will match against the primary key field to find the record to delete.
 func (o *{{$modelNameSingular}}) Delete(ctx context.Context) error {
@@ -51,16 +52,21 @@ func (o {{$modelNameSingular}}Slice) DeleteAll(ctx context.Context) error {
 
 	{{ hook . "before_delete_slice" "o" .Model }}
 
-	var args []any
-	for _, obj := range o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), {{$varNameSingular}}PrimaryKeyMapping)
-		args = append(args, pkeyArgs...)
+	// One array parameter per key column, so the parameter count does not
+	// grow with the slice.
+	{{- range $i, $p := .Model.PrimaryKey.Fields }}
+	{{- $f := $model.FindField $p }}
+	keys{{$i}} := make([]{{ goType $f.GoType }}, len(o))
+	{{- end }}
+	for i, obj := range o {
+		{{- range $i, $p := .Model.PrimaryKey.Fields }}
+		keys{{$i}}[i] = obj.{{ $p | titleCasePath }}
+		{{- end }}
 	}
 
-	sql := "DELETE FROM {{$schemaModel}} WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns, len(o))
+	sql := "DELETE FROM {{$schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{pkArrayWhere .LQ .RQ 1 .Model .Model.PrimaryKey.Fields}}{{else}}{{pkArrayWhere .LQ .RQ 0 .Model .Model.PrimaryKey.Fields}}{{end}}"
 
-	_, err := bunny.Exec(ctx, sql, args...)
+	_, err := bunny.Exec(ctx, sql, {{ range $i, $p := .Model.PrimaryKey.Fields }}{{if $i}}, {{end}}queries.Array(keys{{$i}}){{ end }})
 	if err != nil {
 		return errors.Errorf("{{.PkgName}}: unable to delete all from {{$varNameSingular}} slice: %w", err)
 	}

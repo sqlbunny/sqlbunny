@@ -12,7 +12,6 @@ import (
 
 var (
 	rgxIdentifier = regexp.MustCompile(`^(?i)"?[a-z_][_a-z0-9]*"?(?:\."?[_a-z][_a-z0-9]*"?)*$`)
-	rgxInClause   = regexp.MustCompile(`^(?i)(.*[\s|\)|\?])IN([\s|\(|\?].*)$`)
 )
 
 func buildQuery(q *Query) (string, []any) {
@@ -104,12 +103,6 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []any) {
 		args = append(args, whereArgs...)
 	}
 
-	in, inArgs := inClause(q, len(args)+1)
-	buf.WriteString(in)
-	if len(inArgs) != 0 {
-		args = append(args, inArgs...)
-	}
-
 	writeModifiers(q, buf, &args)
 
 	buf.WriteByte(';')
@@ -128,12 +121,6 @@ func buildDeleteQuery(q *Query) (*bytes.Buffer, []any) {
 		args = append(args, whereArgs...)
 	}
 	buf.WriteString(where)
-
-	in, inArgs := inClause(q, len(args)+1)
-	if len(inArgs) != 0 {
-		args = append(args, inArgs...)
-	}
-	buf.WriteString(in)
 
 	writeModifiers(q, buf, &args)
 
@@ -166,7 +153,7 @@ func buildUpdateQuery(q *Query) (*bytes.Buffer, []any) {
 
 	setSlice := make([]string, len(cols))
 	for index, col := range cols {
-		setSlice[index] = fmt.Sprintf("%s = %s", col, strmangle.Placeholders(q.dialect.IndexPlaceholders, 1, index+1, 1))
+		setSlice[index] = fmt.Sprintf("%s = %s", col, placeholder(q.dialect.IndexPlaceholders, index+1))
 	}
 	fmt.Fprintf(buf, " SET %s", strings.Join(setSlice, ", "))
 
@@ -176,154 +163,11 @@ func buildUpdateQuery(q *Query) (*bytes.Buffer, []any) {
 	}
 	buf.WriteString(where)
 
-	in, inArgs := inClause(q, len(args)+1)
-	if len(inArgs) != 0 {
-		args = append(args, inArgs...)
-	}
-	buf.WriteString(in)
-
 	writeModifiers(q, buf, &args)
 
 	buf.WriteByte(';')
 
 	return buf, args
-}
-
-// BuildUpsertQueryMySQL builds a SQL statement string using the upsertData provided.
-func BuildUpsertQueryMySQL(dia Dialect, modelName string, update, whitelist []string) string {
-	whitelist = strmangle.IdentQuoteSlice(dia.LQ, dia.RQ, whitelist)
-
-	buf := strmangle.GetBuffer()
-	defer strmangle.PutBuffer(buf)
-
-	var fields string
-	if len(whitelist) != 0 {
-		fields = strings.Join(whitelist, ", ")
-	}
-
-	if len(update) == 0 {
-		fmt.Fprintf(
-			buf,
-			"INSERT IGNORE INTO %s (%s) VALUES (%s)",
-			modelName,
-			fields,
-			strmangle.Placeholders(dia.IndexPlaceholders, len(whitelist), 1, 1),
-		)
-		return buf.String()
-	}
-
-	fmt.Fprintf(
-		buf,
-		"INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE ",
-		modelName,
-		fields,
-		strmangle.Placeholders(dia.IndexPlaceholders, len(whitelist), 1, 1),
-	)
-
-	for i, v := range update {
-		if i != 0 {
-			buf.WriteByte(',')
-		}
-		quoted := strmangle.IdentQuote(dia.LQ, dia.RQ, v)
-		buf.WriteString(quoted)
-		buf.WriteString(" = VALUES(")
-		buf.WriteString(quoted)
-		buf.WriteByte(')')
-	}
-
-	return buf.String()
-}
-
-// BuildUpsertQueryPostgres builds a SQL statement string using the upsertData provided.
-func BuildUpsertQueryPostgres(dia Dialect, modelName string, updateOnConflict bool, ret, update, conflict, whitelist []string) string {
-	conflict = strmangle.IdentQuoteSlice(dia.LQ, dia.RQ, conflict)
-	whitelist = strmangle.IdentQuoteSlice(dia.LQ, dia.RQ, whitelist)
-	ret = strmangle.IdentQuoteSlice(dia.LQ, dia.RQ, ret)
-
-	buf := strmangle.GetBuffer()
-	defer strmangle.PutBuffer(buf)
-
-	fields := "DEFAULT VALUES"
-	if len(whitelist) != 0 {
-		fields = fmt.Sprintf("(%s) VALUES (%s)",
-			strings.Join(whitelist, ", "),
-			strmangle.Placeholders(dia.IndexPlaceholders, len(whitelist), 1, 1))
-	}
-
-	fmt.Fprintf(
-		buf,
-		"INSERT INTO %s %s ON CONFLICT ",
-		modelName,
-		fields,
-	)
-
-	if !updateOnConflict || len(update) == 0 {
-		buf.WriteString("DO NOTHING")
-	} else {
-		buf.WriteByte('(')
-		buf.WriteString(strings.Join(conflict, ", "))
-		buf.WriteString(") DO UPDATE SET ")
-
-		for i, v := range update {
-			if i != 0 {
-				buf.WriteByte(',')
-			}
-			quoted := strmangle.IdentQuote(dia.LQ, dia.RQ, v)
-			buf.WriteString(quoted)
-			buf.WriteString(" = EXCLUDED.")
-			buf.WriteString(quoted)
-		}
-	}
-
-	if len(ret) != 0 {
-		buf.WriteString(" RETURNING ")
-		buf.WriteString(strings.Join(ret, ", "))
-	}
-
-	return buf.String()
-}
-
-// BuildUpsertQueryMSSQL builds a SQL statement string using the upsertData provided.
-func BuildUpsertQueryMSSQL(dia Dialect, modelName string, primary, update, insert []string, output []string) string {
-	insert = strmangle.IdentQuoteSlice(dia.LQ, dia.RQ, insert)
-
-	buf := strmangle.GetBuffer()
-	defer strmangle.PutBuffer(buf)
-
-	startIndex := 1
-
-	fmt.Fprintf(buf, "MERGE INTO %s as [t]\n", modelName)
-	fmt.Fprintf(buf, "USING (SELECT %s) as [s] ([%s])\n",
-		strmangle.Placeholders(dia.IndexPlaceholders, len(primary), startIndex, 1),
-		strings.Join(primary, string(dia.RQ)+","+string(dia.LQ)))
-	fmt.Fprint(buf, "ON (")
-	for i, v := range primary {
-		if i != 0 {
-			fmt.Fprint(buf, " AND ")
-		}
-		fmt.Fprintf(buf, "[s].[%s] = [t].[%s]", v, v)
-	}
-	fmt.Fprint(buf, ")\n")
-
-	startIndex += len(primary)
-
-	fmt.Fprint(buf, "WHEN MATCHED THEN ")
-	fmt.Fprintf(buf, "UPDATE SET %s\n", strmangle.SetParamNames(string(dia.LQ), string(dia.RQ), startIndex, update))
-
-	startIndex += len(update)
-
-	fmt.Fprint(buf, "WHEN NOT MATCHED THEN ")
-	fmt.Fprintf(buf, "INSERT (%s) VALUES (%s)",
-		strings.Join(insert, ", "),
-		strmangle.Placeholders(dia.IndexPlaceholders, len(insert), startIndex, 1))
-
-	if len(output) > 0 {
-		fmt.Fprintf(buf, "\nOUTPUT INSERTED.[%s];", strings.Join(output, "],INSERTED.["))
-	} else {
-		fmt.Fprint(buf, ";")
-	}
-
-	return buf.String()
 }
 
 func writeModifiers(q *Query, buf *bytes.Buffer, args *[]any) {
@@ -476,113 +320,6 @@ func whereClause(q *Query, startAt int) (string, []any) {
 	return resp, args
 }
 
-// inClause parses an in slice and converts it into a
-// single IN clause, like:
-// WHERE ("a", "b") IN (($1,$2),($3,$4)).
-func inClause(q *Query, startAt int) (string, []any) {
-	if len(q.in) == 0 {
-		return "", nil
-	}
-
-	buf := strmangle.GetBuffer()
-	defer strmangle.PutBuffer(buf)
-	var args []any
-
-	if len(q.where) == 0 {
-		buf.WriteString(" WHERE ")
-	}
-
-	for i, in := range q.in {
-		ln := len(in.args)
-		// We only prefix the OR and AND separators after the first
-		// clause has been generated UNLESS there is already a where
-		// clause that we have to add on to.
-		if i != 0 || len(q.where) > 0 {
-			buf.WriteString(" AND ")
-		}
-
-		matches := rgxInClause.FindStringSubmatch(in.clause)
-		// If we can't find any matches attempt a simple replace with 1 group.
-		// Clauses that fit this criteria will not be able to contain ? in their
-		// field name side, however if this case is being hit then the regexp
-		// probably needs adjustment, or the user is passing in invalid clauses.
-		if matches == nil {
-			clause, count := convertInQuestionMarks(q.dialect.IndexPlaceholders, in.clause, startAt, 1, ln)
-			buf.WriteString(clause)
-			startAt = startAt + count
-		} else {
-			leftSide := strings.TrimSpace(matches[1])
-			rightSide := strings.TrimSpace(matches[2])
-			// If matches are found, we have to parse the left side (field side)
-			// of the clause to determine how many fields they are using.
-			// This number determines the groupAt for the convert function.
-			cols := strings.Split(leftSide, ",")
-			cols = strmangle.IdentQuoteSlice(q.dialect.LQ, q.dialect.RQ, cols)
-			groupAt := len(cols)
-
-			var leftClause string
-			var leftCount int
-			if q.dialect.IndexPlaceholders {
-				leftClause, leftCount = convertQuestionMarks(strings.Join(cols, ","), startAt)
-			} else {
-				// Count the number of cols that are question marks, so we know
-				// how much to offset convertInQuestionMarks by
-				for _, v := range cols {
-					if v == "?" {
-						leftCount++
-					}
-				}
-				leftClause = strings.Join(cols, ",")
-			}
-			rightClause, rightCount := convertInQuestionMarks(q.dialect.IndexPlaceholders, rightSide, startAt+leftCount, groupAt, ln-leftCount)
-			buf.WriteString(leftClause)
-			buf.WriteString(" IN ")
-			buf.WriteString(rightClause)
-			startAt = startAt + leftCount + rightCount
-		}
-
-		args = append(args, in.args...)
-	}
-
-	return buf.String(), args
-}
-
-// convertInQuestionMarks finds the first unescaped occurrence of ? and swaps it
-// with a list of numbered placeholders, starting at startAt.
-// It uses groupAt to determine how many placeholders should be in each group,
-// for example, groupAt 2 would result in: (($1,$2),($3,$4))
-// and groupAt 1 would result in ($1,$2,$3,$4)
-func convertInQuestionMarks(indexPlaceholders bool, clause string, startAt, groupAt, total int) (string, int) {
-	if startAt == 0 || len(clause) == 0 {
-		panic("Not a valid start number.")
-	}
-
-	paramBuf := strmangle.GetBuffer()
-	defer strmangle.PutBuffer(paramBuf)
-
-	foundAt := -1
-	for i := 0; i < len(clause); i++ {
-		if (clause[i] == '?' && i == 0) || (clause[i] == '?' && clause[i-1] != '\\') {
-			foundAt = i
-			break
-		}
-	}
-
-	if foundAt == -1 {
-		return strings.Replace(clause, `\?`, "?", -1), 0
-	}
-
-	paramBuf.WriteString(clause[:foundAt])
-	paramBuf.WriteByte('(')
-	paramBuf.WriteString(strmangle.Placeholders(indexPlaceholders, total, startAt, groupAt))
-	paramBuf.WriteByte(')')
-	paramBuf.WriteString(clause[foundAt+1:])
-
-	// Remove all backslashes from escaped question-marks
-	ret := strings.Replace(paramBuf.String(), `\?`, "?", -1)
-	return ret, total
-}
-
 // convertQuestionMarks converts each occurrence of ? with $<number>
 // where <number> is an incrementing digit starting at startAt.
 // If question-mark (?) is escaped using back-slash (\), it will be ignored.
@@ -658,4 +395,13 @@ func parseFromClause(toks []string) (alias, name string, ok bool) {
 	}
 
 	return alias, name, ok
+}
+
+// placeholder returns the placeholder for parameter number n: "$n", or "?"
+// when the dialect does not use indexed placeholders.
+func placeholder(indexPlaceholders bool, n int) string {
+	if indexPlaceholders {
+		return fmt.Sprintf("$%d", n)
+	}
+	return "?"
 }

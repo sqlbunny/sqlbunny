@@ -100,47 +100,6 @@ func TestAppendWhere(t *testing.T) {
 		t.Errorf("%#v", q.where)
 	}
 }
-func TestAppendIn(t *testing.T) {
-	t.Parallel()
-
-	q := &Query{}
-	expect := "col IN ?"
-	AppendIn(q, expect, 5, 3)
-	AppendIn(q, expect, 5, 3)
-
-	if len(q.in) != 2 {
-		t.Errorf("%#v", q.in)
-	}
-
-	if q.in[0].clause != expect || q.in[1].clause != expect {
-		t.Errorf("Expected %s, got %#v", expect, q.in)
-	}
-
-	if len(q.in[0].args) != 2 {
-		t.Errorf("arg length wrong: %#v", q.in)
-	}
-
-	if q.in[0].args[0].(int) != 5 || q.in[0].args[1].(int) != 3 {
-		t.Errorf("args wrong: %#v", q.in)
-	}
-
-	q.in = []in{{clause: expect, args: []any{5, 3}}}
-	if q.in[0].clause != expect {
-		t.Errorf("Expected %s, got %v", expect, q.in)
-	}
-
-	if len(q.in[0].args) != 2 {
-		t.Errorf("Expected %d args, got %d", 2, len(q.in[0].args))
-	}
-
-	if q.in[0].args[0].(int) != 5 || q.in[0].args[1].(int) != 3 {
-		t.Errorf("Args not set correctly, expected 5 & 3, got: %#v", q.in[0].args)
-	}
-
-	if len(q.in) != 1 {
-		t.Errorf("%#v", q.in)
-	}
-}
 
 func TestAppendGroupBy(t *testing.T) {
 	t.Parallel()

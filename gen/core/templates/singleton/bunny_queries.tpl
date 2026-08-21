@@ -1,5 +1,7 @@
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/sqlbunny/sqlbunny/runtime/queries"
 	"github.com/sqlbunny/sqlbunny/runtime/qm"
@@ -19,4 +21,17 @@ func NewQuery(mods ...qm.QueryMod) *queries.Query {
 	qm.Apply(q, mods...)
 
 	return q
+}
+
+// paramList returns "$1, $2, ..., $n" (or "?, ?, ...") for one row of n values.
+func paramList(n int) string {
+	parts := make([]string, n)
+	for i := range parts {
+		if dialect.IndexPlaceholders {
+			parts[i] = fmt.Sprintf("$%d", i+1)
+		} else {
+			parts[i] = "?"
+		}
+	}
+	return strings.Join(parts, ", ")
 }
