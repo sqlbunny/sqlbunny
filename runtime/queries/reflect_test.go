@@ -46,8 +46,7 @@ func TestBindStruct(t *testing.T) {
 	}{}
 
 	query := &Query{
-		from:    []string{"fun"},
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+		from: []string{"fun"},
 	}
 
 	db, mock, err := sqlmock.New()
@@ -86,8 +85,7 @@ func TestBindSlice(t *testing.T) {
 	}{}
 
 	query := &Query{
-		from:    []string{"fun"},
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+		from: []string{"fun"},
 	}
 
 	db, mock, err := sqlmock.New()
@@ -137,8 +135,7 @@ func TestBindPtrSlice(t *testing.T) {
 	}{}
 
 	query := &Query{
-		from:    []string{"fun"},
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+		from: []string{"fun"},
 	}
 
 	db, mock, err := sqlmock.New()
@@ -495,8 +492,7 @@ func TestBindSingular(t *testing.T) {
 	}{}
 
 	query := &Query{
-		from:    []string{"fun"},
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+		from: []string{"fun"},
 	}
 
 	db, mock, err := sqlmock.New()
@@ -535,8 +531,7 @@ func TestBindSingularNoRows(t *testing.T) {
 	}{}
 
 	query := &Query{
-		from:    []string{"fun"},
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+		from: []string{"fun"},
 	}
 
 	db, mock, err := sqlmock.New()
@@ -567,8 +562,7 @@ func TestBindSingularMultipleRows(t *testing.T) {
 	}{}
 
 	query := &Query{
-		from:    []string{"fun"},
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+		from: []string{"fun"},
 	}
 
 	db, mock, err := sqlmock.New()
@@ -605,9 +599,8 @@ func TestBind_InnerJoin(t *testing.T) {
 	}{}
 
 	query := &Query{
-		from:    []string{"fun"},
-		joins:   []join{{kind: JoinInner, clause: "happy as h on fun.id = h.fun_id"}},
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
+		from:  []string{"fun"},
+		joins: []join{{kind: JoinInner, clause: "happy as h on fun.id = h.fun_id"}},
 	}
 
 	db, mock, err := sqlmock.New()
@@ -661,7 +654,6 @@ func TestBind_InnerJoinSelect(t *testing.T) {
 	}{}
 
 	query := &Query{
-		dialect:    &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
 		selectCols: []string{"fun.id", "h.id"},
 		from:       []string{"fun"},
 		joins:      []join{{kind: JoinInner, clause: "happy as h on fun.happy_id = h.id"}},
@@ -724,8 +716,7 @@ func TestBind_NullBind(t *testing.T) {
 	}{}
 
 	query := &Query{
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
-		from:    []string{"fun"},
+		from: []string{"fun"},
 	}
 
 	db, mock, err := sqlmock.New()

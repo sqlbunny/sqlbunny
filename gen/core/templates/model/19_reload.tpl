@@ -72,7 +72,7 @@ func (o *{{$modelNameSingular}}Slice) ReloadAll(ctx context.Context) error {
 		{{- end }}
 	}
 
-	sql := "SELECT {{$schemaModel}}.* FROM {{$schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{pkArrayWhere .LQ .RQ 1 .Model .Model.PrimaryKey.Fields}}{{else}}{{pkArrayWhere .LQ .RQ 0 .Model .Model.PrimaryKey.Fields}}{{end}}"
+	sql := "SELECT {{$schemaModel}}.* FROM {{$schemaModel}} WHERE {{pkArrayWhere 1 .Model .Model.PrimaryKey.Fields}}"
 
 	q := queries.Raw(sql, {{ range $i, $p := .Model.PrimaryKey.Fields }}{{if $i}}, {{end}}queries.Array(keys{{$i}}){{ end }})
 

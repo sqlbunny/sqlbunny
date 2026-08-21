@@ -105,8 +105,7 @@ func TestExprPlaceholderNumbering(t *testing.T) {
 	b := NewExpr("? * ?", a, 45)
 
 	q := &Query{
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
-		from:    []string{"t"},
+		from: []string{"t"},
 	}
 	AppendWhere(q, "foo = ?", b)
 	AppendWhere(q, "bar = ?", 99)
@@ -118,29 +117,6 @@ func TestExprPlaceholderNumbering(t *testing.T) {
 		t.Errorf("sql:\n got %q\nwant %q", sql, wantSQL)
 	}
 	wantArgs := []any{25, 34, 45, 99}
-	if !reflect.DeepEqual(args, wantArgs) {
-		t.Errorf("args:\n got %#v\nwant %#v", args, wantArgs)
-	}
-}
-
-// TestExprNonIndexedPlaceholders checks the non-Postgres path where `?` are
-// kept verbatim instead of being numbered.
-func TestExprNonIndexedPlaceholders(t *testing.T) {
-	t.Parallel()
-
-	q := &Query{
-		dialect: &Dialect{LQ: '`', RQ: '`', IndexPlaceholders: false},
-		from:    []string{"t"},
-	}
-	AppendWhere(q, "foo = ?", NewExpr("? + ?", 1, 2))
-
-	sql, args := buildQuery(q)
-
-	const wantSQL = "SELECT * FROM `t` WHERE (foo = (? + ?));"
-	if sql != wantSQL {
-		t.Errorf("sql:\n got %q\nwant %q", sql, wantSQL)
-	}
-	wantArgs := []any{1, 2}
 	if !reflect.DeepEqual(args, wantArgs) {
 		t.Errorf("args:\n got %#v\nwant %#v", args, wantArgs)
 	}

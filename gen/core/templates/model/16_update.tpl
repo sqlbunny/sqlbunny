@@ -32,8 +32,8 @@ func (o *{{$modelNameSingular}}) Update(ctx context.Context, whitelist ... {{$mo
 
 	if !cached {
 		cache.query = fmt.Sprintf("UPDATE {{$schemaModel}} SET %s WHERE %s",
-			strmangle.SetParamNames("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}1{{else}}0{{end}}, wl),
-			strmangle.WhereClause("{{.LQ}}", "{{.RQ}}", {{if .Dialect.IndexPlaceholders}}len(wl)+1{{else}}0{{end}}, {{$varNameSingular}}PrimaryKeyColumns),
+			strmangle.SetParamNames(1, wl),
+			strmangle.WhereClause(len(wl)+1, {{$varNameSingular}}PrimaryKeyColumns),
 		)
 		cache.valueMapping, err = queries.BindMapping({{$varNameSingular}}Type, {{$varNameSingular}}Mapping, append(wl, {{$varNameSingular}}PrimaryKeyColumns...))
 		if err != nil {

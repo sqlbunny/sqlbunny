@@ -173,18 +173,8 @@ var TemplateFunctions = template.FuncMap{
 	"modelPKColumns":    modelPKColumns,
 	"modelNonPKColumns": modelNonPKColumns,
 
-	"quotes": func(s string) string {
-		d := Config.Dialect
-		lq := strmangle.QuoteCharacter(d.LQ)
-		rq := strmangle.QuoteCharacter(d.RQ)
-
-		return fmt.Sprintf("%s%s%s", lq, s, rq)
-	},
 	"schemaModel": func(model string) string {
-		d := Config.Dialect
-		lq := strmangle.QuoteCharacter(d.LQ)
-		rq := strmangle.QuoteCharacter(d.RQ)
-		return strmangle.SchemaModel(lq, rq, model)
+		return quoteIdent(model)
 	},
 	"hook": hook,
 
@@ -241,17 +231,23 @@ func titleCasePath(p schema.Path) string {
 	return res
 }
 
+// quoteIdent quotes a SQL identifier. The quotes are escaped, because the
+// result is written inside a Go string literal in the generated code.
+func quoteIdent(s string) string {
+	return `\"` + s + `\"`
+}
+
 // WhereClause returns the where clause using start as the $ flag index
 // For example, if start was 2 output would be: "colthing=$2 AND colstuff=$3"
-func WhereClause(lq, rq string, start int, cols []schema.Path) string {
+func WhereClause(start int, cols []schema.Path) string {
 	buf := strmangle.GetBuffer()
 	defer strmangle.PutBuffer(buf)
 
 	for i, c := range cols {
 		if start != 0 {
-			buf.WriteString(fmt.Sprintf(`%s%s%s=$%d`, lq, c.SQLName(), rq, start+i))
+			buf.WriteString(fmt.Sprintf(`%s=$%d`, quoteIdent(c.SQLName()), start+i))
 		} else {
-			buf.WriteString(fmt.Sprintf(`%s%s%s=?`, lq, c.SQLName(), rq))
+			buf.WriteString(fmt.Sprintf(`%s=?`, quoteIdent(c.SQLName())))
 		}
 
 		if i < len(cols)-1 {
@@ -263,7 +259,7 @@ func WhereClause(lq, rq string, start int, cols []schema.Path) string {
 }
 
 // JoinOnClause returns a join on clause
-func JoinOnClause(lq, rq string, table1 string, cols1 []schema.Path, table2 string, cols2 []schema.Path) string {
+func JoinOnClause(table1 string, cols1 []schema.Path, table2 string, cols2 []schema.Path) string {
 	buf := strmangle.GetBuffer()
 	defer strmangle.PutBuffer(buf)
 
@@ -271,9 +267,9 @@ func JoinOnClause(lq, rq string, table1 string, cols1 []schema.Path, table2 stri
 		c1 := cols1[i].SQLName()
 		c2 := cols2[i].SQLName()
 		buf.WriteString(fmt.Sprintf(
-			`%s%s%s.%s%s%s=%s%s%s.%s%s%s`,
-			lq, table1, rq, lq, c1, rq,
-			lq, table2, rq, lq, c2, rq,
+			`%s.%s=%s.%s`,
+			quoteIdent(table1), quoteIdent(c1),
+			quoteIdent(table2), quoteIdent(c2),
 		))
 
 		if i < len(cols1)-1 {
@@ -285,15 +281,15 @@ func JoinOnClause(lq, rq string, table1 string, cols1 []schema.Path, table2 stri
 }
 
 // JoinWhereClause returns a where clause explicitly specifying the table name
-func JoinWhereClause(lq, rq string, start int, table string, cols []schema.Path) string {
+func JoinWhereClause(start int, table string, cols []schema.Path) string {
 	buf := strmangle.GetBuffer()
 	defer strmangle.PutBuffer(buf)
 
 	for i, c := range cols {
 		if start != 0 {
-			buf.WriteString(fmt.Sprintf(`%s%s%s.%s%s%s=$%d`, lq, table, rq, lq, c.SQLName(), rq, start+i))
+			buf.WriteString(fmt.Sprintf(`%s.%s=$%d`, quoteIdent(table), quoteIdent(c.SQLName()), start+i))
 		} else {
-			buf.WriteString(fmt.Sprintf(`%s%s%s.%s%s%s=?`, lq, table, rq, lq, c.SQLName(), rq))
+			buf.WriteString(fmt.Sprintf(`%s.%s=?`, quoteIdent(table), quoteIdent(c.SQLName())))
 		}
 
 		if i < len(cols)-1 {
@@ -306,7 +302,7 @@ func JoinWhereClause(lq, rq string, start int, table string, cols []schema.Path)
 
 // WhereClause returns the where clause using start as the $ flag index
 // For example, if start was 2 output would be: "colthing=$2 AND colstuff=$3"
-func WhereInClause(lq, rq string, table string, cols []schema.Path) string {
+func WhereInClause(table string, cols []schema.Path) string {
 	buf := strmangle.GetBuffer()
 	defer strmangle.PutBuffer(buf)
 
@@ -314,7 +310,7 @@ func WhereInClause(lq, rq string, table string, cols []schema.Path) string {
 		buf.WriteString("(")
 	}
 	for i, c := range cols {
-		buf.WriteString(fmt.Sprintf(`%s%s%s.%s%s%s`, lq, table, rq, lq, c.SQLName(), rq))
+		buf.WriteString(fmt.Sprintf(`%s.%s`, quoteIdent(table), quoteIdent(c.SQLName())))
 
 		if i < len(cols)-1 {
 			buf.WriteString(",")
@@ -341,7 +337,7 @@ func templateSQLType(f *schema.Field) string {
 //
 //	"id" = ANY($1::bytea[])
 //	("a","b") IN (SELECT * FROM unnest($1::text[], $2::int[]))
-func PKArrayWhere(lq, rq string, start int, m *schema.Model, cols []schema.Path) string {
+func PKArrayWhere(start int, m *schema.Model, cols []schema.Path) string {
 	param := func(i int) string {
 		if start == 0 {
 			return "?"
@@ -350,12 +346,12 @@ func PKArrayWhere(lq, rq string, start int, m *schema.Model, cols []schema.Path)
 	}
 	if len(cols) == 1 {
 		f := m.FindField(cols[0])
-		return fmt.Sprintf("%s%s%s = ANY(%s::%s[])", lq, cols[0].SQLName(), rq, param(0), templateSQLType(f))
+		return fmt.Sprintf("%s = ANY(%s::%s[])", quoteIdent(cols[0].SQLName()), param(0), templateSQLType(f))
 	}
 	names := make([]string, len(cols))
 	params := make([]string, len(cols))
 	for i, c := range cols {
-		names[i] = fmt.Sprintf("%s%s%s", lq, c.SQLName(), rq)
+		names[i] = quoteIdent(c.SQLName())
 		params[i] = fmt.Sprintf("%s::%s[]", param(i), templateSQLType(m.FindField(c)))
 	}
 	return fmt.Sprintf("(%s) IN (SELECT * FROM unnest(%s))", strings.Join(names, ","), strings.Join(params, ", "))

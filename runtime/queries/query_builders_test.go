@@ -97,7 +97,6 @@ func TestBuildQuery(t *testing.T) {
 
 	for i, test := range tests {
 		filename := filepath.Join("_fixtures", fmt.Sprintf("%02d.sql", i))
-		test.q.dialect = &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true}
 		out, args := buildQuery(test.q)
 
 		if *writeGoldenFiles {
@@ -150,7 +149,6 @@ func TestWriteStars(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		test.In.dialect = &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true}
 		selects := writeStars(&test.In)
 		if !reflect.DeepEqual(selects, test.Out) {
 			t.Errorf("writeStar test fail %d\nwant: %v\ngot:  %v", i, test.Out, selects)
@@ -238,7 +236,6 @@ func TestWhereClause(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		test.q.dialect = &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true}
 		result, _ := whereClause(&test.q, 1)
 		if result != test.expect {
 			t.Errorf("%d) Mismatch between expect and result:\n%s\n%s\n", i, test.expect, result)
@@ -304,7 +301,6 @@ func TestWriteAsStatements(t *testing.T) {
 			`a.clown.run`,
 			`COUNT(a)`,
 		},
-		dialect: &Dialect{LQ: '"', RQ: '"', IndexPlaceholders: true},
 	}
 
 	expect := []string{

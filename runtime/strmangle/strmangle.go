@@ -75,17 +75,8 @@ func init() {
 	bunnyRuleset = newBunnyRuleset()
 }
 
-// SchemaModel returns a model name with a schema prefixed if
-// using a database that supports real schemas, for example,
-// for Postgres: "schema_name"."model_name",
-// for MS SQL: [schema_name].[model_name], versus
-// simply "model_name" for MySQL (because it does not support real schemas)
-func SchemaModel(lq, rq string, model string) string {
-	return fmt.Sprintf(`%s%s%s`, lq, model, rq)
-}
-
 // IdentQuote attempts to quote simple identifiers in SQL statements
-func IdentQuote(lq byte, rq byte, s string) string {
+func IdentQuote(s string) string {
 	if strings.ToLower(s) == "null" || s == "?" {
 		return s
 	}
@@ -103,41 +94,31 @@ func IdentQuote(lq byte, rq byte, s string) string {
 			buf.WriteByte('.')
 		}
 
-		if split[0] == lq || split[len(split)-1] == rq || split == "*" {
+		if split[0] == '"' || split[len(split)-1] == '"' || split == "*" {
 			buf.WriteString(split)
 			continue
 		}
 
-		buf.WriteByte(lq)
+		buf.WriteByte('"')
 		buf.WriteString(split)
-		buf.WriteByte(rq)
+		buf.WriteByte('"')
 	}
 
 	return buf.String()
 }
 
 // IdentQuoteSlice applies IdentQuote to a slice.
-func IdentQuoteSlice(lq byte, rq byte, s []string) []string {
+func IdentQuoteSlice(s []string) []string {
 	if len(s) == 0 {
 		return s
 	}
 
 	strs := make([]string, len(s))
 	for i, str := range s {
-		strs[i] = IdentQuote(lq, rq, str)
+		strs[i] = IdentQuote(str)
 	}
 
 	return strs
-}
-
-// QuoteCharacter returns a string that allows the quote character
-// to be embedded into a Go string that uses double quotes:
-func QuoteCharacter(q byte) string {
-	if q == '"' {
-		return `\"`
-	}
-
-	return string(q)
 }
 
 // Plural converts singular words to plural words (eg: person to people)
@@ -370,15 +351,15 @@ func PrefixStringSlice(str string, strs []string) []string {
 // SetParamNames takes a slice of fields and returns a comma separated
 // list of parameter names for a template statement SET clause.
 // eg: "col1"=$1, "col2"=$2, "col3"=$3
-func SetParamNames(lq, rq string, start int, fields []string) string {
+func SetParamNames(start int, fields []string) string {
 	buf := GetBuffer()
 	defer PutBuffer(buf)
 
 	for i, c := range fields {
 		if start != 0 {
-			buf.WriteString(fmt.Sprintf(`%s%s%s=$%d`, lq, c, rq, i+start))
+			buf.WriteString(fmt.Sprintf(`"%s"=$%d`, c, i+start))
 		} else {
-			buf.WriteString(fmt.Sprintf(`%s%s%s=?`, lq, c, rq))
+			buf.WriteString(fmt.Sprintf(`"%s"=?`, c))
 		}
 
 		if i < len(fields)-1 {
@@ -391,15 +372,15 @@ func SetParamNames(lq, rq string, start int, fields []string) string {
 
 // WhereClause returns the where clause using start as the $ flag index
 // For example, if start was 2 output would be: "colthing=$2 AND colstuff=$3"
-func WhereClause(lq, rq string, start int, cols []string) string {
+func WhereClause(start int, cols []string) string {
 	buf := GetBuffer()
 	defer PutBuffer(buf)
 
 	for i, c := range cols {
 		if start != 0 {
-			buf.WriteString(fmt.Sprintf(`%s%s%s=$%d`, lq, c, rq, start+i))
+			buf.WriteString(fmt.Sprintf(`"%s"=$%d`, c, start+i))
 		} else {
-			buf.WriteString(fmt.Sprintf(`%s%s%s=?`, lq, c, rq))
+			buf.WriteString(fmt.Sprintf(`"%s"=?`, c))
 		}
 
 		if i < len(cols)-1 {

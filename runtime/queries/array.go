@@ -132,7 +132,7 @@ func (a anyArray) Value() (driver.Value, error) {
 //
 // colTypes are the Postgres types of the columns, rows the values in the same
 // column order. Row order is preserved.
-func BulkValues(d Dialect, colTypes []string, rows [][]any) (string, []any) {
+func BulkValues(colTypes []string, rows [][]any) (string, []any) {
 	n := len(colTypes)
 	colVals := make([][]any, n)
 	for i := range colVals {
@@ -156,7 +156,7 @@ func BulkValues(d Dialect, colTypes []string, rows [][]any) (string, []any) {
 		if strings.HasSuffix(t, "[]") {
 			sel[c] += "::" + t
 		}
-		params[c] = placeholder(d.IndexPlaceholders, c+1) + "::" + paramType
+		params[c] = placeholder(c+1) + "::" + paramType
 	}
 	return fmt.Sprintf("SELECT %s FROM unnest(%s) AS u(%s)",
 		strings.Join(sel, ", "), strings.Join(params, ", "), strings.Join(names, ", ")), args

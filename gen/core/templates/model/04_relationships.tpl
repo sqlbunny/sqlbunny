@@ -19,8 +19,8 @@
 func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignModelNameCamel}}Query) {
 	queryMods := []qm.QueryMod{
 		{{if .IsJoinModel -}}
-		qm.InnerJoin("{{.JoinModel | schemaModel }} ON {{joinOnClause $dot.LQ $dot.RQ .JoinModel .JoinForeignFields .ForeignModel .ForeignFields}}"),
-		qm.Where("{{joinWhereClause $dot.LQ $dot.RQ 0 .JoinModel .JoinLocalFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
+		qm.InnerJoin("{{.JoinModel | schemaModel }} ON {{joinOnClause .JoinModel .JoinForeignFields .ForeignModel .ForeignFields}}"),
+		qm.Where("{{joinWhereClause 0 .JoinModel .JoinLocalFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
 		{{if .JoinWhere -}}
 		{{- $schemaModel := .JoinModel | schemaModel }}
 		qm.Where("{{replaceAll .JoinWhere "$join" $schemaModel}}"),
@@ -28,9 +28,9 @@ func (o *{{$modelName}}) {{$relationshipName}}(mods ...qm.QueryMod) ({{$foreignM
 		{{ else if .IsArray }}
 		{{- $localArray := index .LocalFields 0 -}}
 		{{- $foreignCol := index .ForeignFields 0 }}
-		qm.Where("{{$dot.LQ}}{{$foreignCol.SQLName}}{{$dot.RQ}} = ANY(?)", o.{{$localArray | titleCasePath}}),
+		qm.Where("\"{{$foreignCol.SQLName}}\" = ANY(?)", o.{{$localArray | titleCasePath}}),
 		{{ else }}
-		qm.Where("{{whereClause $dot.LQ $dot.RQ 0 .ForeignFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
+		qm.Where("{{whereClause 0 .ForeignFields}}" {{range .LocalFields}}, o.{{. | titleCasePath}}{{end}}),
 		{{- end }}
 		{{if .ForeignWhere -}}
 		{{- $schemaModel := .ForeignModel | schemaModel }}
@@ -84,7 +84,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 	query := NewQuery(
 		qm.Select("f.*"),
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
-		qm.Where("f.{{$dot.LQ}}{{$foreignCol.SQLName}}{{$dot.RQ}} = ANY(?::{{sqlType $fcol}}[])", queries.Array(allIDs)),
+		qm.Where("f.\"{{$foreignCol.SQLName}}\" = ANY(?::{{sqlType $fcol}}[])", queries.Array(allIDs)),
 		{{if .ForeignWhere -}}
 		qm.Where("{{replaceAll .ForeignWhere "$foreign" "f"}}"),
 		{{- end }}
@@ -167,9 +167,9 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 
 	{{- if eq (len .LocalFields) 1 }}
 	{{- $jcol := $joinModel.FindField (index .JoinLocalFields 0) }}
-	where := "{{ whereInClause $dot.LQ $dot.RQ "j" .JoinLocalFields }} = ANY(?::{{sqlType $jcol}}[])"
+	where := "{{ whereInClause "j" .JoinLocalFields }} = ANY(?::{{sqlType $jcol}}[])"
 	{{- else }}
-	where := "{{ whereInClause $dot.LQ $dot.RQ "j" .JoinLocalFields }} IN (SELECT * FROM unnest(
+	where := "{{ whereInClause "j" .JoinLocalFields }} IN (SELECT * FROM unnest(
 		{{- range $i, $c := .JoinLocalFields }}{{if $i}}, {{end}}?::{{ sqlType ($joinModel.FindField $c) }}[]{{ end -}}
 	))"
 	{{- end }}
@@ -179,7 +179,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 			{{ range $i, $c := .JoinLocalFields -}}{{if $i}},{{end}} "j.{{$c.SQLName}}"{{end}},
 		),
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
-		qm.InnerJoin("{{.JoinModel | schemaModel }} AS j ON {{joinOnClause $dot.LQ $dot.RQ "j" .JoinForeignFields "f" .ForeignFields}}"),
+		qm.InnerJoin("{{.JoinModel | schemaModel }} AS j ON {{joinOnClause "j" .JoinForeignFields "f" .ForeignFields}}"),
 		qm.Where(where{{ range $i, $c := .LocalFields }}, queries.Array(keys{{$i}}){{ end }}),
 		{{if .JoinWhere -}}
 		qm.Where("{{replaceAll .JoinWhere "$join" "j"}}"),
@@ -225,9 +225,9 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 	{{else}}
 	{{- if eq (len .LocalFields) 1 }}
 	{{- $fcol := $foreignModel.FindField (index .ForeignFields 0) }}
-	where := "{{ whereInClause $dot.LQ $dot.RQ "f" .ForeignFields }} = ANY(?::{{sqlType $fcol}}[])"
+	where := "{{ whereInClause "f" .ForeignFields }} = ANY(?::{{sqlType $fcol}}[])"
 	{{- else }}
-	where := "{{ whereInClause $dot.LQ $dot.RQ "f" .ForeignFields }} IN (SELECT * FROM unnest(
+	where := "{{ whereInClause "f" .ForeignFields }} IN (SELECT * FROM unnest(
 		{{- range $i, $c := .ForeignFields }}{{if $i}}, {{end}}?::{{ sqlType ($foreignModel.FindField $c) }}[]{{ end -}}
 	))"
 	{{- end }}

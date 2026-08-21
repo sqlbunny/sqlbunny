@@ -29,7 +29,7 @@ func TestIdentQuote(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if got := IdentQuote('"', '"', test.In); got != test.Out {
+		if got := IdentQuote(test.In); got != test.Out {
 			t.Errorf("want: %s, got: %s", test.Out, got)
 		}
 	}
@@ -38,26 +38,12 @@ func TestIdentQuote(t *testing.T) {
 func TestIdentQuoteSlice(t *testing.T) {
 	t.Parallel()
 
-	ret := IdentQuoteSlice('"', '"', []string{`thing`, `null`})
+	ret := IdentQuoteSlice([]string{`thing`, `null`})
 	if ret[0] != `"thing"` {
 		t.Error(ret[0])
 	}
 	if ret[1] != `null` {
 		t.Error(ret[1])
-	}
-}
-
-func TestQuoteCharacter(t *testing.T) {
-	t.Parallel()
-
-	if QuoteCharacter('[') != "[" {
-		t.Error("want just the normal quote character")
-	}
-	if QuoteCharacter('`') != "`" {
-		t.Error("want just the normal quote character")
-	}
-	if QuoteCharacter('"') != `\"` {
-		t.Error("want an escaped character")
 	}
 }
 
@@ -247,7 +233,7 @@ func TestSetParamNames(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		r := SetParamNames(`"`, `"`, test.Start, test.Cols)
+		r := SetParamNames(test.Start, test.Cols)
 		if r != test.Should {
 			t.Errorf("(%d) want: %s, got: %s\nTest: %#v", i, test.Should, r, test)
 		}
@@ -269,7 +255,7 @@ func TestWhereClause(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		r := WhereClause(`"`, `"`, test.Start, test.Cols)
+		r := WhereClause(test.Start, test.Cols)
 		if r != test.Should {
 			t.Errorf("(%d) want: %s, got: %s\nTest: %#v", i, test.Should, r, test)
 		}

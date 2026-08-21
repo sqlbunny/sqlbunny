@@ -45,12 +45,6 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []any) {
 
 	buf.WriteString("SELECT ")
 
-	if q.dialect.UseTopClause {
-		if q.limit != 0 && q.offset == 0 {
-			fmt.Fprintf(buf, " TOP (%d) ", q.limit)
-		}
-	}
-
 	if q.count {
 		buf.WriteString("COUNT(")
 	}
@@ -62,7 +56,7 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []any) {
 		// Don't identQuoteSlice - writeAsStatements does this
 		buf.WriteString(strings.Join(selectColsWithAs, ", "))
 	} else if hasSelectCols {
-		buf.WriteString(strings.Join(strmangle.IdentQuoteSlice(q.dialect.LQ, q.dialect.RQ, q.selectCols), ", "))
+		buf.WriteString(strings.Join(strmangle.IdentQuoteSlice(q.selectCols), ", "))
 	} else if hasJoins && !q.count {
 		selectColsWithStars := writeStars(q)
 		buf.WriteString(strings.Join(selectColsWithStars, ", "))
@@ -75,7 +69,7 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []any) {
 		buf.WriteByte(')')
 	}
 
-	fmt.Fprintf(buf, " FROM %s", strings.Join(strmangle.IdentQuoteSlice(q.dialect.LQ, q.dialect.RQ, q.from), ", "))
+	fmt.Fprintf(buf, " FROM %s", strings.Join(strmangle.IdentQuoteSlice(q.from), ", "))
 
 	if len(q.joins) > 0 {
 		argsLen := len(args)
@@ -87,12 +81,7 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []any) {
 			fmt.Fprintf(joinBuf, " INNER JOIN %s", j.clause)
 			args = append(args, j.args...)
 		}
-		var resp string
-		if q.dialect.IndexPlaceholders {
-			resp, _ = convertQuestionMarks(joinBuf.String(), argsLen+1)
-		} else {
-			resp = joinBuf.String()
-		}
+		resp, _ := convertQuestionMarks(joinBuf.String(), argsLen+1)
 		buf.WriteString(resp)
 		strmangle.PutBuffer(joinBuf)
 	}
@@ -114,7 +103,7 @@ func buildDeleteQuery(q *Query) (*bytes.Buffer, []any) {
 	buf := strmangle.GetBuffer()
 
 	buf.WriteString("DELETE FROM ")
-	buf.WriteString(strings.Join(strmangle.IdentQuoteSlice(q.dialect.LQ, q.dialect.RQ, q.from), ", "))
+	buf.WriteString(strings.Join(strmangle.IdentQuoteSlice(q.from), ", "))
 
 	where, whereArgs := whereClause(q, 1)
 	if len(whereArgs) != 0 {
@@ -133,7 +122,7 @@ func buildUpdateQuery(q *Query) (*bytes.Buffer, []any) {
 	buf := strmangle.GetBuffer()
 
 	buf.WriteString("UPDATE ")
-	buf.WriteString(strings.Join(strmangle.IdentQuoteSlice(q.dialect.LQ, q.dialect.RQ, q.from), ", "))
+	buf.WriteString(strings.Join(strmangle.IdentQuoteSlice(q.from), ", "))
 
 	cols := make(sort.StringSlice, len(q.update))
 	var args []any
@@ -148,12 +137,12 @@ func buildUpdateQuery(q *Query) (*bytes.Buffer, []any) {
 
 	for i := 0; i < len(cols); i++ {
 		args = append(args, q.update[cols[i]])
-		cols[i] = strmangle.IdentQuote(q.dialect.LQ, q.dialect.RQ, cols[i])
+		cols[i] = strmangle.IdentQuote(cols[i])
 	}
 
 	setSlice := make([]string, len(cols))
 	for index, col := range cols {
-		setSlice[index] = fmt.Sprintf("%s = %s", col, placeholder(q.dialect.IndexPlaceholders, index+1))
+		setSlice[index] = fmt.Sprintf("%s = %s", col, placeholder(index+1))
 	}
 	fmt.Fprintf(buf, " SET %s", strings.Join(setSlice, ", "))
 
@@ -186,12 +175,7 @@ func writeModifiers(q *Query, buf *bytes.Buffer, args *[]any) {
 			fmt.Fprintf(havingBuf, j.clause)
 			*args = append(*args, j.args...)
 		}
-		var resp string
-		if q.dialect.IndexPlaceholders {
-			resp, _ = convertQuestionMarks(havingBuf.String(), argsLen+1)
-		} else {
-			resp = havingBuf.String()
-		}
+		resp, _ := convertQuestionMarks(havingBuf.String(), argsLen+1)
 		buf.WriteString(resp)
 		strmangle.PutBuffer(havingBuf)
 	}
@@ -201,36 +185,12 @@ func writeModifiers(q *Query, buf *bytes.Buffer, args *[]any) {
 		buf.WriteString(strings.Join(q.orderBy, ", "))
 	}
 
-	if !q.dialect.UseTopClause {
-		if q.limit != 0 {
-			fmt.Fprintf(buf, " LIMIT %d", q.limit)
-		}
+	if q.limit != 0 {
+		fmt.Fprintf(buf, " LIMIT %d", q.limit)
+	}
 
-		if q.offset != 0 {
-			fmt.Fprintf(buf, " OFFSET %d", q.offset)
-		}
-	} else {
-		// From MS SQL 2012 and above: https://technet.microsoft.com/en-us/library/ms188385(v=sql.110).aspx
-		// ORDER BY ...
-		// OFFSET N ROWS
-		// FETCH NEXT M ROWS ONLY
-		if q.offset != 0 {
-
-			// Hack from https://www.microsoftpressstore.com/articles/article.aspx?p=2314819
-			// ...
-			// As mentioned, the OFFSET-FETCH filter requires an ORDER BY clause. If you want to use arbitrary order,
-			// like TOP without an ORDER BY clause, you can use the trick with ORDER BY (SELECT NULL)
-			// ...
-			if len(q.orderBy) == 0 {
-				buf.WriteString(" ORDER BY (SELECT NULL)")
-			}
-
-			fmt.Fprintf(buf, " OFFSET %d", q.offset)
-
-			if q.limit != 0 {
-				fmt.Fprintf(buf, " FETCH NEXT %d ROWS ONLY", q.limit)
-			}
-		}
+	if q.offset != 0 {
+		fmt.Fprintf(buf, " OFFSET %d", q.offset)
 	}
 
 	if len(q.forlock) != 0 {
@@ -243,7 +203,7 @@ func writeStars(q *Query) []string {
 	for i, f := range q.from {
 		toks := strings.Split(f, " ")
 		if len(toks) == 1 {
-			cols[i] = fmt.Sprintf(`%s.*`, strmangle.IdentQuote(q.dialect.LQ, q.dialect.RQ, toks[0]))
+			cols[i] = fmt.Sprintf(`%s.*`, strmangle.IdentQuote(toks[0]))
 			continue
 		}
 
@@ -255,7 +215,7 @@ func writeStars(q *Query) []string {
 		if len(alias) != 0 {
 			name = alias
 		}
-		cols[i] = fmt.Sprintf(`%s.*`, strmangle.IdentQuote(q.dialect.LQ, q.dialect.RQ, name))
+		cols[i] = fmt.Sprintf(`%s.*`, strmangle.IdentQuote(name))
 	}
 
 	return cols
@@ -271,7 +231,7 @@ func writeAsStatements(q *Query) []string {
 
 		toks := strings.Split(col, ".")
 		if len(toks) == 1 {
-			cols[i] = strmangle.IdentQuote(q.dialect.LQ, q.dialect.RQ, col)
+			cols[i] = strmangle.IdentQuote(col)
 			continue
 		}
 
@@ -280,7 +240,7 @@ func writeAsStatements(q *Query) []string {
 			asParts[j] = strings.Trim(tok, `"`)
 		}
 
-		cols[i] = fmt.Sprintf(`%s as "%s"`, strmangle.IdentQuote(q.dialect.LQ, q.dialect.RQ, col), strings.Join(asParts, "."))
+		cols[i] = fmt.Sprintf(`%s as "%s"`, strmangle.IdentQuote(col), strings.Join(asParts, "."))
 	}
 
 	return cols
@@ -310,12 +270,7 @@ func whereClause(q *Query, startAt int) (string, []any) {
 		args = append(args, where.args...)
 	}
 
-	var resp string
-	if q.dialect.IndexPlaceholders {
-		resp, _ = convertQuestionMarks(buf.String(), startAt)
-	} else {
-		resp = buf.String()
-	}
+	resp, _ := convertQuestionMarks(buf.String(), startAt)
 
 	return resp, args
 }
@@ -397,11 +352,7 @@ func parseFromClause(toks []string) (alias, name string, ok bool) {
 	return alias, name, ok
 }
 
-// placeholder returns the placeholder for parameter number n: "$n", or "?"
-// when the dialect does not use indexed placeholders.
-func placeholder(indexPlaceholders bool, n int) string {
-	if indexPlaceholders {
-		return fmt.Sprintf("$%d", n)
-	}
-	return "?"
+// placeholder returns the placeholder for parameter number n: "$n".
+func placeholder(n int) string {
+	return fmt.Sprintf("$%d", n)
 }

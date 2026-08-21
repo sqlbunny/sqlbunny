@@ -31,7 +31,7 @@ func (o {{$modelNameSingular}}Slice) bulkInsertImpl(ctx context.Context, conflic
 	if err != nil {
 		return err
 	}
-	colsClause := "{{.LQ}}" + strings.Join(wl, "{{.RQ}},{{.LQ}}") + "{{.RQ}}"
+	colsClause := "\"" + strings.Join(wl, "\",\"") + "\""
 
 	src, args := {{$varNameSingular}}BulkValues(o, wl, mapping)
 	query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") " + src + conflictClause
@@ -52,7 +52,7 @@ func {{$varNameSingular}}BulkValues(o {{$modelNameSingular}}Slice, wl []string, 
 	for i, row := range o {
 		rows[i] = queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(row)), mapping)
 	}
-	return queries.BulkValues(dialect, colTypes, rows)
+	return queries.BulkValues(colTypes, rows)
 }
 
 func {{$varNameSingular}}BulkInsertPrep(whitelist []{{$modelNameSingular}}Column) ([]string, []queries.MappedField, error) {
@@ -88,11 +88,11 @@ func (o {{$modelNameSingular}}Slice) InsertAllIgnore(ctx context.Context, confli
 	if err != nil {
 		return nil, err
 	}
-	colsClause := "{{.LQ}}" + strings.Join(wl, "{{.RQ}},{{.LQ}}") + "{{.RQ}}"
+	colsClause := "\"" + strings.Join(wl, "\",\"") + "\""
 	conflictClause := {{$varNameSingular}}IgnoreClause(conflictTarget)
 
 	src, args := {{$varNameSingular}}BulkValues(o, wl, mapping)
-	query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") " + src + conflictClause + " RETURNING {{.LQ}}{{$pkColumn}}{{.RQ}}"
+	query := "INSERT INTO {{$schemaModel}} (" + colsClause + ") " + src + conflictClause + " RETURNING \"{{$pkColumn}}\""
 
 	rows, err := bunny.Query(ctx, query, args...)
 	if err != nil {

@@ -32,8 +32,7 @@ func TestArray(t *testing.T) {
 }
 
 func TestBulkValues(t *testing.T) {
-	d := Dialect{IndexPlaceholders: true}
-	sql, args := BulkValues(d, []string{"bytea", "text[]", "jsonb"}, [][]any{
+	sql, args := BulkValues([]string{"bytea", "text[]", "jsonb"}, [][]any{
 		{byteValuer{1, 2}, "{1,2}", []byte(`{"a":1}`)},
 		{byteValuer{3, 4}, "{}", nil},
 	})

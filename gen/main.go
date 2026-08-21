@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/sqlbunny/sqlbunny/runtime/queries"
 )
 
 var rootCmd *cobra.Command
@@ -36,13 +35,6 @@ func Run(items []ConfigItem) {
 
 	Config = &ConfigStruct{
 		Items: items,
-
-		Dialect: queries.Dialect{
-			LQ:                '"',
-			RQ:                '"',
-			IndexPlaceholders: true,
-			UseTopClause:      false,
-		},
 
 		ModelsPackagePath: "./models",
 		ModelsPackageName: "models",

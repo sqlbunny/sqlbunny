@@ -12,7 +12,7 @@ func (o *{{$modelNameSingular}}) Delete(ctx context.Context) error {
 	{{ hook . "before_delete" "o" .Model }}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), {{$varNameSingular}}PrimaryKeyMapping)
-	sql := "DELETE FROM {{$schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Fields}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Fields}}{{end}}"
+	sql := "DELETE FROM {{$schemaModel}} WHERE {{whereClause 1 .Model.PrimaryKey.Fields}}"
 
 	_, err := bunny.Exec(ctx, sql, args...)
 	if err != nil {
@@ -64,7 +64,7 @@ func (o {{$modelNameSingular}}Slice) DeleteAll(ctx context.Context) error {
 		{{- end }}
 	}
 
-	sql := "DELETE FROM {{$schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{pkArrayWhere .LQ .RQ 1 .Model .Model.PrimaryKey.Fields}}{{else}}{{pkArrayWhere .LQ .RQ 0 .Model .Model.PrimaryKey.Fields}}{{end}}"
+	sql := "DELETE FROM {{$schemaModel}} WHERE {{pkArrayWhere 1 .Model .Model.PrimaryKey.Fields}}"
 
 	_, err := bunny.Exec(ctx, sql, {{ range $i, $p := .Model.PrimaryKey.Fields }}{{if $i}}, {{end}}queries.Array(keys{{$i}}){{ end }})
 	if err != nil {

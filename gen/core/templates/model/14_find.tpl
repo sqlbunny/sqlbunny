@@ -9,10 +9,10 @@ func Find{{$modelNameSingular}}(ctx context.Context{{range .Model.PrimaryKey.Fie
 
 	sel := "*"
 	if len(selectCols) > 0 {
-		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, columnStrings(selectCols)), ",")
+		sel = strings.Join(strmangle.IdentQuoteSlice(columnStrings(selectCols)), ",")
 	}
 	query := fmt.Sprintf(
-		"SELECT %s FROM {{.Model.Name | schemaModel}} WHERE {{if .Dialect.IndexPlaceholders}}{{whereClause .LQ .RQ 1 .Model.PrimaryKey.Fields}}{{else}}{{whereClause .LQ .RQ 0 .Model.PrimaryKey.Fields}}{{end}}", sel,
+		"SELECT %s FROM {{.Model.Name | schemaModel}} WHERE {{whereClause 1 .Model.PrimaryKey.Fields}}", sel,
 	)
 
 	q := queries.Raw(query{{range .Model.PrimaryKey.Fields}}, {{$f := $model.FindField .}}{{$f.Name | camelCase}}{{end}})
