@@ -2,6 +2,7 @@ package migration
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/sqlbunny/errors"
 )
@@ -78,6 +79,9 @@ func (s *Store) FindHeads() []string {
 			res = append(res, m.Name)
 		}
 	}
+	// Sorted, so a merge migration's dependency list doesn't depend on
+	// map iteration order.
+	slices.Sort(res)
 	return res
 }
 
@@ -88,7 +92,9 @@ func (s *Store) RunMigration(target string, applied map[string]struct{}, fn func
 
 	reverse := s.calcReverseDeps()
 
-	ready := make(map[string]struct{})
+	// ready is kept in sorted batches rather than as a set, so migrations
+	// are applied in the same order every run.
+	var ready []string
 	blocked := make(map[string]int)
 
 	visited := make(map[string]struct{})
@@ -108,33 +114,40 @@ func (s *Store) RunMigration(target string, applied map[string]struct{}, fn func
 			}
 		}
 		if count == 0 {
-			ready[m.Name] = struct{}{}
+			ready = append(ready, m.Name)
 		} else {
 			blocked[m.Name] = count
 		}
 	}
+	slices.Sort(ready)
 
 	for len(ready) != 0 {
-		for mn := range ready {
-			delete(ready, mn)
-			m := s.Migrations[mn]
-			if err := fn(m); err != nil {
-				return err
+		mn := ready[0]
+		ready = ready[1:]
+
+		m := s.Migrations[mn]
+		if err := fn(m); err != nil {
+			return err
+		}
+
+		// reverse[mn] comes out of a map, so sort what it unblocks before
+		// queueing it.
+		var unblocked []string
+		for _, dn := range reverse[mn] {
+			count, ok := blocked[dn]
+			if !ok {
+				continue
 			}
-			for _, dn := range reverse[mn] {
-				count, ok := blocked[dn]
-				if !ok {
-					continue
-				}
-				count--
-				if count == 0 {
-					ready[dn] = struct{}{}
-					delete(blocked, dn)
-				} else {
-					blocked[dn] = count
-				}
+			count--
+			if count == 0 {
+				unblocked = append(unblocked, dn)
+				delete(blocked, dn)
+			} else {
+				blocked[dn] = count
 			}
 		}
+		slices.Sort(unblocked)
+		ready = append(ready, unblocked...)
 	}
 
 	if len(blocked) != 0 {
