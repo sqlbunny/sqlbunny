@@ -67,7 +67,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 
 	// Collect unique foreign IDs across all local arrays.
 	seen := make(map[{{ goType $fcol.GoType }}]struct{})
-	var allIDs []any
+	var allIDs []{{ goType $fcol.GoType }}
 	for _, obj := range slice {
 		for _, id := range obj.{{$localArray | titleCasePath}} {
 			if _, ok := seen[id]; ok {
@@ -81,14 +81,10 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		return nil
 	}
 
-	where := fmt.Sprintf(
-		"f.{{$dot.LQ}}{{$foreignCol.SQLName}}{{$dot.RQ}} in (%s)",
-		strmangle.Placeholders(false, len(allIDs), 1, 1),
-	)
 	query := NewQuery(
 		qm.Select("f.*"),
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
-		qm.Where(where, allIDs...),
+		qm.Where("f.{{$dot.LQ}}{{$foreignCol.SQLName}}{{$dot.RQ}} = ANY(?::{{sqlType $fcol}}[])", queries.Array(allIDs)),
 		{{if .ForeignWhere -}}
 		qm.Where("{{replaceAll .ForeignWhere "$foreign" "f"}}"),
 		{{- end }}
@@ -123,26 +119,60 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		}
 	}
 	{{else}}
-	args := make([]any, len(slice)*{{len .LocalFields}})
-	for i, obj := range slice {
-		{{ range $i, $c := .LocalFields }}
-		args[i*{{len $relationship.LocalFields}} + {{$i}}] = obj.{{$c | titleCasePath}}
-		{{ end }}
-	}
-
-	if len(args) == 0 {
+	if len(slice) == 0 {
 		return nil
 	}
+
+	// Collect unique keys. One typed array per key column, sent as one
+	// parameter each, so the parameter count does not grow with the slice.
+	{{- range $i, $c := .LocalFields }}
+	{{- $lcol := $model.FindField $c }}
+	keys{{$i}} := make([]{{ goType $lcol.GoType }}, 0, len(slice))
+	{{- end }}
+	{{- if eq (len .LocalFields) 1 }}
+	{{- $lcol := $model.FindField (index .LocalFields 0) }}
+	seen := make(map[{{ goType $lcol.GoType }}]struct{}, len(slice))
+	for _, obj := range slice {
+		k := obj.{{ index .LocalFields 0 | titleCasePath }}
+		if _, ok := seen[k]; ok {
+			continue
+		}
+		seen[k] = struct{}{}
+		keys0 = append(keys0, k)
+	}
+	{{- else }}
+	type keyType struct {
+		{{- range $i, $c := .LocalFields }}
+		{{- $lcol := $model.FindField $c }}
+		K{{$i}} {{ goType $lcol.GoType }}
+		{{- end }}
+	}
+	seen := make(map[keyType]struct{}, len(slice))
+	for _, obj := range slice {
+		k := keyType{ {{- range $i, $c := .LocalFields }}{{if $i}}, {{end}}obj.{{$c | titleCasePath}}{{ end -}} }
+		if _, ok := seen[k]; ok {
+			continue
+		}
+		seen[k] = struct{}{}
+		{{- range $i, $c := .LocalFields }}
+		keys{{$i}} = append(keys{{$i}}, k.K{{$i}})
+		{{- end }}
+	}
+	{{- end }}
 
 	{{if .IsJoinModel }}
 	{{ $joinModel := index $dot.Schema.Models .JoinModel }}
 	{{- $joinModelName := .JoinModel | titleCase}}
 	{{- $joinModelNameCamel := .JoinModel | camelCase}}
 
-	where := fmt.Sprintf(
-		"{{ whereInClause $dot.LQ $dot.RQ "j" .JoinLocalFields }} in (%s)",
-		strmangle.Placeholders(false, len(slice)*{{len .LocalFields}}, 1, {{len .LocalFields}}),
-	)
+	{{- if eq (len .LocalFields) 1 }}
+	{{- $jcol := $joinModel.FindField (index .JoinLocalFields 0) }}
+	where := "{{ whereInClause $dot.LQ $dot.RQ "j" .JoinLocalFields }} = ANY(?::{{sqlType $jcol}}[])"
+	{{- else }}
+	where := "{{ whereInClause $dot.LQ $dot.RQ "j" .JoinLocalFields }} IN (SELECT * FROM unnest(
+		{{- range $i, $c := .JoinLocalFields }}{{if $i}}, {{end}}?::{{ sqlType ($joinModel.FindField $c) }}[]{{ end -}}
+	))"
+	{{- end }}
 	query := NewQuery(
 		qm.Select(
 			{{ range $i, $c := $foreignModel.Table.Columns -}}"f.{{$i}}",{{end}}
@@ -150,7 +180,7 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		),
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
 		qm.InnerJoin("{{.JoinModel | schemaModel }} AS j ON {{joinOnClause $dot.LQ $dot.RQ "j" .JoinForeignFields "f" .ForeignFields}}"),
-		qm.Where(where, args...),
+		qm.Where(where{{ range $i, $c := .LocalFields }}, queries.Array(keys{{$i}}){{ end }}),
 		{{if .JoinWhere -}}
 		qm.Where("{{replaceAll .JoinWhere "$join" "j"}}"),
 		{{- end }}
@@ -193,14 +223,18 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 		}
 	}
 	{{else}}
-	where := fmt.Sprintf(
-		"{{ whereInClause $dot.LQ $dot.RQ "f" .ForeignFields }} in (%s)",
-		strmangle.Placeholders(false, len(slice)*{{len .LocalFields}}, 1, {{len .LocalFields}}),
-	)
+	{{- if eq (len .LocalFields) 1 }}
+	{{- $fcol := $foreignModel.FindField (index .ForeignFields 0) }}
+	where := "{{ whereInClause $dot.LQ $dot.RQ "f" .ForeignFields }} = ANY(?::{{sqlType $fcol}}[])"
+	{{- else }}
+	where := "{{ whereInClause $dot.LQ $dot.RQ "f" .ForeignFields }} IN (SELECT * FROM unnest(
+		{{- range $i, $c := .ForeignFields }}{{if $i}}, {{end}}?::{{ sqlType ($foreignModel.FindField $c) }}[]{{ end -}}
+	))"
+	{{- end }}
 	query := NewQuery(
 		qm.Select("f.*"),
 		qm.From("{{.ForeignModel | schemaModel}} AS f"),
-		qm.Where(where, args...),
+		qm.Where(where{{ range $i, $c := .LocalFields }}, queries.Array(keys{{$i}}){{ end }}),
 		{{if .ForeignWhere -}}
 		qm.Where("{{replaceAll .ForeignWhere "$foreign" "f"}}"),
 		{{- end }}

@@ -148,6 +148,7 @@ var TemplateFunctions = template.FuncMap{
 	// Database related mangling
 	"whereClause":     WhereClause,
 	"whereInClause":   WhereInClause,
+	"sqlType":         templateSQLType,
 	"joinOnClause":    JoinOnClause,
 	"joinWhereClause": JoinWhereClause,
 
@@ -338,4 +339,13 @@ func WhereInClause(lq, rq string, table string, cols []schema.Path) string {
 	}
 
 	return buf.String()
+}
+
+// templateSQLType returns the Postgres type name of a field, for casts like "?::bytea[]".
+func templateSQLType(f *schema.Field) string {
+	bt, ok := f.Type.(schema.BaseType)
+	if !ok {
+		panic(fmt.Sprintf("field %s has type %s with no SQL type", f.Name, f.Type.GetName()))
+	}
+	return bt.SQLType().Type
 }
