@@ -72,7 +72,9 @@ func {{$varNameSingular}}BulkInsertPrep(whitelist []{{$modelNameSingular}}Column
 {{if eq (len .Model.PrimaryKey.Fields) 1 -}}
 {{- $pkPath := index .Model.PrimaryKey.Fields 0 -}}
 {{- $pkColumn := $pkPath.SQLName -}}
-{{- $pkGoType := goType ($model.FindField $pkPath).Type.GoType }}
+{{- $pkField := $model.FindField $pkPath -}}
+{{- $pkGoType := goType $pkField.Type.GoType -}}
+{{- $pkKeyType := mapKeyType $pkField.Type.GoType }}
 
 // InsertAllIgnore is like InsertAll but appends
 // `ON CONFLICT <conflictTarget> DO NOTHING` to every statement. If
@@ -80,7 +82,12 @@ func {{$varNameSingular}}BulkInsertPrep(whitelist []{{$modelNameSingular}}Column
 // Returns the set of primary-key values that were actually inserted; rows
 // skipped by the ON CONFLICT clause are absent. Returns nil for an empty
 // slice.
-func (o {{$modelNameSingular}}Slice) InsertAllIgnore(ctx context.Context, conflictTarget string, whitelist ...{{$modelNameSingular}}Column) (map[{{$pkGoType}}]struct{}, error) {
+{{- if ne $pkKeyType $pkGoType }}
+//
+// The primary key type {{$pkGoType}} cannot be a map key, so the set has
+// {{ mapKey $pkField.Type.GoType "pk" }} keys instead.
+{{- end }}
+func (o {{$modelNameSingular}}Slice) InsertAllIgnore(ctx context.Context, conflictTarget string, whitelist ...{{$modelNameSingular}}Column) (map[{{$pkKeyType}}]struct{}, error) {
 	if len(o) == 0 {
 		return nil, nil
 	}
@@ -99,13 +106,13 @@ func (o {{$modelNameSingular}}Slice) InsertAllIgnore(ctx context.Context, confli
 		return nil, errors.Errorf("{{.PkgName}}: unable to bulk insert into {{.Model.Name}}: %w", err)
 	}
 	defer rows.Close()
-	inserted := make(map[{{$pkGoType}}]struct{}, len(o))
+	inserted := make(map[{{$pkKeyType}}]struct{}, len(o))
 	for rows.Next() {
 		var id {{$pkGoType}}
 		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
-		inserted[id] = struct{}{}
+		inserted[{{ mapKey $pkField.Type.GoType "id" }}] = struct{}{}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

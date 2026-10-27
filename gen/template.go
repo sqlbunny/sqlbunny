@@ -178,23 +178,95 @@ var TemplateFunctions = template.FuncMap{
 	},
 	"hook": hook,
 
-	"doCompare": func(a, b string, ca, cb *schema.Field) string {
-		if ca.Type.GoType().Name == "[]byte" && cb.Type.GoType().Name == "[]byte" {
-			return "0 == bytes.Compare(" + a + ", " + b + ")"
-		}
+	"doCompare":  templateCompare,
+	"mapKeyType": templateMapKeyType,
+	"mapKey":     templateMapKey,
+}
 
-		if ca.Nullable == cb.Nullable {
-			return a + " == " + b
-		}
+const nullPkg = "github.com/sqlbunny/sqlbunny/types/null"
 
-		if cb.Nullable {
-			a, b = b, a
-			ca, cb = cb, ca
-		}
+// mapKeyConv tells how to use values of a Go type that is not comparable as
+// map keys.
+type mapKeyConv struct {
+	// keyType is a comparable Go type to use as map key instead.
+	keyType schema.GoType
+	// conv returns Go code that converts expr to keyType.
+	conv func(expr string) string
+}
 
-		f := ca.Type.(schema.NullableType).GoTypeNullField()
-		return a + ".Valid && " + a + "." + f + " == " + b
+// mapKeyConvs has the non-comparable Go types that can be keys (primary keys,
+// foreign keys, relationship fields), and how to use them as map keys.
+// Types not in this map are used as map keys as they are.
+var mapKeyConvs = map[schema.GoType]mapKeyConv{
+	{Name: "[]byte"}: {
+		keyType: schema.GoType{Name: "string"},
+		conv: func(expr string) string {
+			return "string(" + expr + ")"
+		},
 	},
+	{Pkg: nullPkg, Name: "Bytes"}: {
+		keyType: schema.GoType{Pkg: nullPkg, Name: "String"},
+		conv: func(expr string) string {
+			newString := templateGoType(schema.GoType{Pkg: nullPkg, Name: "NewString"})
+			return newString + "(string(" + expr + ".Bytes), " + expr + ".Valid)"
+		},
+	},
+}
+
+// templateMapKeyType returns the Go type of map keys for values of type t.
+// It is t, or a comparable type if t is not comparable (string for []byte).
+func templateMapKeyType(t schema.GoType) string {
+	if c, ok := mapKeyConvs[t]; ok {
+		return templateGoType(c.keyType)
+	}
+	return templateGoType(t)
+}
+
+// templateMapKey returns Go code that converts expr, of type t, to a map key
+// of type templateMapKeyType(t).
+func templateMapKey(t schema.GoType, expr string) string {
+	if c, ok := mapKeyConvs[t]; ok {
+		return c.conv(expr)
+	}
+	return expr
+}
+
+func isByteSlice(t schema.GoType) bool {
+	return t.Pkg == "" && t.Name == "[]byte"
+}
+
+// templateCompare returns Go code that reports whether a (of field ca) and b
+// (of field cb) are equal. The fields can be nullable.
+func templateCompare(a, b string, ca, cb *schema.Field) string {
+	eq := func(x, y string) string {
+		return x + " == " + y
+	}
+	isBytes := isByteSlice(ca.Type.GoType()) || isByteSlice(cb.Type.GoType())
+	if isBytes {
+		eq = func(x, y string) string {
+			return "bytes.Equal(" + x + ", " + y + ")"
+		}
+	}
+
+	if !ca.Nullable && !cb.Nullable {
+		return eq(a, b)
+	}
+
+	if ca.Nullable && cb.Nullable {
+		if isBytes {
+			f := ca.Type.(schema.NullableType).GoTypeNullField()
+			return a + ".Valid == " + b + ".Valid && " + eq(a+"."+f, b+"."+f)
+		}
+		return a + " == " + b
+	}
+
+	if cb.Nullable {
+		a, b = b, a
+		ca, cb = cb, ca
+	}
+
+	f := ca.Type.(schema.NullableType).GoTypeNullField()
+	return a + ".Valid && " + eq(a+"."+f, b)
 }
 
 func modelColumns(m *schema.Model) []string {

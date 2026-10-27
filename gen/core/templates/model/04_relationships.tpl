@@ -66,14 +66,14 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 	{{- $fcol := $foreignModel.FindField $foreignCol }}
 
 	// Collect unique foreign IDs across all local arrays.
-	seen := make(map[{{ goType $fcol.GoType }}]struct{})
+	seen := make(map[{{ mapKeyType $fcol.GoType }}]struct{})
 	var allIDs []{{ goType $fcol.GoType }}
 	for _, obj := range slice {
 		for _, id := range obj.{{$localArray | titleCasePath}} {
-			if _, ok := seen[id]; ok {
+			if _, ok := seen[{{ mapKey $fcol.GoType "id" }}]; ok {
 				continue
 			}
-			seen[id] = struct{}{}
+			seen[{{ mapKey $fcol.GoType "id" }}] = struct{}{}
 			allIDs = append(allIDs, id)
 		}
 	}
@@ -106,14 +106,14 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 	}
 
 	// Index foreign rows by their key for O(1) lookup, preserving order.
-	foreignByKey := make(map[{{ goType $fcol.GoType }}]*{{$foreignModelName}}, len(resultSlice))
+	foreignByKey := make(map[{{ mapKeyType $fcol.GoType }}]*{{$foreignModelName}}, len(resultSlice))
 	for _, foreign := range resultSlice {
-		foreignByKey[foreign.{{$foreignCol | titleCasePath}}] = foreign
+		foreignByKey[{{ mapKey $fcol.GoType (printf "foreign.%s" ($foreignCol | titleCasePath)) }}] = foreign
 	}
 
 	for _, local := range slice {
 		for _, id := range local.{{$localArray | titleCasePath}} {
-			if foreign, ok := foreignByKey[id]; ok {
+			if foreign, ok := foreignByKey[{{ mapKey $fcol.GoType "id" }}]; ok {
 				local.R.{{$relationshipNameCamel}} = append(local.R.{{$relationshipNameCamel}}, foreign)
 			}
 		}
@@ -131,31 +131,31 @@ func ({{$modelNameCamel}}L) Load{{$relationshipName}}(ctx context.Context, slice
 	{{- end }}
 	{{- if eq (len .LocalFields) 1 }}
 	{{- $lcol := $model.FindField (index .LocalFields 0) }}
-	seen := make(map[{{ goType $lcol.GoType }}]struct{}, len(slice))
+	seen := make(map[{{ mapKeyType $lcol.GoType }}]struct{}, len(slice))
 	for _, obj := range slice {
 		k := obj.{{ index .LocalFields 0 | titleCasePath }}
-		if _, ok := seen[k]; ok {
+		if _, ok := seen[{{ mapKey $lcol.GoType "k" }}]; ok {
 			continue
 		}
-		seen[k] = struct{}{}
+		seen[{{ mapKey $lcol.GoType "k" }}] = struct{}{}
 		keys0 = append(keys0, k)
 	}
 	{{- else }}
 	type keyType struct {
 		{{- range $i, $c := .LocalFields }}
 		{{- $lcol := $model.FindField $c }}
-		K{{$i}} {{ goType $lcol.GoType }}
+		K{{$i}} {{ mapKeyType $lcol.GoType }}
 		{{- end }}
 	}
 	seen := make(map[keyType]struct{}, len(slice))
 	for _, obj := range slice {
-		k := keyType{ {{- range $i, $c := .LocalFields }}{{if $i}}, {{end}}obj.{{$c | titleCasePath}}{{ end -}} }
+		k := keyType{ {{- range $i, $c := .LocalFields }}{{if $i}}, {{end}}{{ mapKey ($model.FindField $c).GoType (printf "obj.%s" ($c | titleCasePath)) }}{{ end -}} }
 		if _, ok := seen[k]; ok {
 			continue
 		}
 		seen[k] = struct{}{}
 		{{- range $i, $c := .LocalFields }}
-		keys{{$i}} = append(keys{{$i}}, k.K{{$i}})
+		keys{{$i}} = append(keys{{$i}}, obj.{{$c | titleCasePath}})
 		{{- end }}
 	}
 	{{- end }}
