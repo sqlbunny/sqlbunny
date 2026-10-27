@@ -266,3 +266,38 @@ func (o AlterTableSetType) Apply(d *schema.Database, t *schema.Table, ato AlterT
 	c.Type = o.Type
 	return nil
 }
+
+// AlterTableSetUnlogged changes the table to UNLOGGED. Postgres rewrites the
+// table. It fails if a logged table has a foreign key to this table.
+type AlterTableSetUnlogged struct {
+}
+
+func (o AlterTableSetUnlogged) GetAlterTableSQL(ato *AlterTable) string {
+	return "SET UNLOGGED"
+}
+
+func (o AlterTableSetUnlogged) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
+	if t.Unlogged {
+		return fmt.Errorf("table is already unlogged")
+	}
+	t.Unlogged = true
+	return nil
+}
+
+// AlterTableSetLogged changes the table to a normal (logged) table. Postgres
+// rewrites the table and writes all of it to the WAL. It fails if this table
+// has a foreign key to an unlogged table.
+type AlterTableSetLogged struct {
+}
+
+func (o AlterTableSetLogged) GetAlterTableSQL(ato *AlterTable) string {
+	return "SET LOGGED"
+}
+
+func (o AlterTableSetLogged) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
+	if !t.Unlogged {
+		return fmt.Errorf("table is already logged")
+	}
+	t.Unlogged = false
+	return nil
+}

@@ -61,6 +61,7 @@ func (s *Schema) SQLSchema() *schema.Database {
 
 	for _, m := range s.Models {
 		t := schema.NewTable()
+		t.Unlogged = m.Unlogged
 		q.Tables[m.Name] = t
 		m.Table = t
 

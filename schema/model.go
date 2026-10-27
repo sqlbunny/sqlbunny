@@ -14,6 +14,9 @@ type Model struct {
 
 	IsJoinModel bool
 
+	// Unlogged makes the table a Postgres UNLOGGED table.
+	Unlogged bool
+
 	Relationships []*Relationship
 
 	Table *schema.Table

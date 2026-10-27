@@ -68,3 +68,23 @@ func Model(name string, items ...ModelItem) gen.ConfigItem {
 		items: items,
 	}
 }
+
+type defModelUnlogged struct{}
+
+func (d defModelUnlogged) ModelItem(ctx *ModelContext) {
+	ctx.Model.Unlogged = true
+}
+
+var _ ModelItem = defModelUnlogged{}
+
+// Unlogged makes the model's table a Postgres UNLOGGED table. Writes to it
+// skip the WAL, so they are faster, but a crash empties the table and it is
+// not copied to replicas. Use it only for data you can lose.
+//
+//	Model("rate_limit",
+//	    Unlogged,
+//	    Field("key", "bytea", PrimaryKey),
+//	)
+//
+// A logged model cannot have a foreign key to an unlogged model.
+var Unlogged defModelUnlogged

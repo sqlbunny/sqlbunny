@@ -205,6 +205,12 @@ func diffAlterTables(ops []operations.Operation, d1, d2 *schema.Database) []oper
 		for tableName, t1 := range sorted(s1.Tables) {
 			if t2 := getTable(d2, schemaName, tableName); t2 != nil {
 				var subops []operations.AlterTableSuboperation
+				if !t1.Unlogged && t2.Unlogged {
+					subops = append(subops, operations.AlterTableSetUnlogged{})
+				}
+				if t1.Unlogged && !t2.Unlogged {
+					subops = append(subops, operations.AlterTableSetLogged{})
+				}
 				for name, c1 := range sorted(t1.Columns) {
 					c2, ok := t2.Columns[name]
 					if ok {
@@ -267,6 +273,7 @@ func diffCreateTables(ops []operations.Operation, d1, d2 *schema.Database) []ope
 					SchemaName: schemaName,
 					TableName:  tableName,
 					Columns:    cols,
+					Unlogged:   t2.Unlogged,
 				})
 			}
 		}

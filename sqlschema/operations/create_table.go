@@ -18,6 +18,9 @@ type CreateTable struct {
 	SchemaName string
 	TableName  string
 	Columns    []Column
+	// Unlogged creates the table with CREATE UNLOGGED TABLE. The zero value
+	// creates a normal (logged) table.
+	Unlogged bool
 }
 
 func (o CreateTable) GetSQL(transaction bool) string {
@@ -33,7 +36,11 @@ func (o CreateTable) GetSQL(transaction bool) string {
 		}
 		x = append(x, fmt.Sprintf("    \"%s\" %s%s%s", c.Name, c.Type, n, d))
 	}
-	return fmt.Sprintf("CREATE TABLE %s (\n%s\n)", sqlName(o.SchemaName, o.TableName), strings.Join(x, ",\n"))
+	kind := "TABLE"
+	if o.Unlogged {
+		kind = "UNLOGGED TABLE"
+	}
+	return fmt.Sprintf("CREATE %s %s (\n%s\n)", kind, sqlName(o.SchemaName, o.TableName), strings.Join(x, ",\n"))
 }
 
 func (o CreateTable) Apply(d *schema.Database) error {
@@ -46,6 +53,7 @@ func (o CreateTable) Apply(d *schema.Database) error {
 	}
 
 	t := schema.NewTable()
+	t.Unlogged = o.Unlogged
 	for _, c := range o.Columns {
 		t.Columns[c.Name] = &schema.Column{
 			Nullable: c.Nullable,

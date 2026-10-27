@@ -193,6 +193,10 @@ func checkForeignKeys(ctx *gen.Context, m *schema.Model) {
 			ctx.AddError("Model '%s' foreign key '%s': foreign model '%s' does not exist", m.Name, desc, f.ForeignModel)
 			continue
 		}
+		if !m.Unlogged && m2.Unlogged {
+			// Postgres does not allow it.
+			ctx.AddError("Model '%s' foreign key '%s': foreign model '%s' is unlogged, so '%s' must be unlogged too", m.Name, desc, f.ForeignModel, m.Name)
+		}
 		if f.ForeignFields == nil && m2.PrimaryKey != nil {
 			f.ForeignFields = m2.PrimaryKey.Fields
 		}

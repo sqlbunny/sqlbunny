@@ -8,6 +8,10 @@ type Table struct {
 	Indexes     map[string]*Index      `json:"indexes"`
 	Uniques     map[string]*Unique     `json:"uniques"`
 	ForeignKeys map[string]*ForeignKey `json:"foreign_keys"`
+
+	// Unlogged is true for a Postgres UNLOGGED table. Writes to it skip the
+	// WAL, and a crash empties it.
+	Unlogged bool `json:"unlogged"`
 }
 
 func NewTable() *Table {
