@@ -12,8 +12,16 @@ type DropIndex struct {
 	IndexName  string
 }
 
+// GetSQL uses DROP INDEX CONCURRENTLY outside a transaction. Inside one it
+// uses a plain DROP INDEX, since Postgres forbids CONCURRENTLY in a
+// transaction block (same as CreateIndex). CONCURRENTLY matters: a plain
+// DROP INDEX takes an ACCESS EXCLUSIVE lock on the table, so it waits for
+// every running query on the table and blocks all new ones while it waits.
 func (o DropIndex) GetSQL(transaction bool) string {
-	return fmt.Sprintf("DROP INDEX %s", sqlName(o.SchemaName, o.IndexName))
+	if transaction {
+		return fmt.Sprintf("DROP INDEX %s", sqlName(o.SchemaName, o.IndexName))
+	}
+	return fmt.Sprintf("DROP INDEX CONCURRENTLY %s", sqlName(o.SchemaName, o.IndexName))
 }
 
 func (o DropIndex) Apply(d *schema.Database) error {
