@@ -62,6 +62,9 @@ func (s *Schema) SQLSchema() *schema.Database {
 	for _, m := range s.Models {
 		t := schema.NewTable()
 		t.Unlogged = m.Unlogged
+		for k, v := range m.StorageParams {
+			t.StorageParams[k] = v
+		}
 		q.Tables[m.Name] = t
 		m.Table = t
 
@@ -94,6 +97,13 @@ func (s *Schema) SQLSchema() *schema.Database {
 		for _, f := range m.Uniques {
 			t.Uniques[makeName(m.Name, f.Fields, "key")] = &schema.Unique{
 				Columns: sqlNameAll(f.Fields),
+			}
+		}
+
+		for _, f := range m.Statistics {
+			t.Statistics[makeName(m.Name, f.Fields, "stat")+makeHash(strings.Join(f.Kinds, ","))] = &schema.Statistics{
+				Columns: sqlNameAll(f.Fields),
+				Kinds:   f.Kinds,
 			}
 		}
 

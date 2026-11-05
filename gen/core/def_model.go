@@ -88,3 +88,33 @@ var _ ModelItem = defModelUnlogged{}
 //
 // A logged model cannot have a foreign key to an unlogged model.
 var Unlogged defModelUnlogged
+
+type defModelStorageParam struct {
+	name  string
+	value string
+}
+
+func (d defModelStorageParam) ModelItem(ctx *ModelContext) {
+	m := ctx.Model
+	if m.StorageParams == nil {
+		m.StorageParams = make(map[string]string)
+	}
+	if _, ok := m.StorageParams[d.name]; ok {
+		ctx.AddError("Model '%s' storage parameter '%s' is defined multiple times.", m.Name, d.name)
+	}
+	m.StorageParams[d.name] = d.value
+}
+
+var _ ModelItem = defModelStorageParam{}
+
+// StorageParam sets a Postgres storage parameter of the model's table
+// (CREATE TABLE ... WITH (name = value), or ALTER TABLE ... SET). value is a
+// SQL literal.
+//
+//	Model("event",
+//	    StorageParam("autovacuum_analyze_scale_factor", "0.01"),
+//	    ...
+//	)
+func StorageParam(name, value string) defModelStorageParam {
+	return defModelStorageParam{name: name, value: value}
+}

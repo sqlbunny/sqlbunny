@@ -301,3 +301,41 @@ func (o AlterTableSetLogged) Apply(d *schema.Database, t *schema.Table, ato Alte
 	t.Unlogged = false
 	return nil
 }
+
+// AlterTableSetStorageParam sets a storage parameter of the table
+// (SET (name = value)), e.g. autovacuum_analyze_scale_factor. Value is a SQL
+// literal.
+type AlterTableSetStorageParam struct {
+	Name  string
+	Value string
+}
+
+func (o AlterTableSetStorageParam) GetAlterTableSQL(ato *AlterTable) string {
+	return fmt.Sprintf("SET (%s = %s)", o.Name, o.Value)
+}
+
+func (o AlterTableSetStorageParam) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
+	if t.StorageParams == nil {
+		t.StorageParams = make(map[string]string)
+	}
+	t.StorageParams[o.Name] = o.Value
+	return nil
+}
+
+// AlterTableResetStorageParam resets a storage parameter of the table to its
+// default (RESET (name)).
+type AlterTableResetStorageParam struct {
+	Name string
+}
+
+func (o AlterTableResetStorageParam) GetAlterTableSQL(ato *AlterTable) string {
+	return fmt.Sprintf("RESET (%s)", o.Name)
+}
+
+func (o AlterTableResetStorageParam) Apply(d *schema.Database, t *schema.Table, ato AlterTable) error {
+	if _, ok := t.StorageParams[o.Name]; !ok {
+		return fmt.Errorf("storage parameter is not set: %s", o.Name)
+	}
+	delete(t.StorageParams, o.Name)
+	return nil
+}

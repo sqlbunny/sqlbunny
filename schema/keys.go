@@ -18,6 +18,13 @@ type Unique struct {
 	Fields []Path
 }
 
+// Statistics represents a Postgres extended statistics object
+// (CREATE STATISTICS) on some fields of a model.
+type Statistics struct {
+	Fields []Path
+	Kinds  []string // ndistinct, dependencies, mcv. If empty, Postgres builds all kinds.
+}
+
 // ForeignKey represents a foreign key constraint in a database
 type ForeignKey struct {
 	LocalFields   []Path

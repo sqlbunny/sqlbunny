@@ -100,3 +100,115 @@ func TestUnloggedSwitch(t *testing.T) {
 		t.Errorf("got %q want %q", got, want)
 	}
 }
+
+func sqlOf(ops []operations.Operation) []string {
+	var res []string
+	for _, op := range ops {
+		res = append(res, op.GetSQL(false))
+	}
+	return res
+}
+
+func checkSQL(t *testing.T, ops []operations.Operation, want []string) {
+	t.Helper()
+	if got := sqlOf(ops); !reflect.DeepEqual(got, want) {
+		t.Fatalf("got SQL %q\nwant %q", got, want)
+	}
+}
+
+func tableWithCols(cols ...string) *schema.Table {
+	t := newTable(false)
+	for _, c := range cols {
+		t.Columns[c] = &schema.Column{Type: "bytea", Nullable: true}
+	}
+	return t
+}
+
+func TestStatisticsCreateDrop(t *testing.T) {
+	t1 := tableWithCols("org", "site")
+	t2 := tableWithCols("org", "site")
+	t2.Statistics["a_stat"] = &schema.Statistics{Columns: []string{"org", "site"}, Kinds: []string{"dependencies"}}
+	t2.Statistics["b_stat"] = &schema.Statistics{Columns: []string{"org", "site"}}
+
+	ops := diffAndReplay(t, newDB(map[string]*schema.Table{"x": t1}), newDB(map[string]*schema.Table{"x": t2}))
+	checkSQL(t, ops, []string{
+		`CREATE STATISTICS "a_stat" (dependencies) ON "org", "site" FROM "x"`,
+		`CREATE STATISTICS "b_stat" ON "org", "site" FROM "x"`,
+	})
+
+	t3 := tableWithCols("org", "site")
+	ops = diffAndReplay(t, newDB(map[string]*schema.Table{"x": t2}), newDB(map[string]*schema.Table{"x": t3}))
+	checkSQL(t, ops, []string{
+		`DROP STATISTICS "a_stat"`,
+		`DROP STATISTICS "b_stat"`,
+	})
+}
+
+func TestStatisticsChangeKinds(t *testing.T) {
+	t1 := tableWithCols("org", "site")
+	t1.Statistics["s"] = &schema.Statistics{Columns: []string{"org", "site"}, Kinds: []string{"dependencies"}}
+	t2 := tableWithCols("org", "site")
+	t2.Statistics["s"] = &schema.Statistics{Columns: []string{"org", "site"}, Kinds: []string{"mcv"}}
+
+	ops := diffAndReplay(t, newDB(map[string]*schema.Table{"x": t1}), newDB(map[string]*schema.Table{"x": t2}))
+	checkSQL(t, ops, []string{
+		`DROP STATISTICS "s"`,
+		`CREATE STATISTICS "s" (mcv) ON "org", "site" FROM "x"`,
+	})
+}
+
+// Postgres drops a statistics object together with its columns, so the drop
+// must come before the column drop.
+func TestStatisticsDroppedBeforeColumn(t *testing.T) {
+	t1 := tableWithCols("org", "site")
+	t1.Statistics["s"] = &schema.Statistics{Columns: []string{"org", "site"}}
+	t2 := tableWithCols("org")
+
+	ops := diffAndReplay(t, newDB(map[string]*schema.Table{"x": t1}), newDB(map[string]*schema.Table{"x": t2}))
+	checkSQL(t, ops, []string{
+		`DROP STATISTICS "s"`,
+		"ALTER TABLE \"x\"\n    DROP COLUMN \"site\"",
+	})
+}
+
+func TestStatisticsOnNewTable(t *testing.T) {
+	t2 := tableWithCols("org", "site")
+	t2.Statistics["s"] = &schema.Statistics{Columns: []string{"org", "site"}}
+
+	ops := diffAndReplay(t, newDB(nil), newDB(map[string]*schema.Table{"x": t2}))
+	if len(ops) != 2 {
+		t.Fatalf("want 2 ops, got %#v", ops)
+	}
+	if _, ok := ops[1].(operations.CreateStatistics); !ok {
+		t.Fatalf("want CreateStatistics after CreateTable, got %#v", ops)
+	}
+}
+
+func TestStorageParams(t *testing.T) {
+	t1 := newTable(false)
+	t1.StorageParams["fillfactor"] = "90"
+	t1.StorageParams["autovacuum_enabled"] = "false"
+	t2 := newTable(false)
+	t2.StorageParams["fillfactor"] = "80"
+	t2.StorageParams["autovacuum_analyze_scale_factor"] = "0.01"
+
+	ops := diffAndReplay(t, newDB(map[string]*schema.Table{"x": t1}), newDB(map[string]*schema.Table{"x": t2}))
+	checkSQL(t, ops, []string{
+		"ALTER TABLE \"x\"\n    SET (autovacuum_analyze_scale_factor = 0.01),\n    SET (fillfactor = 80),\n    RESET (autovacuum_enabled)",
+	})
+}
+
+func TestStorageParamsOnNewTable(t *testing.T) {
+	t2 := newTable(false)
+	t2.StorageParams["fillfactor"] = "90"
+	t2.StorageParams["autovacuum_analyze_scale_factor"] = "0.01"
+
+	ops := diffAndReplay(t, newDB(nil), newDB(map[string]*schema.Table{"x": t2, "y": newTable(false)}))
+	checkSQL(t, ops, []string{
+		"CREATE TABLE \"x\" (\n    \"id\" bigint NOT NULL DEFAULT 0\n) WITH (autovacuum_analyze_scale_factor = 0.01, fillfactor = 90)",
+		"CREATE TABLE \"y\" (\n    \"id\" bigint NOT NULL DEFAULT 0\n)",
+	})
+	if ops[1].(operations.CreateTable).StorageParams != nil {
+		t.Fatalf("want nil StorageParams for a table without them")
+	}
+}

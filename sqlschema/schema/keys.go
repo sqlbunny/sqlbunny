@@ -18,6 +18,12 @@ type Unique struct {
 	Columns []string
 }
 
+// Statistics represents a Postgres extended statistics object.
+type Statistics struct {
+	Columns []string // At least 2.
+	Kinds   []string // ndistinct, dependencies, mcv. If empty, Postgres builds all kinds.
+}
+
 // ForeignKey represents a foreign key constraint in a database
 type ForeignKey struct {
 	LocalColumns   []string

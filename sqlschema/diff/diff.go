@@ -27,6 +27,7 @@ func Diff(d1, d2 *schema.Database) []operations.Operation {
 	var ops []operations.Operation
 	ops = diffDropForeignKeys(ops, d1, d2)
 	ops = diffDropConstraints(ops, d1, d2)
+	ops = diffDropStatistics(ops, d1, d2)
 	ops = diffDropIndexes(ops, d1, d2)
 	ops = diffDropTables(ops, d1, d2)
 	ops = diffDropSchemas(ops, d1, d2)
@@ -34,6 +35,7 @@ func Diff(d1, d2 *schema.Database) []operations.Operation {
 	ops = diffCreateSchemas(ops, d1, d2)
 	ops = diffCreateTables(ops, d1, d2)
 	ops = diffCreateIndexes(ops, d1, d2)
+	ops = diffCreateStatistics(ops, d1, d2)
 	ops = diffCreateConstraints(ops, d1, d2)
 	ops = diffCreateForeignKeys(ops, d1, d2)
 
@@ -70,6 +72,18 @@ func hasIndex(d *schema.Database, schemaName, tableName string, name string, k *
 		return false
 	}
 	k2, ok := t.Indexes[name]
+	if !ok {
+		return false
+	}
+	return reflect.DeepEqual(k, k2)
+}
+
+func hasStatistics(d *schema.Database, schemaName, tableName string, name string, k *schema.Statistics) bool {
+	t := getTable(d, schemaName, tableName)
+	if t == nil {
+		return false
+	}
+	k2, ok := t.Statistics[name]
 	if !ok {
 		return false
 	}
@@ -175,6 +189,25 @@ func diffDropIndexes(ops []operations.Operation, d1, d2 *schema.Database) []oper
 	return ops
 }
 
+// diffDropStatistics runs before the columns or tables are dropped: Postgres
+// drops a statistics object together with any of its columns.
+func diffDropStatistics(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
+	for schemaName, s1 := range sorted(d1.Schemas) {
+		for tableName, t1 := range sorted(s1.Tables) {
+			for name, k := range sorted(t1.Statistics) {
+				if !hasStatistics(d2, schemaName, tableName, name, k) {
+					ops = append(ops, operations.DropStatistics{
+						SchemaName:     schemaName,
+						TableName:      tableName,
+						StatisticsName: name,
+					})
+				}
+			}
+		}
+	}
+	return ops
+}
+
 func diffDropTables(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
 	for schemaName, s1 := range sorted(d1.Schemas) {
 		for tableName := range sorted(s1.Tables) {
@@ -210,6 +243,16 @@ func diffAlterTables(ops []operations.Operation, d1, d2 *schema.Database) []oper
 				}
 				if t1.Unlogged && !t2.Unlogged {
 					subops = append(subops, operations.AlterTableSetLogged{})
+				}
+				for name, v2 := range sorted(t2.StorageParams) {
+					if v1, ok := t1.StorageParams[name]; !ok || v1 != v2 {
+						subops = append(subops, operations.AlterTableSetStorageParam{Name: name, Value: v2})
+					}
+				}
+				for name := range sorted(t1.StorageParams) {
+					if _, ok := t2.StorageParams[name]; !ok {
+						subops = append(subops, operations.AlterTableResetStorageParam{Name: name})
+					}
 				}
 				for name, c1 := range sorted(t1.Columns) {
 					c2, ok := t2.Columns[name]
@@ -269,11 +312,20 @@ func diffCreateTables(ops []operations.Operation, d1, d2 *schema.Database) []ope
 					})
 				}
 
+				// Leave it nil when empty, so migrations don't get a
+				// "StorageParams: map[string]string{}" in every CreateTable.
+				var params map[string]string
+				if len(t2.StorageParams) != 0 {
+					params = maps.Clone(t2.StorageParams)
+				}
+
 				ops = append(ops, operations.CreateTable{
 					SchemaName: schemaName,
 					TableName:  tableName,
 					Columns:    cols,
 					Unlogged:   t2.Unlogged,
+
+					StorageParams: params,
 				})
 			}
 		}
@@ -294,6 +346,25 @@ func diffCreateIndexes(ops []operations.Operation, d1, d2 *schema.Database) []op
 						Method:     i2.Method,
 						Where:      i2.Where,
 						Unique:     i2.Unique,
+					})
+				}
+			}
+		}
+	}
+	return ops
+}
+
+func diffCreateStatistics(ops []operations.Operation, d1, d2 *schema.Database) []operations.Operation {
+	for schemaName, s2 := range sorted(d2.Schemas) {
+		for tableName, t2 := range sorted(s2.Tables) {
+			for name, k := range sorted(t2.Statistics) {
+				if !hasStatistics(d1, schemaName, tableName, name, k) {
+					ops = append(ops, operations.CreateStatistics{
+						SchemaName:     schemaName,
+						TableName:      tableName,
+						StatisticsName: name,
+						Columns:        k.Columns,
+						Kinds:          k.Kinds,
 					})
 				}
 			}

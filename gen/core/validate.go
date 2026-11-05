@@ -23,6 +23,7 @@ func buildSchema(items []gen.ConfigItem) (*schema.Schema, error) {
 		checkPrimaryKey(ctx, m)
 		checkIndexes(ctx, m)
 		checkUniques(ctx, m)
+		checkStatistics(ctx, m)
 		checkForeignKeys(ctx, m)
 	}
 
@@ -150,6 +151,36 @@ func checkIndexes(ctx *gen.Context, m *schema.Model) {
 			c := m.FindField(path)
 			if c == nil {
 				ctx.AddError("Model '%s' index '%s' references unknown field '%s'", m.Name, desc, path.DotName())
+			}
+		}
+	}
+}
+
+func checkStatistics(ctx *gen.Context, m *schema.Model) {
+	seen := make(map[string]struct{})
+	for _, f := range m.Statistics {
+		desc := describeIndex(f.Fields)
+
+		if _, ok := seen[desc]; ok {
+			ctx.AddError("Model '%s' statistics '%s' is defined multiple times.", m.Name, desc)
+		}
+		seen[desc] = struct{}{}
+
+		if len(f.Fields) < 2 {
+			// Postgres needs 2 or more columns (or an expression, which
+			// we don't support).
+			ctx.AddError("Model '%s' statistics '%s' must have at least 2 fields", m.Name, desc)
+		}
+		for _, path := range f.Fields {
+			if m.FindField(path) == nil {
+				ctx.AddError("Model '%s' statistics '%s' references unknown field '%s'", m.Name, desc, path.DotName())
+			}
+		}
+		for _, k := range f.Kinds {
+			switch k {
+			case "ndistinct", "dependencies", "mcv":
+			default:
+				ctx.AddError("Model '%s' statistics '%s' has unknown kind '%s'. Must be ndistinct, dependencies or mcv", m.Name, desc, k)
 			}
 		}
 	}

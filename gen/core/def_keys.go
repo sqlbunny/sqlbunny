@@ -182,3 +182,42 @@ func ForeignKey(foreignModelName string) defFieldForeignKey {
 		foreignModelName: foreignModelName,
 	}
 }
+
+type defModelStatistics struct {
+	names []string
+	kinds []string
+}
+
+// Kinds sets the statistics kinds to build: "ndistinct", "dependencies",
+// "mcv". If not called, Postgres builds all of them.
+func (d defModelStatistics) Kinds(kinds ...string) defModelStatistics {
+	d.kinds = kinds
+	return d
+}
+
+func (d defModelStatistics) ModelItem(ctx *ModelContext)   {}
+func (d defModelStatistics) StructItem(ctx *StructContext) {}
+
+func (d defModelStatistics) ModelRecursiveItem(ctx *ModelRecursiveContext) {
+	m := ctx.Model
+	m.Statistics = append(m.Statistics, &schema.Statistics{
+		Fields: parsePathsPrefix(ctx, ctx.Prefix, d.names),
+		Kinds:  d.kinds,
+	})
+}
+
+var _ ModelItem = defModelStatistics{}
+var _ StructItem = defModelStatistics{}
+var _ ModelRecursiveItem = defModelStatistics{}
+
+// Statistics creates a Postgres extended statistics object (CREATE
+// STATISTICS) on two or more fields. Use it when the fields are related, so
+// the planner stops treating conditions on them as independent, e.g. when a
+// site_id determines the organization_id:
+//
+//	Statistics("organization_id", "site_id").Kinds("dependencies"),
+//
+// Postgres fills the statistics on the next ANALYZE of the table.
+func Statistics(names ...string) defModelStatistics {
+	return defModelStatistics{names: names}
+}

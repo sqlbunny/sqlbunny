@@ -11,6 +11,12 @@ type Model struct {
 	Indexes     []*Index
 	Uniques     []*Unique
 	ForeignKeys []*ForeignKey
+	Statistics  []*Statistics
+
+	// StorageParams are the Postgres storage parameters of the table
+	// (CREATE TABLE ... WITH (name = value)), e.g.
+	// autovacuum_analyze_scale_factor. Values are SQL literals.
+	StorageParams map[string]string
 
 	IsJoinModel bool
 
